@@ -1,0 +1,18 @@
+LOGGER
+ * right click menu for log tabs:
+   - clear log
+   - save log
+ * fix newlines in log output
+
+MEMORY VIEW
+ * Maybe move to ListCtrl
+ * If not, autosize gridlabels and cells
+ * support different word sizes
+ * support different address widths
+ * easy update method
+ * cache tosser
+
+GENERIC VIEW
+ * creator method
+ * store view info inside view object (aui stuff)
+ * Fix sizing and snapping on linux

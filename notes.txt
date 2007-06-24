@@ -1,0 +1,9 @@
+Application states:
+  - Editing: Source is open, editable, not attached to a GDB session
+  - Building: Source is open, editable, but saving is disabled, make is doing its thing in the background
+  - Attached: GDB session is attached
+    - Halted: Target is halted, GDB can probe and such, source is non-editable
+    - Running: Target is running, GDB cannot probe, running state is indicated, source is non-editable
+
+TODO:
+Progress indicator in the status bar
