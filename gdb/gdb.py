@@ -12,8 +12,12 @@ class GDBEvent(wx.PyEvent):
 
 EVT_GDB_STARTED = wx.PyEventBinder(wx.NewEventType())
 EVT_GDB_FINISHED = wx.PyEventBinder(wx.NewEventType())
+
 EVT_GDB_ERROR = wx.PyEventBinder(wx.NewEventType())
 EVT_GDB_UPDATE = wx.PyEventBinder(wx.NewEventType())
+
+EVT_GDB_RUNNING = wx.PyEventBinder(wx.NewEventType())
+EVT_GDB_STOPPED = wx.PyEventBinder(wx.NewEventType())
 
 class GDB(wx.Process, threading.Thread):
 
