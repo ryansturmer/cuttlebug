@@ -1,12 +1,16 @@
 import wx
 import wx.stc as stc
-import control
+import controls
+import view
+
+class BuildPortalControl(stc.StyledTextCtrl):
+    pass
 
 class BuildView(wx.Panel):
 
     def __init__(self, parent):
         super(BuildView, self).__init__(parent, -1, style=wx.BORDER_STATIC, size=(800,150))
-        self.txt = control.BuildPortalControl(self, -1, style=wx.BORDER_NONE)
+        self.txt = controls.BuildPortalControl(self, -1, style=wx.BORDER_NONE)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.txt, 1, wx.EXPAND)
         self.SetSizer(sizer)

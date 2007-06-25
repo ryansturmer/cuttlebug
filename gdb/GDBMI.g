@@ -117,7 +117,7 @@ async_output returns [val]
 	@init {
 		$val = GDBMIResultRecord()
 	}
-	: ASYNC_CLASS (COMMA result {$val[$result.key] = $val.val})* NL;
+	: ASYNC_CLASS {$val.cls = $ASYNC_CLASS.text } (COMMA result {$val[$result.key] = $result.val})* NL;
 	
 
 var	returns [txt] 

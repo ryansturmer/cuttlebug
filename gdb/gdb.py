@@ -1,6 +1,7 @@
 import wx
 import os, threading, time, logging
 import antlr3, GDBMILexer, GDBMIParser
+
 class GDBEvent(wx.PyEvent):
     def __init__(self, type, object=None, data=None):
         super(GDBEvent, self).__init__()

@@ -29,9 +29,11 @@ class Controller(wx.EvtHandler):
         # Views
         #   Build
         self.build_view = frame.build_view
+
         #   Memory
         self.memory_view = frame.memory_view
         self.memory_view.Bind(views.EVT_VIEW_REQUEST_UPDATE, self.on_update_memory_view)
+
         #   Logs
         self.log_view = frame.log_view
         self.log_view.add_logger(logging.getLogger('stdout'))
@@ -43,8 +45,11 @@ class Controller(wx.EvtHandler):
         self.log_view.add_logger(self.gdb_logger, format="%(message)s")
        
         self.error_logger = logging.getLogger('errors')
-        self.log_view.add_logger(self.error_logger, format="%(message)s")
+        self.log_view.add_logger(self.error_logger)
 
+        self.build_logger = logging.getLogger("Build")
+        self.log_view.add_logger(self.build_logger, format="%(message)s")
+        
         log.redirect_stdout('stdout')
         self.load_session()
         
@@ -80,12 +85,10 @@ class Controller(wx.EvtHandler):
     # STATE MANAGEMENT
     def enter_attached_state(self):
         print "Entering the ATTACHED state."
-        if self.state == IDLE:
+        if self.state == IDLE or self.state == RUNNING:
             self.exit_current_state()
             self.frame.statusbar.icon = "connect.png"
             self.state = ATTACHED
-        elif self.state == RUNNING:
-            self.exit_current_state()
         else:
             self.error_logger.log(logging.WARN, "Tried to attach from state %d" % self.state)
 
@@ -149,7 +152,7 @@ class Controller(wx.EvtHandler):
 
     # HALT
     def halt(self):
-        self.gdb.exec_interrupt()
+        self.gdb.exec_interrupt(self.on_halted)
 
     def on_halted(self, result):
         if result.cls == "done" or result.cls == "stopped":

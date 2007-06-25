@@ -1,7 +1,9 @@
 import wx.aui as aui
+import wx.stc as stc
 import os
 import wx
-import control
+import controls
+
 
 class Notebook(aui.AuiNotebook):
 
@@ -37,7 +39,7 @@ class Notebook(aui.AuiNotebook):
         #if path:
         #    self.close_untitled_tab()
         
-        widget = control.EditorControl(self, -1, style=wx.BORDER_NONE)
+        widget = controls.EditorControl(self, -1, style=wx.BORDER_NONE)
         
         if path:
             widget.open_file(path)
