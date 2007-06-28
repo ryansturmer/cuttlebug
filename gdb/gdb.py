@@ -104,11 +104,13 @@ class GDB(wx.Process, threading.Thread):
                         callable, args, kwargs = self.pending[result.token]
                         callable(result, *args, **kwargs)
                         
-                    # Post an event on error
-                    if result.cls == 'error':
-                        self.post_event(GDBEvent(EVT_GDB_ERROR, self, data=result.msg))
-                    else:
-                        self.post_event(GDBEvent(EVT_GDB_UPDATE, self, data=result))
+                # Post an event on error
+                if result.cls == 'error':
+                    self.post_event(GDBEvent(EVT_GDB_ERROR, self, data=result.msg))
+                elif result.cls == 'stopped':
+                    self.post_event(GDBEvent(EVT_GDB_STOPPED, self, data=result))
+                else:
+                    self.post_event(GDBEvent(EVT_GDB_UPDATE, self, data=result))
 
     def post_event(self, evt):
         if self.notify:
@@ -141,6 +143,9 @@ class GDB(wx.Process, threading.Thread):
     def exec_continue(self, callback=None, *args, **kwargs):
         self.__cmd('-exec-continue\n', callback, *args, **kwargs)
 
+    def exec_step(self, callback=None, *args, **kwargs):
+        self.__cmd('-exec-step\n', callback, *args, **kwargs)
+    
     def exec_interrupt(self, callable=None, *args, **kwargs):
         self.__cmd('-exec-interrupt\n', callable, *args, **kwargs)
 

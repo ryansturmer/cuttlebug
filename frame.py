@@ -8,18 +8,20 @@ import prefs
 class Frame(wx.Frame):
 
         def __init__(self, parent=None, title="Debugger"):
-            super(Frame, self).__init__(parent, -1, title, size=(800,600))
+            super(Frame, self).__init__(parent, -1, title, size=(1024,768))
             self.manager = aui.AuiManager(self)
-            #self.Bind(wx.EVT_CLOSE, self.on_exit)
+
+            self.Bind(wx.EVT_CLOSE, self.on_exit)
             self.create_menu_bar()
             self.create_status_bar()
-            self.create_notebook()
             
             # Create views
             self.create_build_view()
             self.create_log_view()
             self.create_memory_view()
-            #self.create_register_view()
+            self.create_register_view()
+            self.create_project_view()
+            self.create_editor_view()
 
             self.manager.Update()
 
@@ -30,7 +32,11 @@ class Frame(wx.Frame):
             
             # FILE
             file = wx.Menu()
-            util.menu_item(self, file, '&Open...\tCtrl+O', self.on_open)
+            util.menu_item(self, file, '&New Project...', self.on_new_project)
+            util.menu_item(self, file, '&Open Project...\tCtrl+O', self.on_open_project)
+            util.menu_item(self, file, '&Save Project...\tCtrl+S', self.on_save_project)
+            file.AppendSeparator()
+            util.menu_item(self, file, '&Open File(s)...\tCtrl+O', self.on_open)
             file.AppendSeparator()
             util.menu_item(self, file, '&Exit\tAlt+F4', self.on_exit,icon="door_out.png")
             menubar.Append(file, '&File')
@@ -45,6 +51,7 @@ class Frame(wx.Frame):
             # DEBUG
             debug = wx.Menu()
             util.menu_item(self, debug, '&Run\tF5', self.on_run, icon="control_play_blue.png")
+            util.menu_item(self, debug, '&Step\tF6', self.on_step, icon="control_play_blue.png")
             util.menu_item(self, debug, '&Halt\tShift+F5', self.on_halt, icon="control_stop_blue.png")
             debug.AppendSeparator()
             util.menu_item(self, debug, '&Attach', self.on_attach, icon="connect.png")
@@ -84,83 +91,64 @@ class Frame(wx.Frame):
             self.SetStatusBar(self.statusbar)
 
         def create_memory_view(self):
-            view = views.MemoryView(self)
-            self.memory_view = view
-            info = aui.AuiPaneInfo()
-            info.Caption('Memory')
-            info.Right()
-            info.Dockable(True)
-            info.MinSize(view.GetSize())
-            info.BestSize(view.GetSize())
-            info.FloatingSize(view.GetSize())
-            self.manager.AddPane(view, info)
-            self.memory_view.info = info
-            self.memory_view.Bind(wx.grid.EVT_GRID_LABEL_LEFT_DCLICK, self.on_label_dclick)
+            self.memory_view = views.MemoryView(self)
+            self.memory_view.info = aui.AuiPaneInfo().Caption('Memory').Right() 
+            self.manager.AddPane(self.memory_view, self.memory_view.info)
         
-        def on_label_dclick(self, evt):
-            if self.controller.state == app.ATTACHED:
-                self.controller.gdb.read_memory(0, 20)
-
         def create_register_view(self):
-            view = views.RegisterView(self)
-            self.register_view = view
-            info = aui.AuiPaneInfo()
-            info.Caption('Registers')
-            info.Right()
-            info.Dockable(True)
-            info.MinSize(view.GetSize())
-            info.BestSize(view.GetSize())
-            info.FloatingSize(view.GetSize())
-            self.manager.AddPane(view, info)
-            self.register_view.info = info
-            self.register_view.Bind(wx.grid.EVT_GRID_LABEL_LEFT_DCLICK, self.on_label_dclick)
-        
+            pass
+
         def create_build_view(self):
-            view = views.BuildView(self)
-            self.build_view = view
-            info = aui.AuiPaneInfo()
-            info.Caption('Build')
-            info.Bottom()
-            info.Dockable(True)
-            info.MinSize(view.GetSize())
-            info.BestSize(view.GetSize())
-            info.FloatingSize(view.GetSize())
-            self.manager.AddPane(view, info)
-            self.build_view.info = info
+            self.build_view = views.BuildView(self)
+            self.build_view.info = aui.AuiPaneInfo().Caption('Build').Bottom() 
+            self.manager.AddPane(self.build_view, self.build_view.info)
         
         def create_log_view(self):
-            view = views.LogView(self)
-            self.log_view = view
-            info = aui.AuiPaneInfo()
-            info.Caption('Log')
-            info.Bottom()
-            info.Dockable(True)
-            info.MinSize(view.GetSize())
-            info.BestSize(view.GetSize())
-            info.FloatingSize(view.GetSize())
-            self.manager.AddPane(view, info)
-            self.log_view.info = info
+            self.log_view = views.LogView(self)
+            self.log_view.info = aui.AuiPaneInfo().Caption('Logs').Bottom() 
+            self.manager.AddPane(self.log_view, self.log_view.info)
 
-        def create_notebook(self):
-            n = notebook.Notebook(self)
-            self.notebook = n
-            info = aui.AuiPaneInfo()
-            info.CentrePane()
-            info.PaneBorder(False)
-            self.manager.AddPane(n, info)
+        def create_editor_view(self):
+            self.editor_view = views.EditorView(self)
+            self.editor_view.info = aui.AuiPaneInfo().CentrePane().PaneBorder(False)
+            self.manager.AddPane(self.editor_view, self.editor_view.info)
 
+        def create_project_view(self):
+            self.project_view = views.ProjectView(self)
+            self.project_view.info = aui.AuiPaneInfo().Caption('Project').Left() 
+            self.manager.AddPane(self.project_view, self.project_view.info)
+        
         def open_file(self, path):
-            self.notebook.create_file_tab(path)
+            self.editor_view.notebook.create_file_tab(path)
 
 
         # Event Handlers
         def on_open(self, evt):
-            dialog = wx.FileDialog(self, 'Open', style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
+            dialog = wx.FileDialog(self, 'Open', style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST|FD_MULTIPLE)
             result = dialog.ShowModal()
             if result == wx.ID_OK:
                 paths = dialog.GetPaths()
                 for path in paths:
                     self.open_file(path)
+
+        def on_open_project(self, evt):
+            dialog = wx.FileDialog(self, 'Open Project', style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
+            result = dialog.ShowModal()
+            if result == wx.ID_OK:
+                path = dialog.GetPaths()[0]
+                self.controller.load_project(path)
+       
+        def on_new_project(self, evt):
+            if self.controller.project:
+                pass
+            self.controller.new_project()
+        
+        def on_save_project(self, evt):
+            dialog = wx.FileDialog(self, 'Save Project', style=wx.FD_SAVE)
+            result = dialog.ShowModal()
+            if result == wx.ID_OK:
+                path = dialog.GetPaths()[0]
+                self.controller.save_project(path)
 
         def on_exit(self, evt):
             self.controller.save_session()
@@ -194,5 +182,7 @@ class Frame(wx.Frame):
         def on_run(self, evt):
             self.controller.run()
 
+        def on_step(self, evt):
+            self.controller.step()
         def on_halt(self, evt):
             self.controller.halt()

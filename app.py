@@ -1,5 +1,5 @@
 import build, views, prefs, gdb, project, log
-import logging
+import logging, os
 import wx
 IDLE = 0
 BUILDING = 1
@@ -14,7 +14,9 @@ class Controller(wx.EvtHandler):
         self.state = IDLE
         self.gdb = None
         self.frame = frame
-        
+        self.project = None
+        self.project_dir = None
+
         # Build events
         self.Bind(build.EVT_BUILD_FINISHED, self.on_build_finished)
         self.Bind(build.EVT_BUILD_STARTED, self.on_build_started)
@@ -25,6 +27,7 @@ class Controller(wx.EvtHandler):
         self.Bind(gdb.EVT_GDB_FINISHED, self.on_gdb_finished)
         self.Bind(gdb.EVT_GDB_UPDATE, self.on_gdb_update)
         self.Bind(gdb.EVT_GDB_ERROR, self.on_gdb_error)
+        self.Bind(gdb.EVT_GDB_STOPPED, self.on_gdb_stopped)
         
         # Views
         #   Build
@@ -51,25 +54,52 @@ class Controller(wx.EvtHandler):
         self.log_view.add_logger(self.build_logger, format="%(message)s")
         
         log.redirect_stdout('stdout')
-        self.load_session()
         
-        # View Events
+        #   Project
+        self.project_view = frame.project_view
+        self.editor_view = frame.editor_view
 
+        # Session
+        self.load_session()
+    
     def load_session(self):
         try:
-            self.session = project.load('.session')
-            self.frame.manager.LoadPerspective(self.session.perspective)
-            self.frame.manager.Update()
+            session = project.load('.session')
+            #self.frame.manager.LoadPerspective(self.session.perspective)
+            #self.frame.manager.Update()
+            if session.project_filename:
+                print "trying to load project: %s" % session.project_filename
+                try:
+                    self.load_project(session.project_filename)
+                except Exception,  e:
+                    print e
         except Exception, e:
             print e
             self.session = project.Session()
     
     def save_session(self):
-        print self.session
+        #print self.session
         if self.session:
             self.session.perspective = self.frame.manager.SavePerspective()
+            if self.project:
+                self.session.project_filename = self.project.filename
             project.save(self.session, '.session')
-   
+
+    def new_project(self):
+        self.project = project.Project()
+        self.project_view.set_project(self.project)
+        print self.project
+
+    def load_project(self, path):
+        fullpath = os.path.abspath(path)
+        self.project = project.load(fullpath)
+        self.project_dir = os.path.dirname(fullpath)
+        self.project_view.set_project(self.project)
+
+    def save_project(self, path):
+        fullpath = os.path.abspath(path)
+        self.project.save(fullpath)
+
     # IDE Functions, Building, Cleaning, Etc..
     def build(self):
         build_process = build.BuildProcess(prefs.BUILD_COMMAND, notify=self)
@@ -82,9 +112,14 @@ class Controller(wx.EvtHandler):
     def rebuild(self):
         print "Controller is REBUILDing"
 
+
     # STATE MANAGEMENT
+    # ==========================================================
     def enter_attached_state(self):
+        project = self.project
         print "Entering the ATTACHED state."
+        if self.state == IDLE:
+            self.gdb.set_exec(project.fullpath(project.build.target))
         if self.state == IDLE or self.state == RUNNING:
             self.exit_current_state()
             self.frame.statusbar.icon = "connect.png"
@@ -136,9 +171,16 @@ class Controller(wx.EvtHandler):
             print e
             pass
 
-    def change_state(self, state):
-        
+    def change_state(self, state):    
         self.enter_state(state)
+
+    # ==========================================================
+    
+   
+    # STEP
+    def step(self):
+        if self.state == ATTACHED:
+            self.gdb.exec_step()
 
     # RUN
     def run(self):
@@ -148,6 +190,8 @@ class Controller(wx.EvtHandler):
     def on_running(self, result):
         if result.cls.lower() == "running":
             self.change_state(RUNNING)
+        elif result.cls.lower() == "stopped":
+            print result
 
 
     # HALT
@@ -157,6 +201,7 @@ class Controller(wx.EvtHandler):
     def on_halted(self, result):
         if result.cls == "done" or result.cls == "stopped":
             self.change_state(ATTACHED)
+            print result
 
     # ATTACH TO GDB
     def attach(self):
@@ -184,6 +229,11 @@ class Controller(wx.EvtHandler):
     def on_gdb_error(self, evt):
         self.error_logger.log(logging.ERROR, evt.data)
 
+    def on_gdb_stopped(self, evt):
+        result = evt.data
+        print result.frame.fullname
+        print result.frame.line
+        self.editor_view.goto(result.frame.fullname, int(result.frame.line))
     # BUILD EVENTS
     def on_build_started(self, evt):
         self.state = BUILDING

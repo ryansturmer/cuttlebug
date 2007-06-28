@@ -3,30 +3,6 @@ import wx.stc as stc
 import util
 import os
 
-class EditorControl(stc.StyledTextCtrl):
-
-    def get_name(self):
-        if self.file_path:
-            root, name = os.path.split(self.file_path)
-            return name
-        else:
-            return 'Untitled'
-
-    def open_file(self, path):
-        file = None
-        try:
-            file = open(path, 'r')
-            text = file.read()
-            self.SetText(text)
-            self.EmptyUndoBuffer()
-            self.edited = False
-            self.file_path = path
-        except IOError:
-            self.SetText('')
-        finally:
-            if file:
-                file.close()
-
 class StatusBar(wx.StatusBar):
 
     def __init__(self, *args, **kwargs):
