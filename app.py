@@ -28,6 +28,7 @@ class Controller(wx.EvtHandler):
         self.Bind(gdb.EVT_GDB_UPDATE, self.on_gdb_update)
         self.Bind(gdb.EVT_GDB_ERROR, self.on_gdb_error)
         self.Bind(gdb.EVT_GDB_STOPPED, self.on_gdb_stopped)
+        self.Bind(gdb.EVT_GDB_RUNNING, self.on_gdb_running)
         
         # Views
         #   Build
@@ -64,13 +65,13 @@ class Controller(wx.EvtHandler):
     
     def load_session(self):
         try:
-            session = project.load('.session')
+            self.session = project.load('.session')
             #self.frame.manager.LoadPerspective(self.session.perspective)
             #self.frame.manager.Update()
-            if session.project_filename:
-                print "trying to load project: %s" % session.project_filename
+            if self.session.project_filename:
+                print "trying to load project: %s" % self.session.project_filename
                 try:
-                    self.load_project(session.project_filename)
+                    self.load_project(self.session.project_filename)
                 except Exception,  e:
                     print e
         except Exception, e:
@@ -117,7 +118,7 @@ class Controller(wx.EvtHandler):
     # ==========================================================
     def enter_attached_state(self):
         project = self.project
-        print "Entering the ATTACHED state."
+        #print "Entering the ATTACHED state."
         if self.state == IDLE:
             self.gdb.set_exec(project.fullpath(project.build.target))
         if self.state == IDLE or self.state == RUNNING:
@@ -128,10 +129,12 @@ class Controller(wx.EvtHandler):
             self.error_logger.log(logging.WARN, "Tried to attach from state %d" % self.state)
 
     def exit_attached_state(self):
-        print "Exiting the ATTACHED state."
+        pass
+        #print "Exiting the ATTACHED state."
 
     def enter_running_state(self):
-        print "Entering the RUNNING state."
+        
+        #print "Entering the RUNNING state."
         if self.state == ATTACHED:
             self.exit_current_state()
             self.frame.statusbar.icon = "connect_green.png"
@@ -140,16 +143,18 @@ class Controller(wx.EvtHandler):
             self.error_logger.log(logging.WARN, "Tried to run from state %d" % self.state)
 
     def exit_running_state(self):
-        print "Exiting the RUNNING state."
+        pass
+        #print "Exiting the RUNNING state."
 
     def enter_idle_state(self):
-        print "Entering the IDLE state"
+        #print "Entering the IDLE state"
         self.exit_current_state()
         self.frame.statusbar.icon = "disconnect.png"
         self.state = IDLE
 
     def exit_idle_state(self):
-        print "Exiting the IDLE state"
+        pass
+        #print "Exiting the IDLE state"
 
     def exit_current_state(self):
         try:
@@ -181,7 +186,9 @@ class Controller(wx.EvtHandler):
     def step(self):
         if self.state == ATTACHED:
             self.gdb.exec_step()
-
+    def step_out(self):
+        if self.state == ATTACHED:
+            self.gdb.exec_finish()
     # RUN
     def run(self):
         if self.state == ATTACHED:
@@ -196,12 +203,16 @@ class Controller(wx.EvtHandler):
 
     # HALT
     def halt(self):
-        self.gdb.exec_interrupt(self.on_halted)
+        self.gdb.exec_interrupt()
 
     def on_halted(self, result):
         if result.cls == "done" or result.cls == "stopped":
             self.change_state(ATTACHED)
             print result
+
+    def download(self):
+        if self.state == ATTACHED:
+            self.gdb.target_download()
 
     # ATTACH TO GDB
     def attach(self):
@@ -226,14 +237,23 @@ class Controller(wx.EvtHandler):
 
     def on_gdb_update(self, evt):
         pass
+    
     def on_gdb_error(self, evt):
         self.error_logger.log(logging.ERROR, evt.data)
 
     def on_gdb_stopped(self, evt):
+        self.change_state(ATTACHED)
         result = evt.data
-        print result.frame.fullname
-        print result.frame.line
+        #print result.frame.fullname
+        #print result.frame.line
+        self.memory_view.request_update()
         self.editor_view.goto(result.frame.fullname, int(result.frame.line))
+        self.gdb.stack_list_locals()
+        self.gdb.file_list_globals()
+
+    def on_gdb_running(self, evt):
+        self.change_state(RUNNING)
+
     # BUILD EVENTS
     def on_build_started(self, evt):
         self.state = BUILDING
@@ -251,14 +271,11 @@ class Controller(wx.EvtHandler):
     def on_update_memory_view(self, evt):
         if self.state == ATTACHED:
             start, end = evt.data
-            print evt
             self.gdb.read_memory(start, self.memory_view.stride, end-start, callback=self.on_got_memory_data)
 
     def on_got_memory_data(self, result):
         if hasattr(result, 'memory'):
                 memtable = []
                 for entry in result.memory:
-                    print entry
                     memtable.append(int(entry.data[0]))
-
                 wx.CallAfter(self.memory_view.update, int(result.addr,16), memtable)

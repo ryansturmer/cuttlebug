@@ -33,7 +33,7 @@ class Frame(wx.Frame):
             # FILE
             file = wx.Menu()
             util.menu_item(self, file, '&New Project...', self.on_new_project)
-            util.menu_item(self, file, '&Open Project...\tCtrl+O', self.on_open_project)
+            util.menu_item(self, file, '&Open Project...', self.on_open_project)
             util.menu_item(self, file, '&Save Project...\tCtrl+S', self.on_save_project)
             file.AppendSeparator()
             util.menu_item(self, file, '&Open File(s)...\tCtrl+O', self.on_open)
@@ -52,7 +52,10 @@ class Frame(wx.Frame):
             debug = wx.Menu()
             util.menu_item(self, debug, '&Run\tF5', self.on_run, icon="control_play_blue.png")
             util.menu_item(self, debug, '&Step\tF6', self.on_step, icon="control_play_blue.png")
+            util.menu_item(self, debug, '&Step Out\tShift+F6', self.on_step_out, icon="control_play_blue.png")
             util.menu_item(self, debug, '&Halt\tShift+F5', self.on_halt, icon="control_stop_blue.png")
+            debug.AppendSeparator()
+            util.menu_item(self, debug, "Download", self.on_download, icon="application_put.png")
             debug.AppendSeparator()
             util.menu_item(self, debug, '&Attach', self.on_attach, icon="connect.png")
             util.menu_item(self, debug, '&Detach', self.on_detach, icon="disconnect.png")
@@ -124,7 +127,7 @@ class Frame(wx.Frame):
 
         # Event Handlers
         def on_open(self, evt):
-            dialog = wx.FileDialog(self, 'Open', style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST|FD_MULTIPLE)
+            dialog = wx.FileDialog(self, 'Open', style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST|wx.FD_MULTIPLE)
             result = dialog.ShowModal()
             if result == wx.ID_OK:
                 paths = dialog.GetPaths()
@@ -184,5 +187,12 @@ class Frame(wx.Frame):
 
         def on_step(self, evt):
             self.controller.step()
+
+        def on_step_out(self, evt):
+            self.controller.step_out()
+
         def on_halt(self, evt):
             self.controller.halt()
+
+        def on_download(self, evt):
+            self.controller.download()

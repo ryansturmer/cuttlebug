@@ -206,7 +206,9 @@ class MemoryView(view.View):
 
     def update(self, base_addr, values):
         self.grid.update(base_addr, values)
-    def request_update(self, range):
+
+    def request_update(self, range=None):
+        range = range or self.grid.visible_address_range()
         evt = view.ViewEvent(view.EVT_VIEW_REQUEST_UPDATE, self, data=range)
         wx.PostEvent(self, evt)
         

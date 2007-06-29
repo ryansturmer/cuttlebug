@@ -109,6 +109,8 @@ class GDB(wx.Process, threading.Thread):
                     self.post_event(GDBEvent(EVT_GDB_ERROR, self, data=result.msg))
                 elif result.cls == 'stopped':
                     self.post_event(GDBEvent(EVT_GDB_STOPPED, self, data=result))
+                elif result.cls == 'running':
+                    self.post_event(GDBEvent(EVT_GDB_RUNNING, self, data=result))
                 else:
                     self.post_event(GDBEvent(EVT_GDB_UPDATE, self, data=result))
 
@@ -139,15 +141,27 @@ class GDB(wx.Process, threading.Thread):
     # Utility Stuff
     def command(self, cmd):
         self.__cmd(cmd)
-    
+   
+    def stack_list_locals(self, callback=None, *args, **kwargs):
+        self.__cmd('-stack-list-locals 1', callback, *args, **kwargs)
+
+    def file_list_globals(self, file='', callback=None, *args, **kwargs):
+        self.__cmd('-symbol-list-variables', callback, *args, **kwargs)
+
     def exec_continue(self, callback=None, *args, **kwargs):
         self.__cmd('-exec-continue\n', callback, *args, **kwargs)
 
     def exec_step(self, callback=None, *args, **kwargs):
         self.__cmd('-exec-step\n', callback, *args, **kwargs)
+   
+    def exec_finish(self, callback=None, *args, **kwargs):
+        self.__cmd('-exec-finish\n', callback, *args, **kwargs)
     
     def exec_interrupt(self, callable=None, *args, **kwargs):
         self.__cmd('-exec-interrupt\n', callable, *args, **kwargs)
+
+    def target_download(self, callable=None, *args, **kwargs):
+        self.__cmd('-target-download\n', callable, *args, **kwargs)
 
     def sig_interrupt(self):
         self.__cmd('\x03\n')

@@ -31,6 +31,16 @@ class EditorControl(stc.StyledTextCtrl):
         else:
             return 'Untitled'
 
+    def set_lexer_language(self, language=None):
+        languages = {'.c':'cpp', '.C':'cpp', '.h':'cpp', '.H':'cpp'}
+        if not language:
+            try:
+                path, filename = os.path.split(self.file_path)
+                shortname, ext = os.path.splitext(filename)
+                self.SetLexerLanguage(languages[ext])
+            except Exception, e:
+                print e
+
     def open_file(self, path):
         file = None
         try:
