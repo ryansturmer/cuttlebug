@@ -3,12 +3,13 @@ import os
 from os.path import abspath, dirname, normcase, normpath, splitdrive
 from os.path import join as path_join, commonprefix
 
-def menu_item(window, menu, label, func, icon=None, kind=wx.ITEM_NORMAL, toolbar=None, registries=None):
+def menu_item(window, menu, label, func, icon=None, kind=wx.ITEM_NORMAL, toolbar=None, registries=None, enabled=True):
     item = wx.MenuItem(menu, -1, label, kind=kind)
     if func:
         window.Bind(wx.EVT_MENU, func, id=item.GetId())
     if icon:
         item.SetBitmap(get_icon(icon))
+        item.SetDisabledBitmap(get_icon('blank.png'))
     menu.AppendItem(item)
     if toolbar and icon:
         tool_item = toolbar.AddSimpleTool(-1, get_icon(icon), label)
@@ -18,6 +19,7 @@ def menu_item(window, menu, label, func, icon=None, kind=wx.ITEM_NORMAL, toolbar
         for registry in registries:
             if item not in registry:
                 registry.append(item)
+    item.Enable(bool(enabled))
     return item
     
 def tool_item(window, toolbar, label, func, icon):

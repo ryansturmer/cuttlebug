@@ -9,6 +9,7 @@ class Frame(wx.Frame):
 
         def __init__(self, parent=None, title="Debugger"):
             super(Frame, self).__init__(parent, -1, title, size=(1024,768))
+            self.menu_registry = {}
             self.manager = aui.AuiManager(self)
 
             self.Bind(wx.EVT_CLOSE, self.on_exit)
@@ -28,6 +29,10 @@ class Frame(wx.Frame):
             self.controller = app.Controller(self)            
 
         def create_menu_bar(self):
+            self.menu_registry['project_open'] = project_open =[]
+            self.menu_registry['target_running'] = target_running = []
+            self.menu_registry['target_attached'] = target_attached = []
+
             menubar = wx.MenuBar()
             
             # FILE
@@ -49,29 +54,28 @@ class Frame(wx.Frame):
             project = wx.Menu()
             util.menu_item(self, project, '&New Project...', self.on_new_project, icon="package.png")
             util.menu_item(self, project, '&Open Project...', self.on_open_project)
-            util.menu_item(self, project, '&Save Project...\tCtrl+S', self.on_save_project, icon="disk.png")
+            util.menu_item(self, project, '&Save Project...\tCtrl+S', self.on_save_project, icon="disk.png", registries=[self.menu_registry['project_open']])
             project.AppendSeparator()
-            util.menu_item(self, project, 'Project Options...', self.on_project_options, icon='cog_edit.png')
+            util.menu_item(self, project, 'Project Options...', self.on_project_options, icon='cog_edit.png', registries=[self.menu_registry['project_open']])
             menubar.Append(project, '&Project')
-
             # BUILD
             build = wx.Menu()
-            util.menu_item(self, build, '&Build\tF7', self.on_build, icon="brick.png")
-            util.menu_item(self, build, '&Clean\tF8', self.on_clean)
-            util.menu_item(self, build, '&Rebuild\tF10', self.on_rebuild)
+            util.menu_item(self, build, '&Build\tF7', self.on_build, icon="brick.png",registries=[self.menu_registry['project_open']])
+            util.menu_item(self, build, '&Clean\tF8', self.on_clean,registries=[self.menu_registry['project_open']])
+            util.menu_item(self, build, '&Rebuild\tF10', self.on_rebuild,registries=[self.menu_registry['project_open']])
             menubar.Append(build, '&Build')
            
-            # DEBUG
+            # DEBUG (Disabled till a project is opened)
             debug = wx.Menu()
-            util.menu_item(self, debug, '&Run\tF5', self.on_run, icon="control_play_blue.png")
-            util.menu_item(self, debug, '&Step\tF6', self.on_step, icon="control_play_blue.png")
-            util.menu_item(self, debug, '&Step Out\tShift+F6', self.on_step_out, icon="control_play_blue.png")
-            util.menu_item(self, debug, '&Halt\tShift+F5', self.on_halt, icon="control_stop_blue.png")
+            util.menu_item(self, debug, '&Run\tF5', self.on_run, icon="control_play_blue.png", registries=[target_attached])
+            util.menu_item(self, debug, '&Step\tF6', self.on_step, icon="control_play_blue.png", registries=[target_attached])
+            util.menu_item(self, debug, '&Step Out\tShift+F6', self.on_step_out, icon="control_play_blue.png", registries=[target_attached])
+            util.menu_item(self, debug, '&Halt\tShift+F5', self.on_halt, icon="control_stop_blue.png", registries=[target_running])
             debug.AppendSeparator()
-            util.menu_item(self, debug, "Download", self.on_download, icon="application_put.png")
+            util.menu_item(self, debug, "Download", self.on_download, icon="application_put.png", registries=[target_attached])
             debug.AppendSeparator()
-            util.menu_item(self, debug, '&Attach', self.on_attach, icon="connect.png")
-            util.menu_item(self, debug, '&Detach', self.on_detach, icon="disconnect.png")
+            util.menu_item(self, debug, '&Attach', self.on_attach, icon="connect.png", registries=[project_open])
+            util.menu_item(self, debug, '&Detach', self.on_detach, icon="disconnect.png", registries=[project_open])
             menubar.Append(debug, '&Debug')
 
             # VIEW
@@ -86,8 +90,12 @@ class Frame(wx.Frame):
             util.menu_item(self, devel, '&GDB Command...', self.on_gdb_command)
             menubar.Append(devel, '&Devel')
 
-            self.SetMenuBar(menubar)
+            self.disable_menuitems('project_open')
+            self.disable_menuitems('target_attached')
+            self.disable_menuitems('target_running')
 
+            self.SetMenuBar(menubar)
+        
         def browse_for_file(self, message='', dir='', file='', style=wx.FD_OPEN, wildcard=""):
             dlg = wx.FileDialog(self, message=message, defaultDir=dir, defaultFile=file, wildcard=wildcard, style=style)
             if dlg.ShowModal() == wx.ID_OK:
@@ -97,6 +105,14 @@ class Frame(wx.Frame):
                     return dlg.GetPaths()[0]
             else:
                 return None
+
+        def disable_menuitems(self, entry):
+            for item in self.menu_registry[entry]:
+                item.Enable(False)
+
+        def enable_menuitems(self, entry):
+            for item in self.menu_registry[entry]:
+                item.Enable()
 
         def error(self, message="Unspecified Error."):
             dlg = wx.MessageDialog(self, message=message, style=wx.ICON_ERROR)
@@ -170,7 +186,8 @@ class Frame(wx.Frame):
             if result == wx.ID_OK:
                 path = dialog.GetPaths()[0]
                 self.controller.load_project(path)
-       
+                self.enable_menuitems('project_open')
+
         def on_new_project(self, evt):
             if self.controller.project:
                 pass

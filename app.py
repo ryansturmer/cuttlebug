@@ -92,6 +92,8 @@ class Controller(wx.EvtHandler):
 
     def load_project(self, path):
         self.project = project.Project.load(path)
+
+        self.frame.enable_menuitems('project_open')
         self.project_view.set_project(self.project)
 
     def save_project(self):
@@ -110,11 +112,11 @@ class Controller(wx.EvtHandler):
         build_process = build.BuildProcess(self.project.build.rebuild_cmd, notify=self)
         build_process.start()
 
-
     # STATE MANAGEMENT
     # ==========================================================
     def enter_attached_state(self):
         project = self.project
+        self.frame.enable_menuitems('target_attached')
         #print "Entering the ATTACHED state."
         if self.state == IDLE:
             self.gdb.set_exec(project.fullpath(project.build.target))
@@ -126,11 +128,11 @@ class Controller(wx.EvtHandler):
             self.error_logger.log(logging.WARN, "Tried to attach from state %d" % self.state)
 
     def exit_attached_state(self):
-        pass
+        self.frame.disable_menuitems('target_attached')
         #print "Exiting the ATTACHED state."
 
     def enter_running_state(self):
-        
+        self.frame.enable_menuitems('target_running')
         #print "Entering the RUNNING state."
         if self.state == ATTACHED:
             self.exit_current_state()
@@ -140,7 +142,7 @@ class Controller(wx.EvtHandler):
             self.error_logger.log(logging.WARN, "Tried to run from state %d" % self.state)
 
     def exit_running_state(self):
-        pass
+        self.frame.disable_menuitems('target_running')
         #print "Exiting the RUNNING state."
 
     def enter_idle_state(self):

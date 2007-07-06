@@ -62,6 +62,14 @@ class ProjectTree(wx.TreeCtrl):
         self.bind_icon('.cfg', 'file_wrench.png')
         self.bind_icon('.py', 'file_py.png')
         self.bind_icon('.h', 'file_h.png')
+        self.bind_icon('.png', 'file_picture.png')
+        self.bind_icon('.jpg', 'file_picture.png')
+        self.bind_icon('.gif', 'file_picture.png')
+        self.bind_icon('.tif', 'file_picture.png')
+        self.bind_icon('.tiff', 'file_picture.png')
+        self.bind_icon('.sh', 'file_gear.png')
+        self.bind_icon('.script', 'file_gear.png')
+
 
     def add_art(self, *arts):
         for art in arts:
