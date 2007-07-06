@@ -2,6 +2,7 @@ import threading, subprocess
 import wx
 import app
 import prefs
+import os
 
 class BuildEvent(wx.PyEvent):
     def __init__(self, type, object=None, data=None):
@@ -16,17 +17,21 @@ EVT_BUILD_UPDATE = wx.PyEventBinder(wx.NewEventType())
 
 class BuildProcess(wx.Process):
 
-    def __init__(self, cmd, notify=None):
+    def __init__(self, cmd, working_directory=os.curdir, notify=None):
         wx.Process.__init__(self, notify)
         self.Redirect()
-        self.cmd = cmd
+        self.cmd = "%s" % (cmd,)
         self.pid = None
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_timer)
     
     def start(self):
         wx.PostEvent(self, BuildEvent(EVT_BUILD_STARTED, self))
-        self.pid = wx.Execute(self.cmd, wx.EXEC_ASYNC, self)
+        try:
+            self.pid = wx.Execute(self.cmd, wx.EXEC_ASYNC, self)
+        except Exception, e:
+            print e
+            return
         self.timer.Start(100)
 
     def on_timer(self, evt):

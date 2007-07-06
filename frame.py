@@ -32,14 +32,27 @@ class Frame(wx.Frame):
             
             # FILE
             file = wx.Menu()
-            util.menu_item(self, file, '&New Project...', self.on_new_project)
-            util.menu_item(self, file, '&Open Project...', self.on_open_project)
-            util.menu_item(self, file, '&Save Project...\tCtrl+S', self.on_save_project)
-            file.AppendSeparator()
-            util.menu_item(self, file, '&Open File(s)...\tCtrl+O', self.on_open)
+            util.menu_item(self, file, '&New...\tCtrl+N', self.on_new, icon="page_white_text.png")
+            util.menu_item(self, file, '&Open...\tCtrl+O', self.on_open)
+            util.menu_item(self, file, '&Save\tCtrl+S', self.on_save, icon="disk.png")
+            util.menu_item(self, file, '&Save As...\tCtrl+Shift+S', self.on_save_as, icon="save_as.png")
+
             file.AppendSeparator()
             util.menu_item(self, file, '&Exit\tAlt+F4', self.on_exit,icon="door_out.png")
             menubar.Append(file, '&File')
+            
+            # EDIT
+            edit = wx.Menu()
+            menubar.Append(edit, '&Edit')
+
+            # Project Menu
+            project = wx.Menu()
+            util.menu_item(self, project, '&New Project...', self.on_new_project, icon="package.png")
+            util.menu_item(self, project, '&Open Project...', self.on_open_project)
+            util.menu_item(self, project, '&Save Project...\tCtrl+S', self.on_save_project, icon="disk.png")
+            project.AppendSeparator()
+            util.menu_item(self, project, 'Project Options...', self.on_project_options, icon='cog_edit.png')
+            menubar.Append(project, '&Project')
 
             # BUILD
             build = wx.Menu()
@@ -74,6 +87,23 @@ class Frame(wx.Frame):
             menubar.Append(devel, '&Devel')
 
             self.SetMenuBar(menubar)
+
+        def browse_for_file(self, message='', dir='', file='', style=wx.FD_OPEN, wildcard=""):
+            dlg = wx.FileDialog(self, message=message, defaultDir=dir, defaultFile=file, wildcard=wildcard, style=style)
+            if dlg.ShowModal() == wx.ID_OK:
+                if style & wx.FD_MULTIPLE:
+                    return dlg.GetPaths()
+                else:
+                    return dlg.GetPaths()[0]
+            else:
+                return None
+
+        def error(self, message="Unspecified Error."):
+            dlg = wx.MessageDialog(self, message=message, style=wx.ICON_ERROR)
+            dlg.ShowModal()
+
+        def on_project_options(self, evt):
+            prefs.ProjectOptionsDialog.show(self, project=self.controller.project)
 
         def on_read_memory(self, evt):
             if self.controller.state is app.ATTACHED:
@@ -144,14 +174,21 @@ class Frame(wx.Frame):
         def on_new_project(self, evt):
             if self.controller.project:
                 pass
-            self.controller.new_project()
+            
+            path = self.browse_for_file(style=wx.FD_SAVE)
+            self.controller.new_project(path)
         
         def on_save_project(self, evt):
-            dialog = wx.FileDialog(self, 'Save Project', style=wx.FD_SAVE)
-            result = dialog.ShowModal()
-            if result == wx.ID_OK:
-                path = dialog.GetPaths()[0]
-                self.controller.save_project(path)
+            self.controller.save_project()
+
+        def on_save(self, evt):
+            pass
+
+        def on_save_as(self, evt):
+            pass
+
+        def on_new(self, evt):
+            pass
 
         def on_exit(self, evt):
             self.controller.save_session()

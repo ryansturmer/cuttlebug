@@ -42,6 +42,8 @@ class LogPane(wx.Panel):
 
     def listener(self, handler, message):
         line = handler.format(message)
+        if not line.endswith("\n"): line += "\n"
+
         wx.CallAfter(self.txt.AppendText, "%s" % line)
 
     # TODO hook these up

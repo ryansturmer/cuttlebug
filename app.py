@@ -15,7 +15,6 @@ class Controller(wx.EvtHandler):
         self.gdb = None
         self.frame = frame
         self.project = None
-        self.project_dir = None
 
         # Build events
         self.Bind(build.EVT_BUILD_FINISHED, self.on_build_finished)
@@ -86,32 +85,30 @@ class Controller(wx.EvtHandler):
                 self.session.project_filename = self.project.filename
             project.save(self.session, '.session')
 
-    def new_project(self):
-        self.project = project.Project()
-        self.project_view.set_project(self.project)
-        print self.project
+    def new_project(self, path):
+        if path:
+            self.project = project.Project.create(path)
+            self.project_view.set_project(self.project)
 
     def load_project(self, path):
-        fullpath = os.path.abspath(path)
-        self.project = project.load(fullpath)
-        self.project_dir = os.path.dirname(fullpath)
+        self.project = project.Project.load(path)
         self.project_view.set_project(self.project)
 
-    def save_project(self, path):
-        fullpath = os.path.abspath(path)
-        self.project.save(fullpath)
+    def save_project(self):
+        self.project.save()
 
     # IDE Functions, Building, Cleaning, Etc..
     def build(self):
-        build_process = build.BuildProcess(prefs.BUILD_COMMAND, notify=self)
+        build_process = build.BuildProcess(self.project.build.build_cmd, notify=self)
         build_process.start()
     
     def clean(self):
-        build_process = build.BuildProcess(prefs.CLEAN_COMMAND, notify=self)
+        build_process = build.BuildProcess(self.project.build.clean_cmd, notify=self)
         build_process.start()
 
     def rebuild(self):
-        print "Controller is REBUILDing"
+        build_process = build.BuildProcess(self.project.build.rebuild_cmd, notify=self)
+        build_process.start()
 
 
     # STATE MANAGEMENT
