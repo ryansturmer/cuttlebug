@@ -57,11 +57,15 @@ class Controller(wx.EvtHandler):
         
         #   Project
         self.project_view = frame.project_view
+        self.project_view.Bind(views.EVT_PROJECT_DCLICK_FILE, self.on_project_dclick_file)
         self.editor_view = frame.editor_view
 
         # Session
         self.load_session()
     
+    def on_project_dclick_file(self, evt):
+        self.frame.open_file(evt.data)
+
     def load_session(self):
         try:
             self.session = project.load('.session')

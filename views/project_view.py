@@ -1,6 +1,11 @@
 import wx
 import view, project, util
 import os
+
+class ProjectViewEvent(view.ViewEvent): pass
+
+EVT_PROJECT_DCLICK_FILE = wx.PyEventBinder(wx.NewEventType())
+
 class ProjectView(view.View):
 
     def __init__(self, *args, **kwargs):
@@ -10,9 +15,23 @@ class ProjectView(view.View):
         sizer.Add(self.tree, 1, wx.EXPAND)
         self.SetSizer(sizer)
         self.SetSize((200,-1))
+        self.tree.Bind(wx.EVT_LEFT_DCLICK, self.on_left_dclick)
+
+    def on_left_dclick(self, evt):
+        pt = evt.GetPosition()
+        item, flags = self.tree.HitTest(pt)
+        if item:
+            path = self.tree.GetPyData(item)
+            if path:
+                evt = ProjectViewEvent(EVT_PROJECT_DCLICK_FILE, self, data=path)
+                wx.PostEvent(self, evt)
+        
     def set_project(self, project):
         self.project = project
         self.tree.set_project(project)
+
+    def show_backups(self, show):
+        self.tree.show_backups(show)
 
 class ProjectTree(wx.TreeCtrl):
 
@@ -25,7 +44,11 @@ class ProjectTree(wx.TreeCtrl):
         self.SetImageList(self.image_list)
         self.bind_icons()
         self.set_project(None)
-        
+        self.backups_visible = False
+
+    def show_backups(self, show):
+        self.backups_visible = bool(show)
+
     def set_project(self, project):
         self.project = project
         if project:
@@ -40,10 +63,7 @@ class ProjectTree(wx.TreeCtrl):
 
     def get_file_icon(self, filename):
         fn, ext = os.path.splitext(filename)
-        try:
-            return self.icon_bindings[ext.lower()]
-        except:
-            return 'file_white.png'
+        return self.icon_bindings.get(ext.lower(), 'file_white.png')
 
         
     def bind_icon(self, extension, icon):
@@ -70,7 +90,6 @@ class ProjectTree(wx.TreeCtrl):
         self.bind_icon('.sh', 'file_gear.png')
         self.bind_icon('.script', 'file_gear.png')
 
-
     def add_art(self, *arts):
         for art in arts:
             if art not in self.art:
@@ -92,6 +111,7 @@ class ProjectTree(wx.TreeCtrl):
         parent_item = self.files[parent]
 
         item = self.AppendItem(parent_item, fn)
+        self.SetPyData(item, file)
         self.files[file] = item
         self.SetItemImage(item, icon)
 
@@ -102,12 +122,13 @@ class ProjectTree(wx.TreeCtrl):
         for root, dirs, files in os.walk(self.project.directory):
             if root not in self.files:
                 parent, dir = os.path.split(root)
-                if dir == ".svn" or dir == ".cvs":
+                if dir.startswith("."):
                     self.add_file(root, 'folder_wrench.png')
                 else:
                     self.add_file(root, 'folder.png')
 
             for file in files:
                 if file not in self.files:
+                    if not self.backups_visible and file.endswith("~"):
+                        continue
                     self.add_file(os.path.join(root, file), self.get_file_icon(file))
-                    

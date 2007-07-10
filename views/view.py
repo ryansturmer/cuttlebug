@@ -14,3 +14,7 @@ EVT_VIEW_POST_UPDATE = wx.PyEventBinder(wx.NewEventType())
 
 class View(wx.Panel):
     pass
+   # def __init__(self, *args, **kwargs):
+   #     self.controller = kwargs.pop('controller', None)
+   #     super(wx.Panel, self).__init__(*args, **kwargs)
+

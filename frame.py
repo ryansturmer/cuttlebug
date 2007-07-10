@@ -23,11 +23,10 @@ class Frame(wx.Frame):
             self.create_register_view()
             self.create_project_view()
             self.create_editor_view()
-
             self.manager.Update()
 
             self.controller = app.Controller(self)            
-
+        
         def create_menu_bar(self):
             self.menu_registry['project_open'] = project_open =[]
             self.menu_registry['target_running'] = target_running = []
