@@ -1,6 +1,7 @@
 import wx
 import os, threading, time, logging
 import antlr3, GDBMILexer, GDBMIParser
+import util
 
 class GDBEvent(wx.PyEvent):
     def __init__(self, type, object=None, data=None):
@@ -19,12 +20,10 @@ EVT_GDB_UPDATE = wx.PyEventBinder(wx.NewEventType())
 EVT_GDB_RUNNING = wx.PyEventBinder(wx.NewEventType())
 EVT_GDB_STOPPED = wx.PyEventBinder(wx.NewEventType())
 
-class GDB(wx.Process, threading.Thread):
+class GDB(util.Process):
 
-    def __init__(self, cmd="gdb -n -q -i mi", notify=None, polling_interval=100, mi_log=None, console_log=None, target_log=None, log_log=None):
-        wx.Process.__init__(self, notify)
-        threading.Thread.__init__(self)
-        
+    def __init__(self, cmd="gdb -n -q -i mi", notify=None, mi_log=None, console_log=None, target_log=None, log_log=None):
+
         self.pending = {}
         self.token = 1
 
@@ -41,7 +40,8 @@ class GDB(wx.Process, threading.Thread):
         self.notify = notify
         self.cmd = cmd
         self.pid = None
-        self.start_process()
+        self.buffer = ''
+        util.Process.__init__(self, cmd, start=self.on_start, stdout=self.on_stdout, end=self.on_end)
 
     def __parse(self, string):
         '''
@@ -70,21 +70,19 @@ class GDB(wx.Process, threading.Thread):
         if self.mi_log:
             self.mi_log.log(logging.INFO, txt)
 
-    def run(self):
-        input = self.GetInputStream()
-        buffer = ''
-        while(self.Exists(self.pid)):
-            if input.CanRead():
-                line = input.readline()
-                self.__mi_log(line)
-                buffer += line
-                if line.strip() == '(gdb)':
-                    response = self.__parse(buffer)
-                    self.handle_response(response)
-                    buffer = ''
-            else:
-                time.sleep(0.01)
-                continue
+    def on_start(self):
+        self.post_event(GDBEvent(EVT_GDB_STARTED, self))
+    
+    def on_end(self):
+        self.post_event(GDBEvent(EVT_GDB_FINISHED, self))
+
+    def on_stdout(self, line):
+        self.__mi_log(line)
+        self.buffer += line
+        if line.strip() == '(gdb)':
+            response = self.__parse(self.buffer)
+            self.handle_response(response)
+            self.buffer = ''
 
     def handle_response(self, response):
         # Deal with the console streams in the response
@@ -117,11 +115,6 @@ class GDB(wx.Process, threading.Thread):
     def post_event(self, evt):
         if self.notify:
             wx.PostEvent(self.notify, evt)
-    
-    def start_process(self):
-        self.pid = wx.Execute(self.cmd, wx.EXEC_ASYNC, self)
-        self.post_event(GDBEvent(EVT_GDB_STARTED, self))
-        self.start()
     
     def __send(self, data):
         self.__mi_log(data)

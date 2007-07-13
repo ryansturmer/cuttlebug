@@ -1,5 +1,6 @@
 import wx
-import os
+import os, threading, subprocess
+
 from os.path import abspath, dirname, normcase, normpath, splitdrive
 from os.path import join as path_join, commonprefix
 
@@ -110,3 +111,70 @@ def relpath(target, base_path):
 
     return ret
 
+class ThreadWorker(threading.Thread):
+    def __init__(self, callable, *args, **kwargs):
+        super(ThreadWorker, self).__init__()
+        self.callable = callable
+        self.args = args
+        self.kwargs = kwargs
+        self.setDaemon(True)
+
+    def run(self):
+        try:
+            self.callable(*self.args, **self.kwargs)
+        except wx.PyDeadObjectError:
+            pass
+        except Exception, e:
+            print e
+import proc
+
+class Process(proc.Popen):
+
+    def __init__(self, cmd, start=None, stdout=None, stderr=None, end=None):
+        self.start = start
+        self.end = end
+        self.stdout = stdout
+        self.stderr = stderr
+        self.done = False
+        super(proc.Popen, self).__init__(cmd, shell=True, stdout=proc.PIPE, stderr=proc.PIPE, stdin=proc.PIPE)
+        if start:
+            start()
+        
+        self.outworker = ThreadWorker(self.__monitor, self.recv)
+        self.errworker = ThreadWorker(self.__monitor, self.recv_err)
+        self.doneworker = ThreadWorker(self.__watch_for_done)
+        
+        self.outworker.start()
+        self.errworker.start()
+        self.doneworker.start()
+    
+    def write(self, data):
+        self.send(data)
+
+    def __monitor(self, f, g):
+        buffer = ''
+        while True:
+            ch = f(1)
+            buffer += ch
+            if ch == '\n':
+                buffer += ch
+                if g:
+                    g(buffer)
+                buffer = ''
+
+    def __watch_for_done(self):
+        self.wait()
+        self.done = True
+        if self.end:
+            self.end()
+
+if __name__ == "__main__":
+    import os
+    import recipe
+    import subprocess
+    def prn(s):
+        print s
+
+    p = Process("python -u subprocess_test.py")
+
+    while True: pass

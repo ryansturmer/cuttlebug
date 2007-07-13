@@ -103,6 +103,8 @@ class Controller(wx.EvtHandler):
     def save_project(self):
         self.project.save()
 
+    def open_fule(self, path):
+        self.frame.open_file(path)
     # IDE Functions, Building, Cleaning, Etc..
     def build(self):
         build_process = build.BuildProcess(self.project.build.build_cmd, notify=self)

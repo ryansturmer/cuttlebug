@@ -3,6 +3,7 @@ import wx
 import app
 import prefs
 import os
+from subprocess import *
 
 class BuildEvent(wx.PyEvent):
     def __init__(self, type, object=None, data=None):
@@ -14,6 +15,33 @@ class BuildEvent(wx.PyEvent):
 EVT_BUILD_STARTED = wx.PyEventBinder(wx.NewEventType())
 EVT_BUILD_FINISHED = wx.PyEventBinder(wx.NewEventType())
 EVT_BUILD_UPDATE = wx.PyEventBinder(wx.NewEventType())
+EVT_BUILD_CATASTROPHE = wx.PyEventBinder(wx.NewEventType())
+
+class BuildSubProcess(object):
+    def __init__(self, cmd, working_directory=os.curdir, notify=None):
+        self.cmd = cmd
+        self.working_directory = working_directory
+        self.notify = notify
+        self.process = None
+
+    def post_update(self, text):
+        if self.notify:
+            wx.PostEvent(self.notify, BuildEvent(EVT_BUILD_UPDATE, self, data=text))
+
+    def start(self):
+        try:
+            self.process = Popen(cmd, stdout=PIPE, shell=True)
+            if self.notify:
+                wx.PostEvent(self.notify, BuildEvent(EVT_BUILD_STARTED, self))
+        except Exception,e:
+            if self.notify:
+                wx.PostEvent(self.notify, BuildEvent(EVT_BUILD_CATASTROPHE, self, data=e))
+            raise
+
+
+    def finish(self):
+        if self.notify:
+            wx.PostEvent(self.notify, BuildEvent(EVT_BUILD_FINISHED, self))
 
 class BuildProcess(wx.Process):
 

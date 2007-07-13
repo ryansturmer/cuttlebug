@@ -185,7 +185,6 @@ class Frame(wx.Frame):
             if result == wx.ID_OK:
                 path = dialog.GetPaths()[0]
                 self.controller.load_project(path)
-                self.enable_menuitems('project_open')
 
         def on_new_project(self, evt):
             if self.controller.project:
