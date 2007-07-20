@@ -11,8 +11,29 @@ MEMORY VIEW
  * support different address widths
  * easy update method
  * cache tosser
+ * fix scrolling so updates are less frequent
+ * formatting
+ * right click menus
 
 GENERIC VIEW
  * creator method
  * store view info inside view object (aui stuff)
  * Fix sizing and snapping on linux
+
+BUILD VIEW
+ * colorization
+ * callback on build complete
+
+LOCALS VIEW
+ * edit support
+ * proper fonts
+ * right click menus
+EDITOR VIEW
+ * styles/colorization/fonts
+
+PROJECT VIEW
+ * right click menus
+
+PROJECT OPTIONS DIALOG
+ * generic flexgridsizers widget page setup thingie
+

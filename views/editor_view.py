@@ -24,6 +24,9 @@ class EditorView(view.View):
 
 class EditorControl(stc.StyledTextCtrl):
 
+    def __init__(self, *args, **kwargs):
+        super(EditorControl, self).__init__(*args, **kwargs)
+
     def get_name(self):
         if self.file_path:
             root, name = os.path.split(self.file_path)

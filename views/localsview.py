@@ -9,9 +9,14 @@ class DictListCtrl(wx.ListCtrl):
         super(self.__class__, self).__init__(parent, -1, style=wx.LC_REPORT | wx.LC_VIRTUAL)
         self.InsertColumn(0, "Name")
         self.InsertColumn(1, "Value")
+        self.SetColumnWidth(0, wx.LIST_AUTOSIZE)
+        self.SetColumnWidth(2, wx.LIST_AUTOSIZE)
+
         self.SetItemCount(0)
         self.__items = OrderedDict()
         self.__changed = {}
+
+        # Attributes (for changing list item colors)
         self.redattr = wx.ListItemAttr()
         self.redattr.SetTextColour("red")
         self.blackattr = wx.ListItemAttr()

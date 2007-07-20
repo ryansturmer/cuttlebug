@@ -39,8 +39,15 @@ class Controller(wx.EvtHandler):
 
         self.locals_view = frame.locals_view
         self.locals_view.Bind(views.EVT_VIEW_REQUEST_UPDATE, self.on_update_locals_view)
+ 
+        #   Project
+        self.project_view = frame.project_view
+        self.project_view.Bind(views.EVT_PROJECT_DCLICK_FILE, self.on_project_dclick_file)
 
-        #   Logs
+        #   Editor
+        self.editor_view = frame.editor_view
+
+        # Logs
         self.log_view = frame.log_view
         self.log_view.add_logger(logging.getLogger('stdout'))
         
@@ -57,12 +64,7 @@ class Controller(wx.EvtHandler):
         self.log_view.add_logger(self.build_logger, format="%(message)s")
         
         log.redirect_stdout('stdout')
-        
-        #   Project
-        self.project_view = frame.project_view
-        self.project_view.Bind(views.EVT_PROJECT_DCLICK_FILE, self.on_project_dclick_file)
-        self.editor_view = frame.editor_view
-
+       
         # Session
         self.load_session()
     
@@ -199,8 +201,12 @@ class Controller(wx.EvtHandler):
             self.gdb.exec_finish()
     # RUN
     def run(self):
-        if self.state == ATTACHED:
-            self.gdb.exec_continue(self.on_running)
+        if self.state == IDLE:
+            self.change_state(ATTACHED)
+        elif self.state == RUNNING:
+            return
+
+        self.gdb.exec_continue(self.on_running)
             
     def on_running(self, result):
         if result.cls.lower() == "running":
