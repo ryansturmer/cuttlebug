@@ -20,6 +20,7 @@ class Frame(wx.Frame):
             self.create_build_view()
             self.create_log_view()
             self.create_memory_view()
+            self.create_locals_view()
             self.create_register_view()
             self.create_project_view()
             self.create_editor_view()
@@ -143,6 +144,11 @@ class Frame(wx.Frame):
             self.memory_view.info = aui.AuiPaneInfo().Caption('Memory').Right() 
             self.manager.AddPane(self.memory_view, self.memory_view.info)
         
+        def create_locals_view(self):
+            self.locals_view = views.LocalsView(self)
+            self.locals_view.info = aui.AuiPaneInfo().Caption('Locals').Right() 
+            self.manager.AddPane(self.locals_view, self.locals_view.info)
+        
         def create_register_view(self):
             pass
 
@@ -211,6 +217,7 @@ class Frame(wx.Frame):
             self.Close()
 
         def on_attach(self, evt):
+            print "attaching"
             self.controller.attach()
         
         def on_detach(self, evt):

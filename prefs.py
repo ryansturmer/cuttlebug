@@ -227,10 +227,36 @@ class ProjectOptionsDialog(wx.Dialog):
         panel.SetSizer(util.padded(sizer, 8))
         self.add_panel(panel,"Build", icon='brick.png')
 
+
     def create_debug_panel(self):
-        panel = wx.Panel(self.tree)
-        self.add_panel(panel, "Debug", icon='bug.png')
+        panel = wx.Panel(self.tree, -1)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        box = wx.StaticBox(panel, -1, "Commands")
+        group = wx.StaticBoxSizer(box, wx.VERTICAL)
+        grid = wx.FlexGridSizer(1,2,8,8)
+        grid.AddGrowableCol(1,1)
+        
+        widget = wx.TextCtrl(panel, -1)
+        grid.Add(wx.StaticText(panel, -1, 'Target'), 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        grid.Add(widget, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
+        sizer.Add(group, 0, wx.EXPAND)
+        widget.Bind(wx.EVT_TEXT,  self.on_change)
+        self.bind(widget, "debug.target")
+
+         
+        widget = wx.TextCtrl(panel, -1)
+        grid.Add(wx.StaticText(panel, -1, 'Attach Command'), 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        grid.Add(widget, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
+        group.Add(grid, 0, wx.EXPAND | wx.ALL, 8)
+        widget.Bind(wx.EVT_TEXT,  self.on_change)
+        self.bind(widget, "debug.attach_cmd")
+        
+        panel.SetSizer(util.padded(sizer, 8))
+        self.add_panel(panel,"Debug", icon='bug.png')
+
 
 if __name__ == "__main__":
     app = wx.App()
-    ProjectOptionsDialog.show()
+    frame = wx.Frame(None)
+    ProjectOptionsDialog.show(frame)

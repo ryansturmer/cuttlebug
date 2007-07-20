@@ -125,7 +125,10 @@ class ThreadWorker(threading.Thread):
         except wx.PyDeadObjectError:
             pass
         except Exception, e:
-            print e
+            #print "omg exception"
+            #print e
+            raise
+'''
 import proc
 
 class Process(proc.Popen):
@@ -133,20 +136,20 @@ class Process(proc.Popen):
     def __init__(self, cmd, start=None, stdout=None, stderr=None, end=None):
         self.start = start
         self.end = end
-        self.stdout = stdout
-        self.stderr = stderr
+        self.stdout_func = stdout
+        self.stderr_func = stderr
         self.done = False
-        super(proc.Popen, self).__init__(cmd, shell=True, stdout=proc.PIPE, stderr=proc.PIPE, stdin=proc.PIPE)
+        super(Process, self).__init__(cmd, shell=True, stdout=proc.PIPE, stderr=proc.PIPE, stdin=proc.PIPE)
         if start:
             start()
         
-        self.outworker = ThreadWorker(self.__monitor, self.recv)
-        self.errworker = ThreadWorker(self.__monitor, self.recv_err)
-        self.doneworker = ThreadWorker(self.__watch_for_done)
+        self.outworker = ThreadWorker(self.__monitor, self.recv, self.stdout_func)
+        self.errworker = ThreadWorker(self.__monitor, self.recv_err, self.stderr_func)
+        #self.doneworker = ThreadWorker(self.__watch_for_done)
         
         self.outworker.start()
         self.errworker.start()
-        self.doneworker.start()
+        #self.doneworker.start()
     
     def write(self, data):
         self.send(data)
@@ -155,9 +158,10 @@ class Process(proc.Popen):
         buffer = ''
         while True:
             ch = f(1)
-            buffer += ch
-            if ch == '\n':
+            if buffer:
                 buffer += ch
+                print buffer
+            if ch == '\n':
                 if g:
                     g(buffer)
                 buffer = ''
@@ -165,6 +169,34 @@ class Process(proc.Popen):
     def __watch_for_done(self):
         self.wait()
         self.done = True
+        if self.end:
+            self.end()
+'''
+class Process(subprocess.Popen):
+    def __init__(self, cmd, start=None, stdout=None, stderr=None, end=None, cwd=os.curdir):
+        self.start = start
+        self.stdout_func = stdout
+        self.stderr_func = stderr
+        self.end = end
+        self.done = False
+        self.done = False
+        super(Process, self).__init__(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, cwd=cwd)
+        if start:
+            self.start()
+
+        self.stdoutworker = ThreadWorker(self.monitor_stdout, self.stdout_func)
+        self.stdoutworker.start()
+
+    def monitor_stdout(self, func):
+        while True:
+            data = self.stdout.readline()
+            if data:
+                if func:
+                    func(data)
+            else:
+                print "Finished monitoring stdout"
+                self.done = True
+                break
         if self.end:
             self.end()
 

@@ -190,9 +190,10 @@ class MemoryView(view.View):
         self.grid = MemoryGridControl(self, -1, style=wx.BORDER_NONE, stride=stride, update_callable=self.on_cell_update)
         self.grid.Bind(wx.EVT_SCROLLWIN, self.on_scrolled) 
         sizer = wx.BoxSizer(wx.VERTICAL)
-        self.toolbar = wx.ToolBar(self, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
-        util.tool_item(self, self.toolbar, "Menu", func=None, icon="resultset_next.png")
-        sizer.Add(self.toolbar,0, wx.EXPAND)
+        
+        #self.toolbar = wx.ToolBar(self, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
+        #util.tool_item(self, self.toolbar, "Menu", func=None, icon="resultset_next.png")
+        #sizer.Add(self.toolbar,0, wx.EXPAND)
         sizer.Add(self.grid,1, wx.EXPAND)
         self.SetSizer(sizer)
     

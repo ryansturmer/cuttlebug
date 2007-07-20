@@ -22,7 +22,7 @@ EVT_GDB_STOPPED = wx.PyEventBinder(wx.NewEventType())
 
 class GDB(util.Process):
 
-    def __init__(self, cmd="gdb -n -q -i mi", notify=None, mi_log=None, console_log=None, target_log=None, log_log=None):
+    def __init__(self, cmd="arm-elf-gdb -n -q -i mi", notify=None, mi_log=None, console_log=None, target_log=None, log_log=None):
 
         self.pending = {}
         self.token = 1
@@ -36,7 +36,6 @@ class GDB(util.Process):
         # Parser for GDBMI commands
         self.__lexer = GDBMILexer.GDBMILexer(None)
         self.__parser = GDBMIParser.GDBMIParser(None)
-        self.Redirect()
         self.notify = notify
         self.cmd = cmd
         self.pid = None
@@ -71,10 +70,10 @@ class GDB(util.Process):
             self.mi_log.log(logging.INFO, txt)
 
     def on_start(self):
-        self.post_event(GDBEvent(EVT_GDB_STARTED, self))
+        self.post_event(GDBEvent(EVT_GDB_STARTED, self.notify))
     
     def on_end(self):
-        self.post_event(GDBEvent(EVT_GDB_FINISHED, self))
+        self.post_event(GDBEvent(EVT_GDB_FINISHED, self.notify))
 
     def on_stdout(self, line):
         self.__mi_log(line)
@@ -104,13 +103,13 @@ class GDB(util.Process):
                         
                 # Post an event on error
                 if result.cls == 'error':
-                    self.post_event(GDBEvent(EVT_GDB_ERROR, self, data=result.msg))
+                    self.post_event(GDBEvent(EVT_GDB_ERROR, self.notify, data=result.msg))
                 elif result.cls == 'stopped':
-                    self.post_event(GDBEvent(EVT_GDB_STOPPED, self, data=result))
+                    self.post_event(GDBEvent(EVT_GDB_STOPPED, self.notify, data=result))
                 elif result.cls == 'running':
-                    self.post_event(GDBEvent(EVT_GDB_RUNNING, self, data=result))
+                    self.post_event(GDBEvent(EVT_GDB_RUNNING, self.notify, data=result))
                 else:
-                    self.post_event(GDBEvent(EVT_GDB_UPDATE, self, data=result))
+                    self.post_event(GDBEvent(EVT_GDB_UPDATE, self.notify, data=result))
 
     def post_event(self, evt):
         if self.notify:
@@ -118,8 +117,7 @@ class GDB(util.Process):
     
     def __send(self, data):
         self.__mi_log(data)
-        stream = self.GetOutputStream()
-        stream.write(data)
+        self.stdin.write(data)
 
     def __cmd(self, cmd, callback=None, *args, **kwargs):
         if cmd[-1] != '\n':
@@ -176,4 +174,4 @@ class GDB(util.Process):
 
 
     def OnTerminate(self, *args, **kwargs):
-        self.post_event(GDBEvent(EVT_GDB_FINISHED, self))
+        self.post_event(GDBEvent(EVT_GDB_FINISHED, self.notify))

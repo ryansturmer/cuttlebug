@@ -37,6 +37,9 @@ class Controller(wx.EvtHandler):
         self.memory_view = frame.memory_view
         self.memory_view.Bind(views.EVT_VIEW_REQUEST_UPDATE, self.on_update_memory_view)
 
+        self.locals_view = frame.locals_view
+        self.locals_view.Bind(views.EVT_VIEW_REQUEST_UPDATE, self.on_update_locals_view)
+
         #   Logs
         self.log_view = frame.log_view
         self.log_view.add_logger(logging.getLogger('stdout'))
@@ -84,7 +87,7 @@ class Controller(wx.EvtHandler):
     def save_session(self):
         #print self.session
         if self.session:
-            self.session.perspective = self.frame.manager.SavePerspective()
+            #self.session.perspective = self.frame.manager.SavePerspective()
             if self.project:
                 self.session.project_filename = self.project.filename
             project.save(self.session, '.session')
@@ -96,36 +99,36 @@ class Controller(wx.EvtHandler):
 
     def load_project(self, path):
         self.project = project.Project.load(path)
-
         self.frame.enable_menuitems('project_open')
         self.project_view.set_project(self.project)
+        print self.project
 
     def save_project(self):
         self.project.save()
 
-    def open_fule(self, path):
+    def open_file(self, path):
         self.frame.open_file(path)
     # IDE Functions, Building, Cleaning, Etc..
     def build(self):
-        build_process = build.BuildProcess(self.project.build.build_cmd, notify=self)
+        build_process = build.BuildProcess(self.project.build.build_cmd, notify=self, cwd=self.project.directory)
         build_process.start()
     
     def clean(self):
-        build_process = build.BuildProcess(self.project.build.clean_cmd, notify=self)
+        build_process = build.BuildProcess(self.project.build.clean_cmd, notify=self, cwd=self.project.directory)
         build_process.start()
 
     def rebuild(self):
-        build_process = build.BuildProcess(self.project.build.rebuild_cmd, notify=self)
+        build_process = build.BuildProcess(self.project.build.rebuild_cmd, notify=self, cwd=self.project.directory)
         build_process.start()
 
     # STATE MANAGEMENT
     # ==========================================================
     def enter_attached_state(self):
-        project = self.project
+        #project = self.project
         self.frame.enable_menuitems('target_attached')
         #print "Entering the ATTACHED state."
         if self.state == IDLE:
-            self.gdb.set_exec(project.fullpath(project.build.target))
+            self.gdb.set_exec(self.project.absolute_path(self.project.debug.target))
         if self.state == IDLE or self.state == RUNNING:
             self.exit_current_state()
             self.frame.statusbar.icon = "connect.png"
@@ -208,8 +211,8 @@ class Controller(wx.EvtHandler):
 
     # HALT
     def halt(self):
-        self.gdb.exec_interrupt()
-
+        self.gdb.exec_interrupt(self.on_halted)
+        
     def on_halted(self, result):
         if result.cls == "done" or result.cls == "stopped":
             self.change_state(ATTACHED)
@@ -222,8 +225,8 @@ class Controller(wx.EvtHandler):
     # ATTACH TO GDB
     def attach(self):
         if self.state == IDLE:
-            self.gdb = gdb.GDB(cmd=prefs.GDB, notify=self, mi_log=self.mi_logger, console_log=self.gdb_logger, target_log=self.gdb_logger, log_log=self.gdb_logger)
-            self.gdb.command(prefs.ATTACH_COMMAND)
+            self.gdb = gdb.GDB(notify=self, mi_log=self.mi_logger, console_log=self.gdb_logger, target_log=self.gdb_logger, log_log=self.gdb_logger)
+            self.gdb.command(self.project.debug.attach_cmd)
         else:
             print "Cannot attach to process from state %d" % self.state
 
@@ -252,6 +255,7 @@ class Controller(wx.EvtHandler):
         #print result.frame.fullname
         #print result.frame.line
         self.memory_view.request_update()
+        self.locals_view.request_update()
         self.editor_view.goto(result.frame.fullname, int(result.frame.line))
         self.gdb.stack_list_locals()
         self.gdb.file_list_globals()
@@ -277,10 +281,19 @@ class Controller(wx.EvtHandler):
         if self.state == ATTACHED:
             start, end = evt.data
             self.gdb.read_memory(start, self.memory_view.stride, end-start, callback=self.on_got_memory_data)
-
     def on_got_memory_data(self, result):
         if hasattr(result, 'memory'):
                 memtable = []
                 for entry in result.memory:
                     memtable.append(int(entry.data[0]))
                 wx.CallAfter(self.memory_view.update, int(result.addr,16), memtable)
+
+    def on_update_locals_view(self, evt):
+        if self.state == ATTACHED:
+            self.gdb.stack_list_locals(callback=self.on_got_locals_data)
+    def on_got_locals_data(self, result):
+        if hasattr(result, 'locals'):
+            update_dict = {}
+            for item in result.locals:
+                update_dict[item.name] = item.value
+            self.locals_view.update(update_dict)

@@ -31,8 +31,8 @@ class Category(object):
     def __getattr__(self, attr):
         try:
             return self.items[str(attr)]
-        except:
-            raise AttributeError()
+        except KeyError:
+            raise AttributeError
     
     #def __setattr__(self, attr, val):
     #    self.items[str(attr)] = val
@@ -63,6 +63,11 @@ class Category(object):
     def __iter__(self):
         return iter(self.items)
 
+    def __str__(self):
+        return str(self.items)
+    def __repr__(self):
+        return str(self)
+
 class Project(Category):
 
     def __init__(self):
@@ -81,11 +86,12 @@ class Project(Category):
         self["build.rebuild_cmd"]= "make clean; make"
         
         # Debug
-        self.add_category('debug_session')
-        self["debug_session.gdb_executable"] = "arm-elf-gdb"
-        self["debug_session.attach_cmd"] = "target remote localhost:3333"
-        self["debug_session.detatch_cmd"] = ""
-    
+        self.add_category('debug')
+        self["debug.gdb_executable"] = "arm-elf-gdb"
+        self["debug.attach_cmd"] = "target async localhost:3333"
+        self["debug.detatch_cmd"] = ""
+        self["debug.target"] = "build/main.elf"
+        
     @staticmethod
     def load(filename):
         path = os.path.abspath(filename)
@@ -113,11 +119,16 @@ class Project(Category):
         project_dir = self.directory
         return util.relpath(dir, project_dir)
 
+    def absolute_path(self, file):
+        if os.path.isabs(file): return file
+        return os.path.join(self.directory, file)
+
     def save(self):
         fp = open(self.filename,'w')
         pickle.dump(self, fp)
         fp.close()
 
+    
 class Session(object):
 
     def __init__(self):
