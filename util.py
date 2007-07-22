@@ -3,7 +3,31 @@ import os, threading, subprocess
 
 from os.path import abspath, dirname, normcase, normpath, splitdrive
 from os.path import join as path_join, commonprefix
-
+class FontEnumerator(wx.FontEnumerator):
+    def __init__(self):
+        super(FontEnumerator, self).__init__()
+        self.fonts = []
+        self.EnumerateFacenames(fixedWidthOnly=True)
+    def OnFacename(self, name):
+        self.fonts.append(name)
+        return True
+        
+def get_fonts():
+    fonts = FontEnumerator().fonts
+    fonts.sort()
+    return fonts
+    
+def get_font():
+    preferred_fonts = [
+        'Bitstream Vera Sans Mono',
+        'Courier New',
+        'Courier',
+    ]
+    fonts = get_fonts()
+    for font in preferred_fonts:
+        if font in fonts:
+            return font
+    return fonts[0] if fonts else None
 def menu_item(window, menu, label, func, icon=None, kind=wx.ITEM_NORMAL, toolbar=None, registries=None, enabled=True):
     item = wx.MenuItem(menu, -1, label, kind=kind)
     if func:

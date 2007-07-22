@@ -33,7 +33,13 @@ EDITOR VIEW
 
 PROJECT VIEW
  * right click menus
+ *    Project - Project options, save, save as
+ *    Files - 
 
 PROJECT OPTIONS DIALOG
  * generic flexgridsizers widget page setup thingie
+
+MAIN FRAME
+ * View Menu - should have all the views, and should show and hide them correctly
+ * Cuttlebug Options - Should have global options for the debugger at large
 

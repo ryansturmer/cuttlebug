@@ -1,12 +1,16 @@
 import view
 import wx
+import wx.lib.mixins.listctrl as listmix
 import sys
 from odict import OrderedDict
 
-class DictListCtrl(wx.ListCtrl):
+class DictListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.TextEditMixin):
     
     def __init__(self, parent):
-        super(self.__class__, self).__init__(parent, -1, style=wx.LC_REPORT | wx.LC_VIRTUAL)
+        wx.ListCtrl.__init__(self, parent, -1, style=wx.LC_REPORT | wx.LC_VIRTUAL)
+        listmix.ListCtrlAutoWidthMixin.__init__(self)
+        listmix.TextEditMixin.__init__(self)
+
         self.InsertColumn(0, "Name")
         self.InsertColumn(1, "Value")
         self.SetColumnWidth(0, wx.LIST_AUTOSIZE)

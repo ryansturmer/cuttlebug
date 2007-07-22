@@ -107,11 +107,69 @@ class Treebook(wx.Treebook):
             self.art[art] = self.image_list.Add(util.get_icon(art))
         self.AssignImageList(self.image_list) 
     
-    def add_page(self, page, text, icon=None):
+    def add_panel(self, page, text, icon=None):
         if icon:
             self.AddPage(page, text, imageId=self.art[icon])
         else:
             self.AddPage(page, text)
+
+class OptionsDialogPanel(wx.Panel):
+
+    def __init__(self, parent, name="Unnamed"):
+        wx.Panel.__init__(self, parent, -1)
+        self.name = name
+        sizer = wx.FlexGridSizer(1,2,8,8)
+        sizer.AddGrowableCol(1,1)
+        self.grid = sizer
+
+    def add(self, label, widget_class, label_on_right=False):
+        widget = widget_class(self, -1)
+        if label_on_right:
+            pass
+        else:
+            self.grid.Add(wx.StaticText(self, -1, str(label)), 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+            self.grid.Add(widget, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
+            #widget.Bind(wx.EVT_TEXT,  self.on_change)
+        #self.bind(widget, "build.build_cmd")
+
+class OptionsDialog(wx.Dialog):
+    def __init__(self, parent, title="Options", size=(600,400), icons=[], data=None):
+        super(self.__class__, self).__init__(parent, -1, title, size=size)
+        self.bindings = {}
+        self.data = data
+
+        dlg_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.tree = Treebook(self, -1, icons=icons)
+        dlg_sizer.Add(self.tree, 1, wx.EXPAND)
+
+         # The OK/Cancel/Apply buttons at the bottom
+        panel = wx.Panel(self, -1)
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.AddStretchSpacer(1)
+        
+        self.btn_cancel = util.button(panel, "Cancel", self.on_cancel)
+        sizer.Add(util.padded(self.btn_cancel, 8), 0, wx.ALIGN_RIGHT)
+        
+        self.btn_apply = util.button(panel, "Apply", self.on_apply)
+        self.btn_apply.Disable()
+        sizer.Add(util.padded(self.btn_apply, 8), 0, wx.ALIGN_RIGHT)
+        
+        self.btn_ok = util.button(panel, "Ok", self.on_ok)
+        sizer.Add(util.padded(self.btn_ok, 8), 0, wx.ALIGN_RIGHT)
+        
+        panel.SetSizer(sizer)
+        
+        dlg_sizer.Add(panel, 0, wx.EXPAND)
+        self.SetSizer(dlg_sizer)
+
+
+    def add_panel(self, page, icon=None):
+        self.tree.add_panel(page, page.name, icon=icon)
+
+    def on_cancel(self, evt): pass
+    def on_apply(self, evt): pass
+    def on_ok(self, evt): pass
 
 class ProjectOptionsDialog(wx.Dialog):
 
@@ -259,4 +317,8 @@ class ProjectOptionsDialog(wx.Dialog):
 if __name__ == "__main__":
     app = wx.App()
     frame = wx.Frame(None)
-    ProjectOptionsDialog.show(frame)
+    opt = OptionsDialog(frame)
+    page = OptionsDialogPanel(opt)
+    page.add("Test", wx.TextCtrl)
+    opt.add_panel(page)
+    opt.ShowModal()

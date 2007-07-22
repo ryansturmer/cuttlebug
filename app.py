@@ -1,6 +1,7 @@
-import build, views, prefs, gdb, project, log
+import build, views, prefs, gdb, project, log, styles
 import logging, os
 import wx
+
 IDLE = 0
 BUILDING = 1
 ATTACHED = 2
@@ -11,6 +12,8 @@ class Controller(wx.EvtHandler):
 
     def __init__(self, frame=None):
         super(Controller, self).__init__()
+
+        self.style_manager = styles.StyleManager()
         self.state = IDLE
         self.gdb = None
         self.frame = frame

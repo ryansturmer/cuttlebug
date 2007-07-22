@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import wx.aui as aui
 import wx.stc as stc
 import os
@@ -22,6 +23,12 @@ class EditorView(view.View):
         widget.GotoLine(line)
 
 
+    def save(self):
+        self.notebook.save()
+
+    def new(self):
+        self.notebook.create_file_tab()
+
 class EditorControl(stc.StyledTextCtrl):
 
     def __init__(self, *args, **kwargs):
@@ -43,6 +50,19 @@ class EditorControl(stc.StyledTextCtrl):
                 self.SetLexerLanguage(languages[ext])
             except Exception, e:
                 print e
+
+    def save(self):
+        if self.file_path:
+            try:
+                fp = open(self.file_path, 'w')
+                try:
+                    fp.write(self.GetText())
+                except:
+                    pass
+                finally:
+                    fp.close()
+            except:
+                pass
 
     def open_file(self, path):
         file = None
@@ -74,6 +94,12 @@ class Notebook(aui.AuiNotebook):
     def get_windows(self):
         n = self.GetPageCount()
         return [self.get_window(i) for i in range(n)]
+
+    def save(self):
+        window = self.get_window()
+        if window:
+            window.save()
+           
 
     def create_file_tab(self, path=None):
         if path:

@@ -3,7 +3,7 @@ import wx.aui as aui
 import wx.stc as stc
 import util, build, app, notebook, controls, views
 import prefs
-
+import styles, style_dialog
 # TODO Application icon
 class Frame(wx.Frame):
 
@@ -33,12 +33,13 @@ class Frame(wx.Frame):
             self.menu_registry['target_running'] = target_running = []
             self.menu_registry['target_attached'] = target_attached = []
 
-            menubar = wx.MenuBar()
+            menubar = controls.BusyMenuBar()
             
             # FILE
             file = wx.Menu()
             util.menu_item(self, file, '&New...\tCtrl+N', self.on_new, icon="page_white_text.png")
             util.menu_item(self, file, '&Open...\tCtrl+O', self.on_open)
+            util.menu_item(self, file, '&Close\tCtrl+W', self.on_close)
             util.menu_item(self, file, '&Save\tCtrl+S', self.on_save, icon="disk.png")
             util.menu_item(self, file, '&Save As...\tCtrl+Shift+S', self.on_save_as, icon="save_as.png")
 
@@ -49,6 +50,7 @@ class Frame(wx.Frame):
             # EDIT
             edit = wx.Menu()
             menubar.Append(edit, '&Edit')
+            util.menu_item(self, edit, '&Styles...', self.on_styles)
 
             # Project Menu
             project = wx.Menu()
@@ -203,13 +205,21 @@ class Frame(wx.Frame):
             self.controller.save_project()
 
         def on_save(self, evt):
-            pass
+            self.editor_view.save()
 
         def on_save_as(self, evt):
             pass
 
-        def on_new(self, evt):
+        def on_close(self, evt):
             pass
+
+        def on_styles(self, evt):
+            dialog = style_dialog.StyleDialog(None, self.controller.style_manager)
+            dialog.Centre()
+            dialog.ShowModal() 
+        
+        def on_new(self, evt):
+            self.editor_view.new()
 
         def on_exit(self, evt):
             self.controller.save_session()
@@ -217,7 +227,6 @@ class Frame(wx.Frame):
             self.Close()
 
         def on_attach(self, evt):
-            print "attaching"
             self.controller.attach()
         
         def on_detach(self, evt):

@@ -3,6 +3,9 @@ import wx.stc as stc
 import util
 import os
 
+class BusyMenuBar(wx.MenuBar):
+    pass
+
 class StatusBar(wx.StatusBar):
 
     def __init__(self, *args, **kwargs):
