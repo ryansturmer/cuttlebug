@@ -1,4 +1,4 @@
-import build, views, gdb, project, log, styles, settings, util
+import build, views, gdb, project, log, styles, settings, util, menu
 import logging, os
 import wx
 
@@ -106,12 +106,12 @@ class Controller(wx.EvtHandler):
     def new_project(self, path):
         if path:
             self.project = project.Project.create(path)
-            self.frame.enable_menuitems('project_open')
+            menu.manager.publish(menu.PROJECT_OPEN)
             self.project_view.set_project(self.project)
 
     def load_project(self, path):
         self.project = project.Project.load(path)
-        self.frame.enable_menuitems('project_open')
+        menu.manager.publish(menu.PROJECT_OPEN)
         self.project_view.set_project(self.project)
         self.session.project_filename = path
         print self.project
@@ -141,7 +141,7 @@ class Controller(wx.EvtHandler):
     # ==========================================================
     def enter_attached_state(self):
         #project = self.project
-        self.frame.enable_menuitems('target_attached')
+        menu.manager.publish(menu.TARGET_ATTACHED)
         #print "Entering the ATTACHED state."
         if self.state == IDLE:
             self.gdb.set_exec(self.project.absolute_path(self.project.debug.target))
@@ -153,11 +153,11 @@ class Controller(wx.EvtHandler):
             self.error_logger.log(logging.WARN, "Tried to attach from state %d" % self.state)
 
     def exit_attached_state(self):
-        self.frame.disable_menuitems('target_attached')
+        menu.manager.publish(menu.TARGET_ATTACHED)
         #print "Exiting the ATTACHED state."
 
     def enter_running_state(self):
-        self.frame.enable_menuitems('target_running')
+        menu.manager.publish(menu.TARGET_RUNNING)
         #print "Entering the RUNNING state."
         if self.state == ATTACHED:
             self.exit_current_state()
@@ -167,7 +167,7 @@ class Controller(wx.EvtHandler):
             self.error_logger.log(logging.WARN, "Tried to run from state %d" % self.state)
 
     def exit_running_state(self):
-        self.frame.disable_menuitems('target_running')
+        menu.manager.publish(menu.TARGET_HALTED)
         #print "Exiting the RUNNING state."
 
     def enter_idle_state(self):

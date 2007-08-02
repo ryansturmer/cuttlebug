@@ -1,7 +1,7 @@
 import wx
 import wx.aui as aui
 import wx.stc as stc
-import util, build, app, notebook, controls, views, project, settings
+import util, build, app, notebook, controls, views, project, settings, menu
 import styles, style_dialog
 # TODO Application icon
 class Frame(wx.Frame):
@@ -35,68 +35,66 @@ class Frame(wx.Frame):
             menubar = controls.BusyMenuBar()
             
             # FILE
-            file = wx.Menu()
-            util.menu_item(self, file, '&New...\tCtrl+N', self.on_new, icon="page_white_text.png")
-            util.menu_item(self, file, '&Open...\tCtrl+O', self.on_open)
-            util.menu_item(self, file, '&Close\tCtrl+W', self.on_close)
-            util.menu_item(self, file, '&Save\tCtrl+S', self.on_save, icon="disk.png")
-            util.menu_item(self, file, '&Save As...\tCtrl+Shift+S', self.on_save_as, icon="save_as.png")
+            file = menu.Menu()
+            menu.manager.menu_item(self, file, '&New...\tCtrl+N', self.on_new, icon="page_white_text.png")
+            menu.manager.menu_item(self, file, '&Open...\tCtrl+O', self.on_open)
+            menu.manager.menu_item(self, file, '&Close\tCtrl+W', self.on_close)
+            menu.manager.menu_item(self, file, '&Save\tCtrl+S', self.on_save, icon="disk.png")
+            menu.manager.menu_item(self, file, '&Save As...\tCtrl+Shift+S', self.on_save_as, icon="save_as.png")
 
             file.AppendSeparator()
-            util.menu_item(self, file, '&Exit\tAlt+F4', self.on_exit,icon="door_out.png")
+            menu.manager.menu_item(self, file, '&Exit\tAlt+F4', self.on_exit,icon="door_out.png")
             menubar.Append(file, '&File')
             
             # EDIT
-            edit = wx.Menu()
+            edit = menu.Menu()
             menubar.Append(edit, '&Edit')
-            util.menu_item(self, edit, '&Styles...', self.on_styles)
+            menu.manager.menu_item(self, edit, '&Styles...', self.on_styles)
             edit.AppendSeparator()
-            util.menu_item(self, edit, '&Options...', self.on_settings, icon='cog_edit.png')
+            menu.manager.menu_item(self, edit, '&Options...', self.on_settings, icon='cog_edit.png')
 
             # Project Menu
-            project = wx.Menu()
-            util.menu_item(self, project, '&New Project...', self.on_new_project, icon="package.png")
-            util.menu_item(self, project, '&Open Project...', self.on_open_project)
-            util.menu_item(self, project, '&Save Project...\tCtrl+S', self.on_save_project, icon="disk.png", registries=[self.menu_registry['project_open']])
+            project = menu.Menu()
+            menu.manager.menu_item(self, project, '&New Project...', self.on_new_project, icon="package.png")
+            menu.manager.menu_item(self, project, '&Open Project...', self.on_open_project)
+            menu.manager.menu_item(self, project, '&Save Project...\tCtrl+S', self.on_save_project, icon="disk.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
             project.AppendSeparator()
-            util.menu_item(self, project, 'Project Options...', self.on_project_options, icon='cog_edit.png', registries=[self.menu_registry['project_open']])
+            menu.manager.menu_item(self, project, 'Project Options...', self.on_project_options, icon='cog_edit.png', enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
             menubar.Append(project, '&Project')
             # BUILD
-            build = wx.Menu()
-            util.menu_item(self, build, '&Build\tF7', self.on_build, icon="brick.png",registries=[self.menu_registry['project_open']])
-            util.menu_item(self, build, '&Clean\tF8', self.on_clean,registries=[self.menu_registry['project_open']])
-            util.menu_item(self, build, '&Rebuild\tF10', self.on_rebuild,registries=[self.menu_registry['project_open']])
+            build = menu.Menu()
+            menu.manager.menu_item(self, build, '&Build\tF7', self.on_build, icon="brick.png",enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
+            menu.manager.menu_item(self, build, '&Clean\tF8', self.on_clean,enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
+            menu.manager.menu_item(self, build, '&Rebuild\tF10', self.on_rebuild,enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
             menubar.Append(build, '&Build')
            
             # DEBUG (Disabled till a project is opened)
-            debug = wx.Menu()
-            util.menu_item(self, debug, '&Run\tF5', self.on_run, icon="control_play_blue.png", registries=[target_attached])
-            util.menu_item(self, debug, '&Step\tF6', self.on_step, icon="control_play_blue.png", registries=[target_attached])
-            util.menu_item(self, debug, '&Step Out\tShift+F6', self.on_step_out, icon="control_play_blue.png", registries=[target_attached])
-            util.menu_item(self, debug, '&Halt\tShift+F5', self.on_halt, icon="control_stop_blue.png", registries=[target_running])
+            debug = menu.Menu()
+            menu.manager.menu_item(self, debug, '&Run\tF5', self.on_run, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED)
+            menu.manager.menu_item(self, debug, '&Step\tF6', self.on_step, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED)
+            menu.manager.menu_item(self, debug, '&Step Out\tShift+F6', self.on_step_out, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED)
+            menu.manager.menu_item(self, debug, '&Halt\tShift+F5', self.on_halt, icon="control_stop_blue.png", enable=menu.TARGET_RUNNING)
             debug.AppendSeparator()
-            util.menu_item(self, debug, "Download", self.on_download, icon="application_put.png", registries=[target_attached])
+            menu.manager.menu_item(self, debug, "Download", self.on_download, icon="application_put.png", enable=menu.TARGET_ATTACHED)
             debug.AppendSeparator()
-            util.menu_item(self, debug, '&Attach', self.on_attach, icon="connect.png", registries=[project_open])
-            util.menu_item(self, debug, '&Detach', self.on_detach, icon="disconnect.png", registries=[project_open])
+            menu.manager.menu_item(self, debug, '&Attach', self.on_attach, icon="connect.png", enable=menu.PROJECT_OPEN)
+            menu.manager.menu_item(self, debug, '&Detach', self.on_detach, icon="disconnect.png", enable=menu.TARGET_ATTACHED)
             menubar.Append(debug, '&Debug')
 
             # VIEW
-            view = wx.Menu()
-            util.menu_item(self, view, '&Build Log\tAlt+B', self.on_toggle_build_view, icon="application_view_list.png")
+            view = menu.Menu()
+            menu.manager.menu_item(self, view, '&Build Log\tAlt+B', self.on_toggle_build_view, icon="application_view_list.png")
             menubar.Append(view, '&View')
 
             # DEVELOPMENT (Remove for production)
-            devel = wx.Menu()
-            util.menu_item(self, devel, '&Development Stuff Goes Here', lambda x : None)
-            util.menu_item(self, devel, '&Read Memory', self.on_read_memory)
-            util.menu_item(self, devel, '&GDB Command...', self.on_gdb_command)
+            devel = menu.Menu()
+            menu.manager.menu_item(self, devel, '&Development Stuff Goes Here', lambda x : None)
+            menu.manager.menu_item(self, devel, '&Read Memory', self.on_read_memory)
+            menu.manager.menu_item(self, devel, '&GDB Command...', self.on_gdb_command)
             menubar.Append(devel, '&Devel')
 
-            self.disable_menuitems('project_open')
-            self.disable_menuitems('target_attached')
-            self.disable_menuitems('target_running')
-
+            menu.manager.publish(menu.PROJECT_CLOSE)
+            menu.manager.publish(menu.TARGET_DETACHED)
             self.SetMenuBar(menubar)
         
         def browse_for_file(self, message='', dir='', file='', style=wx.FD_OPEN, wildcard=""):
@@ -108,14 +106,6 @@ class Frame(wx.Frame):
                     return dlg.GetPaths()[0]
             else:
                 return None
-
-        def disable_menuitems(self, entry):
-            for item in self.menu_registry[entry]:
-                item.Enable(False)
-
-        def enable_menuitems(self, entry):
-            for item in self.menu_registry[entry]:
-                item.Enable()
 
         def error(self, message="Unspecified Error."):
             dlg = wx.MessageDialog(self, message=message, style=wx.ICON_ERROR)
