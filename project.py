@@ -1,74 +1,9 @@
 import pickle, os 
 from odict import OrderedDict
 import util
+from options import *
 
-class Category(object):
-
-    def __init__(self, name='', parent=None):
-        # TODO ordered dict later?
-        self.items = dict()
-        self.name = str(name)
-        #self.parent = parent
-        self.__modified = False
-        self.modified = False
-    '''
-    def __get_modified(self):
-        return self.__modified
-
-    def __set_modified(self, x):
-        self.__modified = bool(x)
-        if self.modified and self.parent:
-            self.parent.modified = True
-    modified = property(__get_modified, __set_modified)
-    '''
-
-    def reset(self):
-        self.modified = False
-    
-    #def __getstate__(self):
-    #    return self.__dict__
-
-    def __getattr__(self, attr):
-        try:
-            return self.items[str(attr)]
-        except KeyError:
-            raise AttributeError
-    
-    #def __setattr__(self, attr, val):
-    #    self.items[str(attr)] = val
-    
-    def __getitem__(self, idx):
-        names = idx.split(".")
-        if len(names) == 1:
-            return self.items[idx]
-        else:
-            next = self.items[names[0]]
-            return next[".".join(names[1:])]
-
-    def __setitem__(self, idx, val):
-        names = idx.split(".")
-        if len(names) == 1:
-            self.items[idx] = val
-            self.modified = True
-        else:
-            next = self.items[names[0]]
-            next[".".join(names[1:])] = val
-
-    def add_category(self, name):
-        if name in self:
-            raise ProjectError("Already a category called '%s'" % name)
-        self[name] = Category(name)
-        self.modified = True
-
-    def __iter__(self):
-        return iter(self.items)
-
-    def __str__(self):
-        return str(self.items)
-    def __repr__(self):
-        return str(self)
-
-class Project(Category):
+class Project(util.Category):
 
     def __init__(self):
         super(Project, self).__init__()
@@ -89,7 +24,7 @@ class Project(Category):
         self.add_category('debug')
         self["debug.gdb_executable"] = "arm-elf-gdb"
         self["debug.attach_cmd"] = "target async localhost:3333"
-        self["debug.detatch_cmd"] = ""
+        self["debug.detach_cmd"] = ""
         self["debug.target"] = "build/main.elf"
         
     @staticmethod
@@ -124,31 +59,45 @@ class Project(Category):
         return os.path.join(self.directory, file)
 
     def save(self):
-        fp = open(self.filename,'w')
+        fp = open(self.filename,'wb')
         pickle.dump(self, fp)
         fp.close()
 
-    
-class Session(object):
+class ProjectOptionsDialog(OptionsDialog):
 
+    def __init__(self, parent, title="Project Options", size=(600,400), project=None):
+        OptionsDialog.__init__(self, parent, title=title, size=size, data=project, icons=["brick.png", "bug.png", "application_view_list.png"])
+        self.create_general_panel()
+        self.create_build_panel()
+        self.create_debug_panel()
+
+    def create_general_panel(self):
+        panel = OptionsPanel(self, "General")
+        panel.add("Informations", "Project Name", TextWidget, key="general.project_name")
+        self.add_panel(panel, icon='application_view_list.png')
+    
+    def create_build_panel(self):
+        panel = OptionsPanel(self, "Build")
+        panel.add("Commands", "Build", TextWidget, key="build.build_cmd")
+        panel.add("Commands", "Clean", TextWidget, key="build.clean_cmd")
+        panel.add("Commands", "Rebuild", TextWidget, key="build.rebuild_cmd")
+        self.add_panel(panel, icon='brick.png')
+
+    def create_debug_panel(self):
+        panel = OptionsPanel(self, "Debug")
+        panel.add("General", "Target", TextWidget, key="debug.target")
+        panel.add("Commands", "Attach", TextWidget, key="debug.attach_cmd")
+        panel.add("Commands", "Detach", TextWidget, key="debug.detach_cmd")
+        self.add_panel(panel, icon='bug.png')
+
+    @staticmethod
+    def show(parent, project=None):
+        dialog = ProjectOptionsDialog(parent, project=project)
+        dialog.Centre()
+        dialog.ShowModal() 
+
+class Session(object):
     def __init__(self):
         self.project_filename = None
-        self.perspective = None
 
-
-def save(object, filename):
-        try:
-            del(object.filename)
-        except:
-            pass
-        fp = open(os.path.abspath(filename),'w')
-        pickle.dump(object, fp)
-        fp.close()
-
-def load(filename):
-    path = os.path.abspath(filename)
-    fp = open(path, 'r')
-    object = pickle.load(fp)
-    fp.close()
-    object.filename = path
-    return object 
+ 

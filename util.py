@@ -1,5 +1,5 @@
 import wx
-import os, threading, subprocess
+import os, threading, subprocess, pickle
 
 from os.path import abspath, dirname, normcase, normpath, splitdrive
 from os.path import join as path_join, commonprefix
@@ -224,6 +224,93 @@ class Process(subprocess.Popen):
         if self.end:
             self.end()
 
+class Category(object):
+
+    def __init__(self, name='', parent=None):
+        # TODO ordered dict later?
+        self.items = dict()
+        self.name = str(name)
+        #self.parent = parent
+        self.__modified = False
+        self.modified = False
+    '''
+    def __get_modified(self):
+        return self.__modified
+
+    def __set_modified(self, x):
+        self.__modified = bool(x)
+        if self.modified and self.parent:
+            self.parent.modified = True
+    modified = property(__get_modified, __set_modified)
+    '''
+    def __setstate__(self, data):
+      self.__dict__.update(data)
+
+    def reset(self):
+        self.modified = False
+    
+    #def __getstate__(self):
+    #    return self.__dict__
+
+    def __getattr__(self, attr):
+        try:
+            return self.items[str(attr)]
+        except KeyError:
+            raise AttributeError
+    
+    #def __setattr__(self, attr, val):
+    #    self.items[str(attr)] = val
+    
+    def __getitem__(self, idx):
+        names = idx.split(".")
+        if len(names) == 1:
+            return self.items[idx]
+        else:
+            next = self.items[names[0]]
+            return next[".".join(names[1:])]
+
+    def __setitem__(self, idx, val):
+        names = idx.split(".")
+        if len(names) == 1:
+            self.items[idx] = val
+            self.modified = True
+        else:
+            next = self.items[names[0]]
+            next[".".join(names[1:])] = val
+
+    def add_category(self, name):
+        if name in self:
+            raise ProjectError("Already a category called '%s'" % name)
+        self[name] = Category(name)
+        self.modified = True
+
+    def __iter__(self):
+        return iter(self.items)
+
+    def __str__(self):
+        return str(self.items)
+    def __repr__(self):
+        return str(self)
+
+def pickle_file(object, filename):
+        try:
+            del(object.filename)
+        except:
+            pass
+        
+        fp = open(os.path.abspath(filename),'wb')
+        pickle.dump(object, fp, -1)
+        fp.close()
+
+def unpickle_file(filename):
+    path = os.path.abspath(filename)
+    fp = open(path, 'r')
+    object = pickle.load(fp)
+    fp.close()
+    object.filename = path
+    return object
+
+
 if __name__ == "__main__":
     import os
     import recipe
@@ -234,3 +321,5 @@ if __name__ == "__main__":
     p = Process("python -u subprocess_test.py")
 
     while True: pass
+
+

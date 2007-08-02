@@ -30,6 +30,7 @@ LOCALS VIEW
  * right click menus
 EDITOR VIEW
  * styles/colorization/fonts
+ * fix bug for files that can't load (user tried to open a binary file, for example)
 
 PROJECT VIEW
  * right click menus
@@ -37,7 +38,7 @@ PROJECT VIEW
  *    Files - 
 
 PROJECT OPTIONS DIALOG
- * generic flexgridsizers widget page setup thingie
+ * Proper hierarchical pages in generic optionsdialog
 
 MAIN FRAME
  * View Menu - should have all the views, and should show and hide them correctly

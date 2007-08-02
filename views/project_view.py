@@ -33,6 +33,9 @@ class ProjectView(view.View):
     def show_backups(self, show):
         self.tree.show_backups(show)
 
+    def update(self):
+        self.tree.update()
+
 class ProjectTree(wx.TreeCtrl):
 
     def __init__(self, parent, id):
@@ -132,3 +135,7 @@ class ProjectTree(wx.TreeCtrl):
                     if not self.backups_visible and file.endswith("~"):
                         continue
                     self.add_file(os.path.join(root, file), self.get_file_icon(file))
+    def update(self):
+        self.SetItemText(self.root_item, self.project.general.project_name)
+        self.update_file_tree()
+

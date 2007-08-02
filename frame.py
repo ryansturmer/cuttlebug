@@ -1,8 +1,7 @@
 import wx
 import wx.aui as aui
 import wx.stc as stc
-import util, build, app, notebook, controls, views
-import prefs
+import util, build, app, notebook, controls, views, project, settings
 import styles, style_dialog
 # TODO Application icon
 class Frame(wx.Frame):
@@ -12,7 +11,7 @@ class Frame(wx.Frame):
             self.menu_registry = {}
             self.manager = aui.AuiManager(self)
 
-            self.Bind(wx.EVT_CLOSE, self.on_exit)
+            self.Bind(wx.EVT_CLOSE, self.on_close)
             self.create_menu_bar()
             self.create_status_bar()
             
@@ -51,6 +50,8 @@ class Frame(wx.Frame):
             edit = wx.Menu()
             menubar.Append(edit, '&Edit')
             util.menu_item(self, edit, '&Styles...', self.on_styles)
+            edit.AppendSeparator()
+            util.menu_item(self, edit, '&Options...', self.on_settings, icon='cog_edit.png')
 
             # Project Menu
             project = wx.Menu()
@@ -121,7 +122,8 @@ class Frame(wx.Frame):
             dlg.ShowModal()
 
         def on_project_options(self, evt):
-            prefs.ProjectOptionsDialog.show(self, project=self.controller.project)
+            project.ProjectOptionsDialog.show(self, project=self.controller.project)
+            self.project_view.update()
 
         def on_read_memory(self, evt):
             if self.controller.state is app.ATTACHED:
@@ -197,7 +199,6 @@ class Frame(wx.Frame):
         def on_new_project(self, evt):
             if self.controller.project:
                 pass
-            
             path = self.browse_for_file(style=wx.FD_SAVE)
             self.controller.new_project(path)
         
@@ -222,9 +223,11 @@ class Frame(wx.Frame):
             self.editor_view.new()
 
         def on_exit(self, evt):
+            self.Close()
+        
+        def on_close(self, evt):
             self.controller.save_session()
             evt.Skip()
-            self.Close()
 
         def on_attach(self, evt):
             self.controller.attach()
@@ -239,6 +242,11 @@ class Frame(wx.Frame):
         def on_toggle_log_view(self, evt):
             self.log_view.info.Show(not self.log_view.info.IsShown())
             self.manager.Update()
+
+        def on_settings(self, evt):
+            settings.SettingsDialog.show(self, self.controller.settings)
+            self.controller.settings.save()
+            self.controller.update_settings()
 
         # Events that manage the build process
         def on_clean(self, evt):

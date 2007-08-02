@@ -1,4 +1,4 @@
-import build, views, prefs, gdb, project, log, styles
+import build, views, gdb, project, log, styles, settings, util
 import logging, os
 import wx
 
@@ -18,7 +18,12 @@ class Controller(wx.EvtHandler):
         self.gdb = None
         self.frame = frame
         self.project = None
-
+        try:
+            self.settings = settings.Settings.load(".settings")
+        except Exception, e:
+            print e
+            self.settings = settings.Settings.create(".settings")
+        
         # Build events
         self.Bind(build.EVT_BUILD_FINISHED, self.on_build_finished)
         self.Bind(build.EVT_BUILD_STARTED, self.on_build_started)
@@ -67,7 +72,7 @@ class Controller(wx.EvtHandler):
         self.log_view.add_logger(self.build_logger, format="%(message)s")
         
         log.redirect_stdout('stdout')
-       
+      
         # Session
         self.load_session()
     
@@ -76,7 +81,7 @@ class Controller(wx.EvtHandler):
 
     def load_session(self):
         try:
-            self.session = project.load('.session')
+            self.session = util.unpickle_file('.session')
             #self.frame.manager.LoadPerspective(self.session.perspective)
             #self.frame.manager.Update()
             if self.session.project_filename:
@@ -95,17 +100,20 @@ class Controller(wx.EvtHandler):
             #self.session.perspective = self.frame.manager.SavePerspective()
             if self.project:
                 self.session.project_filename = self.project.filename
-            project.save(self.session, '.session')
+            print self.project.filename
+            util.pickle_file(self.session, '.session')
 
     def new_project(self, path):
         if path:
             self.project = project.Project.create(path)
+            self.frame.enable_menuitems('project_open')
             self.project_view.set_project(self.project)
 
     def load_project(self, path):
         self.project = project.Project.load(path)
         self.frame.enable_menuitems('project_open')
         self.project_view.set_project(self.project)
+        self.session.project_filename = path
         print self.project
 
     def save_project(self):
@@ -113,6 +121,9 @@ class Controller(wx.EvtHandler):
 
     def open_file(self, path):
         self.frame.open_file(path)
+
+    def update_settings(self):
+        self.editor_view.update_settings()
     # IDE Functions, Building, Cleaning, Etc..
     def build(self):
         build_process = build.BuildProcess(self.project.build.build_cmd, notify=self, cwd=self.project.directory)
@@ -265,7 +276,7 @@ class Controller(wx.EvtHandler):
         #print result.frame.line
         self.memory_view.request_update()
         self.locals_view.request_update()
-        self.editor_view.goto(result.frame.fullname, int(result.frame.line))
+        self.editor_view.set_exec_location(result.frame.fullname, int(result.frame.line))
         self.gdb.stack_list_locals()
         self.gdb.file_list_globals()
 
