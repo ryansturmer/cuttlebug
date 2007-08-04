@@ -82,7 +82,7 @@ class MenuManager(object):
             raise TypeError("MenuManager can only manage menu.Menu objects, (not wx.Menu)")
         
         for topics, func in [(enable, self.enable), (disable, self.disable), (show, self.show), (hide, self.hide)]:
-            if not topics:
+            if topics == None:
                 continue
             if not isinstance(topics, list):
                 topics = [topics]

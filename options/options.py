@@ -1,6 +1,6 @@
 import wx
 import util
-
+import os
 class OptionsEvent(wx.PyEvent):
     def __init__(self, type, object=None):
         super(OptionsEvent, self).__init__()
@@ -15,7 +15,7 @@ class Tree(wx.TreeCtrl):
     '''
     def __init__(self, parent, id=-1, style=0):
         super(Tree, self).__init__(parent, id, style=style | wx.TR_HIDE_ROOT)
-        self.SetQuickBestSize(False)
+        #self.SetQuickBestSize(False)
         self.clear()
         self.clear_art()
 
@@ -89,22 +89,39 @@ class Tree(wx.TreeCtrl):
         self.SetItemPyData(node, item)
         if icon is not None:
             self.set_item_art(item, icon)
-        
+       
+        self.compute_best_size()
+        return node
+    
+    def compute_best_size(self):
+        if os.name == 'nt':
+            best_size = (self.__max_width_win32(), -1)
+        else:
+            best_size = (self.__max_width(), -1)
+        self.SetMinSize(best_size)
+    
+    def __max_width_win32(self):
+        dc = wx.ScreenDC()
+        dc.SetFont(self.GetFont())
+        widths = []
+        for item, depth in self.__walk_items():
+            if item != self.root:
+                width = dc.GetTextExtent(self.GetItemText(item))[0] + self.GetIndent()*depth
+                widths.append(width)
+        return max(widths) + self.GetIndent()
+
+    def __max_width(self):
         self.Freeze()
         expanded = {}
         for item in self.get_items():
-            expanded[item] = self.IsExpanded(item)
+            if item is not self.root:
+                expanded[item] = self.IsExpanded(item)
         self.ExpandAll()
-        self.best_size = self.GetBestSize()
+        best_size = self.GetBestSize()
         for item in expanded:
             if not expanded[item]: self.Collapse(item)
         self.Thaw()
-        return node
-    
-    def GetBestSize(self):
-        if not self.best_size:
-            return wx.TreeCtrl.GetBestSize(self)
-        return self.best_size
+        return best_size[0]
 
     def set_item_art(self, item, art, type = wx.TreeItemIcon_Normal):
         item = self.find_item(item)
@@ -131,25 +148,35 @@ class TreeBook(wx.Panel):
         self.sizer.Add(panel, 1, wx.EXPAND)
         panel.Hide()
         self.Layout()
-        if self.current_panel == self.empty_panel:
-            self.tree.SelectItem(node, True)
+        #if self.current_panel == self.empty_panel:
+        #    self.tree.SelectItem(node, True)
         self.Thaw()
 
     def __show_panel(self, panel):
         self.Freeze()
-        panel.Show()
         self.current_panel.Hide()
+        panel.Show()
         self.Layout()
-        self.current_panel = panel
         self.Thaw()
+        self.current_panel = panel
 
     def on_sel_changed(self, evt):
-        self.__show_panel(self.tree.GetItemPyData(evt.GetItem()))
+        panel = self.tree.GetItemPyData(evt.GetItem())
+        self.__show_panel(panel)
+
+class OptionsTreeBook(TreeBook):
+    def __init__(self, parent, *args, **kwargs):
+        super(OptionsTreeBook, self).__init__(parent, *args, **kwargs)
+        self.parent = parent
+
+    def bind(self, widget, key):
+        if self.parent:
+            self.parent.bind(widget, key)
 
 class OptionsPanel(wx.Panel):
 
     def __init__(self, parent, name="Unnamed"):
-        wx.Panel.__init__(self, parent, -1)
+        wx.Panel.__init__(self, parent.book, -1)
         self.name = name
         self.groups = {}
         self.parent = parent
@@ -188,8 +215,7 @@ class OptionsPanel(wx.Panel):
 
     def bind(self, widget, key):
         if self.parent:
-            if self.parent.data:
-                self.parent.bind(widget, key)
+            self.parent.bind(widget, key)
                 
 class OptionsDialog(wx.Dialog):
     def __init__(self, parent, title="Options", size=(600,400), icons=[], data=None):
@@ -199,8 +225,8 @@ class OptionsDialog(wx.Dialog):
         self.changed = False
         dlg_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        self.tree = TreeBook(self, -1)
-        dlg_sizer.Add(self.tree, 1, wx.EXPAND)
+        self.book = OptionsTreeBook(self, -1)
+        dlg_sizer.Add(self.book, 1, wx.EXPAND)
 
          # The OK/Cancel/Apply buttons at the bottom
         panel = wx.Panel(self, -1)
@@ -227,7 +253,7 @@ class OptionsDialog(wx.Dialog):
         self.btn_apply.Enable()
 
     def add_panel(self, page, parent=None, icon=None):
-        self.tree.add_panel(page, page.name, parent=parent, icon=icon)
+        self.book.add_panel(page, page.name, parent=parent, icon=icon)
 
     def on_apply(self, evt):
        self.apply_changes()

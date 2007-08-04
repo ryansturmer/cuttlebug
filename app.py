@@ -100,14 +100,14 @@ class Controller(wx.EvtHandler):
             #self.session.perspective = self.frame.manager.SavePerspective()
             if self.project:
                 self.session.project_filename = self.project.filename
-            print self.project.filename
+                print self.project.filename
             util.pickle_file(self.session, '.session')
 
     def new_project(self, path):
         if path:
             self.project = project.Project.create(path)
-            menu.manager.publish(menu.PROJECT_OPEN)
             self.project_view.set_project(self.project)
+            menu.manager.publish(menu.PROJECT_OPEN)
 
     def load_project(self, path):
         self.project = project.Project.load(path)
@@ -124,6 +124,7 @@ class Controller(wx.EvtHandler):
 
     def update_settings(self):
         self.editor_view.update_settings()
+
     # IDE Functions, Building, Cleaning, Etc..
     def build(self):
         build_process = build.BuildProcess(self.project.build.build_cmd, notify=self, cwd=self.project.directory)

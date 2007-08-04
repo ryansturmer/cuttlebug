@@ -97,7 +97,7 @@ class EditorControl(stc.StyledTextCtrl):
         self.SetMargins(settings.page.margin_left, settings.page.margin_right)
         
         #self.apply_bookmark_settings()
-        #self.apply_folding_settings()
+        self.apply_folding_settings()
         self.show_line_numbers()
         self.detect_language()
 
