@@ -154,7 +154,7 @@ class Controller(wx.EvtHandler):
             self.error_logger.log(logging.WARN, "Tried to attach from state %d" % self.state)
 
     def exit_attached_state(self):
-        menu.manager.publish(menu.TARGET_ATTACHED)
+        menu.manager.publish(menu.TARGET_DETACHED)
         #print "Exiting the ATTACHED state."
 
     def enter_running_state(self):
@@ -232,6 +232,7 @@ class Controller(wx.EvtHandler):
 
     # HALT
     def halt(self):
+        print "trying to halt"
         self.gdb.exec_interrupt(self.on_halted)
         
     def on_halted(self, result):

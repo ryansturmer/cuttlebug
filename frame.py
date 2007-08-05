@@ -70,15 +70,26 @@ class Frame(wx.Frame):
            
             # DEBUG (Disabled till a project is opened)
             debug = menu.Menu()
-            menu.manager.menu_item(self, debug, '&Run\tF5', self.on_run, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED)
-            menu.manager.menu_item(self, debug, '&Step\tF6', self.on_step, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED)
-            menu.manager.menu_item(self, debug, '&Step Out\tShift+F6', self.on_step_out, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED)
-            menu.manager.menu_item(self, debug, '&Halt\tShift+F5', self.on_halt, icon="control_stop_blue.png", enable=menu.TARGET_RUNNING)
+            menu.manager.menu_item(self, debug, '&Run\tF5', self.on_run, icon="control_play_blue.png", 
+                                         enable=menu.TARGET_ATTACHED, 
+                                         disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
+
+            menu.manager.menu_item(self, debug, '&Step\tF6', self.on_step, icon="control_play_blue.png", 
+                                         enable=menu.TARGET_ATTACHED, 
+                                         disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
+
+            menu.manager.menu_item(self, debug, '&Step Out\tShift+F6', self.on_step_out, icon="control_play_blue.png", 
+                                         enable=menu.TARGET_ATTACHED, 
+                                         disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
+
+            menu.manager.menu_item(self, debug, '&Halt\tShift+F5', self.on_halt, icon="control_stop_blue.png", 
+                                         enable=menu.TARGET_RUNNING, 
+                                         disable=[menu.TARGET_HALTED, menu.TARGET_DETACHED])
             debug.AppendSeparator()
             menu.manager.menu_item(self, debug, "Download", self.on_download, icon="application_put.png", enable=menu.TARGET_ATTACHED)
             debug.AppendSeparator()
-            menu.manager.menu_item(self, debug, '&Attach', self.on_attach, icon="connect.png", enable=menu.PROJECT_OPEN)
-            menu.manager.menu_item(self, debug, '&Detach', self.on_detach, icon="disconnect.png", enable=menu.TARGET_ATTACHED)
+            menu.manager.menu_item(self, debug, '&Attach', self.on_attach, icon="connect.png", show=[menu.PROJECT_OPEN, menu.TARGET_DETACHED], hide=[menu.TARGET_ATTACHED, menu.PROJECT_CLOSE])
+            menu.manager.menu_item(self, debug, '&Detach', self.on_detach, icon="disconnect.png", show=menu.TARGET_ATTACHED, hide=menu.TARGET_DETACHED)
             menubar.Append(debug, '&Debug')
 
             # VIEW
@@ -258,6 +269,7 @@ class Frame(wx.Frame):
             self.controller.step_out()
 
         def on_halt(self, evt):
+            print "halt handler called"
             self.controller.halt()
 
         def on_download(self, evt):

@@ -13,6 +13,7 @@ TARGET_DETACHED = 3
 TARGET_RUNNING = 4
 TARGET_HALTED = 5
 
+
 class Menu(wx.Menu):
 
     def __init__(self, *args, **kwargs):
@@ -21,41 +22,35 @@ class Menu(wx.Menu):
 
     def AppendSeparator(self):
         item = wx.MenuItem(self, id=wx.ID_SEPARATOR)
-        self.Append(item)
+        item.parent_menu = self
+        self.AppendItem(item)
 
-    def Append(self, item):
+    def AppendItem(self, item):
         self._items[item] = True
+        item.parent_menu = self
         wx.Menu.AppendItem(self, item)
 
     def _clear(self):
         for item in self._items:
-            if self._items[item]:
-                self.Remove(item)
+            try: self.RemoveItem(item)
+            except: pass
 
     def _repopulate(self):
         last_item = None
         for item in self._items:
             if self._items[item]:
-                self.Append(item)
+                self.AppendItem(item)
 
     def _rebuild(self):
-        self.Freeze()
+        #self.Freeze()
         self._clear()
         self._repopulate()
-        self.Thaw()
+        #self.Thaw()
 
     def Hide(self, item):
         if self._items[item]:
-            self._items[item] = False
-            items = list(self._items)
-            # TODO keep separators from being at the beginning or end
-            # Keep 2 separators from being right next to each other
-            for i, itm in enumerate(items):
-                if i > 0:
-                    if itm.IsSeparator() and items[i-1].IsSeparator():
-                        self._items[itm] = False
-            
-            self._rebuild()
+            self._items[item] = False 
+        self._rebuild()
 
     def Show(self, item):
         #TODO fix separators
@@ -86,8 +81,8 @@ class MenuManager(object):
                 continue
             if not isinstance(topics, list):
                 topics = [topics]
-                for topic in topics:
-                    self.subscribe(topic, item, func)
+            for topic in topics:
+                self.subscribe(topic, item, func)
 
     def publish(self, topic):
         if topic not in self._topics:
@@ -95,9 +90,8 @@ class MenuManager(object):
         for menu_item in self._topics[topic]:
             callback = self._topics[topic][menu_item]
             callback(menu_item)
-
+        
     def subscribe(self, topic, menu_item, func):
-        print "Subscribing to %s" % topic
         if topic not in self._topics:
             self._topics[topic] = {}
         self._topics[topic][menu_item] = func
@@ -109,11 +103,11 @@ class MenuManager(object):
         menu_item.Enable(False)
 
     def show(self, menu_item):
-        menu = menu_item.GetMenu()
+        menu = menu_item.parent_menu
         menu.Show(menu_item)
 
     def hide(self, menu_item):
-        menu = menu_item.GetMenu()
+        menu = menu_item.parent_menu
         menu.Hide(menu_item)
 
 manager = MenuManager()

@@ -23,11 +23,14 @@ class EditorView(view.View):
         widget.GotoLine(line)
 
     def set_exec_location(self, file, line):
+        for window in self.notebook:
+            window.remove_exec_marker()
+
         self.goto(file, line)
         widget = self.notebook.create_file_tab(file)
         if not widget:
             return
-        widget.set_exec_location(line)
+        widget.set_exec_marker(line)
 
     def update_settings(self):
         for editor in self.notebook:
@@ -106,8 +109,10 @@ class EditorControl(stc.StyledTextCtrl):
         self.SetMarginWidth(self.LINE_MARGIN, 0)
         self.update_line_numbers()
 
-    def set_exec_location(self, line):
-        self.MarkerDeleteAll(31)
+    def remove_exec_marker(self):
+        self.MarkerDeleteAll(1 << self.EXECUTION_MARKER)
+
+    def set_exec_marker(self, line):
         if line != None:
             if self.MarkerGet(line) & (1 << self.EXECUTION_MARKER):
                 pass
