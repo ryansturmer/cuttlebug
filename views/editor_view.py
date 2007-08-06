@@ -23,11 +23,10 @@ class EditorView(view.View):
         widget.GotoLine(line)
 
     def set_exec_location(self, file, line):
-        for window in self.notebook:
-            window.remove_exec_marker()
-
         self.goto(file, line)
         widget = self.notebook.create_file_tab(file)
+        for window in self.notebook:
+            window.remove_exec_marker()
         if not widget:
             return
         widget.set_exec_marker(line)

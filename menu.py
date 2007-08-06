@@ -17,7 +17,7 @@ TARGET_HALTED = 5
 class Menu(wx.Menu):
 
     def __init__(self, *args, **kwargs):
-        super(Menu, self).__init__(*args, **kwargs)
+        wx.Menu.__init__(self, *args, **kwargs)
         self._items = odict.OrderedDict()
 
     def AppendSeparator(self):
@@ -26,7 +26,7 @@ class Menu(wx.Menu):
         self.AppendItem(item)
 
     def AppendItem(self, item):
-        self._items[item] = True
+        self._items[item] = (True, True)
         item.parent_menu = self
         wx.Menu.AppendItem(self, item)
 
@@ -38,25 +38,40 @@ class Menu(wx.Menu):
     def _repopulate(self):
         last_item = None
         for item in self._items:
-            if self._items[item]:
+            visible, enabled = self._items[item]
+            if visible:
                 self.AppendItem(item)
+                if enabled:
+                    self.Enable(item.GetId(), True)
+                else:
+                    self.Enable(item.GetId(), False)
+            else:
+                pass
 
-    def _rebuild(self):
+    def rebuild(self):
         #self.Freeze()
         self._clear()
         self._repopulate()
         #self.Thaw()
 
-    def Hide(self, item):
-        if self._items[item]:
-            self._items[item] = False 
-        self._rebuild()
+    def enable(self, item):
+        print "en"
+        visible, enabled = self._items[item]
+        self._items[item] = (visible, True)
 
-    def Show(self, item):
+    def disable(self, item):
+        print "dis"
+        visible, enabled = self._items[item]
+        self._items[item] = (visible, False)
+
+    def hide(self, item):
+        visible, enabled = self._items[item]    
+        self._items[item] = (False, enabled)
+
+    def show(self, item):
         #TODO fix separators
-        if not self._items[item]:
-            self._items[item] = True
-            self._rebuild()
+        visible, enabled = self._items[item]    
+        self._items[item] = (True, enabled)
 
 
 class MenuManager(object):
@@ -87,27 +102,38 @@ class MenuManager(object):
     def publish(self, topic):
         if topic not in self._topics:
             return
+        print "publishing topic %s: %d items affected." % (topic, len(self._topics[topic]))
+        rebuilders = set()
         for menu_item in self._topics[topic]:
+            if menu_item.parent_menu not in rebuilders:
+                rebuilders.add(menu_item.parent_menu)
             callback = self._topics[topic][menu_item]
             callback(menu_item)
-        
+        for menu in rebuilders:
+            menu.rebuild()
     def subscribe(self, topic, menu_item, func):
         if topic not in self._topics:
             self._topics[topic] = {}
         self._topics[topic][menu_item] = func
 
     def enable(self, menu_item):
-        menu_item.Enable(True)
+        print "  enabling %s" % menu_item.GetItemLabelText()
+        menu = menu_item.parent_menu
+        menu.enable(menu_item)
 
     def disable(self, menu_item):
-        menu_item.Enable(False)
+        print "  disabling %s in menu %s" % (menu_item.GetItemLabelText(), menu_item.GetMenu().GetTitle())
+        menu = menu_item.parent_menu
+        menu.disable(menu_item)
 
     def show(self, menu_item):
+        print "  showing %s in menu %s" % (menu_item.GetItemLabelText(), menu_item.parent_menu.GetTitle())
         menu = menu_item.parent_menu
-        menu.Show(menu_item)
+        menu.show(menu_item)
 
     def hide(self, menu_item):
+        print "  hiding %s in menu %s" % (menu_item.GetItemLabelText(), menu_item.parent_menu.GetTitle())
         menu = menu_item.parent_menu
-        menu.Hide(menu_item)
+        menu.hide(menu_item)
 
 manager = MenuManager()
