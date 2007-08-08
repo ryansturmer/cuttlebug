@@ -15,52 +15,65 @@ TARGET_HALTED = 5
 
 
 class Menu(wx.Menu):
-
+    'Just like a wx.Menu, but iterable and able to show/hide items'
+        
     def __init__(self, *args, **kwargs):
         wx.Menu.__init__(self, *args, **kwargs)
-        self._items = odict.OrderedDict()
+        self._items = odict.OrderedDict() # Menu item -> (visible, enabled)
+
+    def __iter__(self):
+        return iter(self._items)
 
     def AppendSeparator(self):
         item = wx.MenuItem(self, id=wx.ID_SEPARATOR)
-        item.parent_menu = self
+        item.parent_menu = self # Do this because GetMenu() wont work with menu items that have been removed from a menu!
         self.AppendItem(item)
 
     def AppendItem(self, item):
-        self._items[item] = (True, True)
-        item.parent_menu = self
+        print "Adding a NEW item to the menu: %s" % item.GetItemLabelText()
+        self._items[item] = (True, True) # New items are visible and enabled by default
+        item.parent_menu = self # See above
         wx.Menu.AppendItem(self, item)
+
+    def RemoveItem(self, item):
+        self._clear()
+        self._items.pop(item)
+        self._repopulate()
+        return item
 
     def _clear(self):
         for item in self._items:
-            try: self.RemoveItem(item)
-            except: pass
-
-    def _repopulate(self):
-        last_item = None
-        for item in self._items:
             visible, enabled = self._items[item]
             if visible:
-                self.AppendItem(item)
+                print "Removing item: %s" % item.GetItemLabelText()
+                wx.Menu.RemoveItem(self, item)
+
+    def _repopulate(self):
+        for item in self:
+            visible, enabled = self._items[item]
+            if visible:
+                print "Adding item: %s enabled: %s" % (item.GetItemLabelText(), enabled)
+                item = wx.Menu.AppendItem(self, item)
                 if enabled:
+                    #item.Enable(True)
                     self.Enable(item.GetId(), True)
                 else:
+                    #item.Enable(False)
                     self.Enable(item.GetId(), False)
             else:
                 pass
 
     def rebuild(self):
-        #self.Freeze()
+        print "rebuild()ing"
         self._clear()
         self._repopulate()
-        #self.Thaw()
 
+    # You have to call rebuild() after you do these for the changes to take effect
     def enable(self, item):
-        print "en"
         visible, enabled = self._items[item]
         self._items[item] = (visible, True)
 
     def disable(self, item):
-        print "dis"
         visible, enabled = self._items[item]
         self._items[item] = (visible, False)
 
@@ -69,10 +82,15 @@ class Menu(wx.Menu):
         self._items[item] = (False, enabled)
 
     def show(self, item):
-        #TODO fix separators
         visible, enabled = self._items[item]    
         self._items[item] = (True, enabled)
 
+    def __str__(self):
+        retval = "v e label\n"
+        for item in self:
+            visible, enabled = self._items[item]
+            retval += "%s %s %s\n" % ("*" if visible else " ", "*" if enabled else " ", item.GetItemLabelText())
+        return retval
 
 class MenuManager(object):
 
@@ -81,15 +99,16 @@ class MenuManager(object):
         self._topics = {}
 
     def menu_item(self, window, menu, label, func=None, icon=None, kind=wx.ITEM_NORMAL, enabled=True, enable=None, disable=None, show=None, hide=None):
+        if not isinstance(menu, Menu):
+            raise TypeError("MenuManager can only manage menu.Menu objects, (not wx.Menu)")
         item = wx.MenuItem(menu, -1, label, kind=kind)
         if func:
-            window.Bind(wx.EVT_MENU, func, id=item.GetId())
+            menu.Bind(wx.EVT_MENU, func, id=item.GetId())
         if icon:
             item.SetBitmap(util.get_icon(icon))
             item.SetDisabledBitmap(util.get_icon('blank.png'))
+
         menu.AppendItem(item)
-        if not isinstance(menu, Menu):
-            raise TypeError("MenuManager can only manage menu.Menu objects, (not wx.Menu)")
         
         for topics, func in [(enable, self.enable), (disable, self.disable), (show, self.show), (hide, self.hide)]:
             if topics == None:
@@ -97,7 +116,7 @@ class MenuManager(object):
             if not isinstance(topics, list):
                 topics = [topics]
             for topic in topics:
-                self.subscribe(topic, item, func)
+                self._subscribe(topic, item, func)
 
     def publish(self, topic):
         if topic not in self._topics:
@@ -111,28 +130,30 @@ class MenuManager(object):
             callback(menu_item)
         for menu in rebuilders:
             menu.rebuild()
-    def subscribe(self, topic, menu_item, func):
+            print menu
+
+    def _subscribe(self, topic, menu_item, func):
         if topic not in self._topics:
             self._topics[topic] = {}
         self._topics[topic][menu_item] = func
 
     def enable(self, menu_item):
-        print "  enabling %s" % menu_item.GetItemLabelText()
+        print "  mgr: enabling %s in menu %s" % (menu_item.GetItemLabelText(), menu_item.parent_menu.GetTitle())
         menu = menu_item.parent_menu
         menu.enable(menu_item)
 
     def disable(self, menu_item):
-        print "  disabling %s in menu %s" % (menu_item.GetItemLabelText(), menu_item.GetMenu().GetTitle())
+        print "  mgr: disabling %s in menu %s" % (menu_item.GetItemLabelText(), menu_item.parent_menu.GetTitle())
         menu = menu_item.parent_menu
         menu.disable(menu_item)
 
     def show(self, menu_item):
-        print "  showing %s in menu %s" % (menu_item.GetItemLabelText(), menu_item.parent_menu.GetTitle())
+        print "  mgr: showing %s in menu %s" % (menu_item.GetItemLabelText(), menu_item.parent_menu.GetTitle())
         menu = menu_item.parent_menu
         menu.show(menu_item)
 
     def hide(self, menu_item):
-        print "  hiding %s in menu %s" % (menu_item.GetItemLabelText(), menu_item.parent_menu.GetTitle())
+        print "  mgr: hiding %s in menu %s" % (menu_item.GetItemLabelText(), menu_item.parent_menu.GetTitle())
         menu = menu_item.parent_menu
         menu.hide(menu_item)
 
