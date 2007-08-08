@@ -28,77 +28,62 @@ class Frame(wx.Frame):
             self.controller = app.Controller(self)            
         
         def create_menu_bar(self):
-            self.menu_registry['project_open'] = project_open =[]
-            self.menu_registry['target_running'] = target_running = []
-            self.menu_registry['target_attached'] = target_attached = []
+            menubar = menu.manager.menu_bar(self)
 
-            menubar = controls.BusyMenuBar()
-            
             # FILE
-            file = menu.Menu()
-            menu.manager.menu_item(self, file, '&New...\tCtrl+N', self.on_new, icon="page_white_text.png")
-            menu.manager.menu_item(self, file, '&Open...\tCtrl+O', self.on_open)
-            menu.manager.menu_item(self, file, '&Close\tCtrl+W', self.on_close)
-            menu.manager.menu_item(self, file, '&Save\tCtrl+S', self.on_save, icon="disk.png")
-            menu.manager.menu_item(self, file, '&Save As...\tCtrl+Shift+S', self.on_save_as, icon="save_as.png")
-
-            file.AppendSeparator()
-            menu.manager.menu_item(self, file, '&Exit\tAlt+F4', self.on_exit,icon="door_out.png")
-            menubar.Append(file, '&File')
+            file = menubar.menu("&File")
+            file.item('&New...\tCtrl+N', self.on_new, icon="page_white_text.png")
+            file.item('&Open...\tCtrl+O', self.on_open)
+            file.item('&Close\tCtrl+W', self.on_close)
+            file.item('&Save\tCtrl+S', self.on_save, icon="disk.png")
+            file.item('&Save As...\tCtrl+Shift+S', self.on_save_as, icon="save_as.png")
+            file.separator()
+            file.item('&Exit\tAlt+F4', self.on_exit,icon="door_out.png")
             
             # EDIT
-            edit = menu.Menu()
-            menubar.Append(edit, '&Edit')
-            menu.manager.menu_item(self, edit, '&Styles...', self.on_styles)
-            edit.AppendSeparator()
-            menu.manager.menu_item(self, edit, '&Options...', self.on_settings, icon='cog_edit.png')
+            edit = menubar.menu("&Edit")
+            edit.item('&Styles...', self.on_styles)
+            edit.separator()
+            edit.item('&Options...', self.on_settings, icon='cog_edit.png')
 
             # Project Menu
-            project = menu.Menu()
-            menu.manager.menu_item(self, project, '&New Project...', self.on_new_project, icon="package.png")
-            menu.manager.menu_item(self, project, '&Open Project...', self.on_open_project)
-            menu.manager.menu_item(self, project, '&Save Project...\tCtrl+S', self.on_save_project, icon="disk.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
-            project.AppendSeparator()
-            menu.manager.menu_item(self, project, 'Project Options...', self.on_project_options, icon='cog_edit.png', enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
-            menubar.Append(project, '&Project')
+            project = menubar.menu("&Project")
+            project.item('&New Project...', self.on_new_project, icon="package.png")
+            project.item('&Open Project...', self.on_open_project)
+            project.item('&Save Project...\tCtrl+S', self.on_save_project, icon="disk.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
+            project.separator()
+            project.item('Project Options...', self.on_project_options, icon='cog_edit.png', enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
+            
             # BUILD
-            build = menu.Menu()
-            menu.manager.menu_item(self, build, '&Build\tF7', self.on_build, icon="brick.png",enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
-            menu.manager.menu_item(self, build, '&Clean\tF8', self.on_clean,enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
-            menu.manager.menu_item(self, build, '&Rebuild\tF10', self.on_rebuild,enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
-            menubar.Append(build, '&Build')
+            build = menubar.menu("&Build")
+            build.item('&Build\tF7', self.on_build, icon="brick.png",enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
+            build.item('&Clean\tF8', self.on_clean,enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
+            build.item('&Rebuild\tF10', self.on_rebuild,enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
            
             # DEBUG (Disabled till a project is opened)
-            debug = menu.Menu()
-            menu.manager.menu_item(self, debug, '&Run\tF5', self.on_run, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
-
-            menu.manager.menu_item(self, debug, '&Step\tF6', self.on_step, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
-
-            menu.manager.menu_item(self, debug, '&Step Out\tShift+F6', self.on_step_out, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
-
-            menu.manager.menu_item(self, debug, '&Halt\tShift+F5', self.on_halt, icon="control_stop_blue.png", enable=menu.TARGET_RUNNING, disable=[menu.TARGET_HALTED, menu.TARGET_DETACHED])
-            debug.AppendSeparator()
-            menu.manager.menu_item(self, debug, "Download", self.on_download, icon="application_put.png", enable=menu.TARGET_ATTACHED)
-            debug.AppendSeparator()
-            menu.manager.menu_item(self, debug, '&Attach', self.on_attach, icon="connect.png", show=[menu.PROJECT_OPEN, menu.TARGET_DETACHED], hide=[menu.TARGET_ATTACHED, menu.PROJECT_CLOSE])
-            menu.manager.menu_item(self, debug, '&Detach', self.on_detach, icon="disconnect.png", show=menu.TARGET_ATTACHED, hide=menu.TARGET_DETACHED)
-            menubar.Append(debug, '&Debug')
+            debug = menubar.menu("&Debug")
+            debug.item('&Run\tF5', self.on_run, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
+            debug.item('&Step\tF6', self.on_step, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
+            debug.item('&Step Out\tShift+F6', self.on_step_out, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
+            debug.item('&Halt\tShift+F5', self.on_halt, icon="control_stop_blue.png", enable=menu.TARGET_RUNNING, disable=[menu.TARGET_HALTED, menu.TARGET_DETACHED])
+            debug.separator()
+            debug.item("Download", self.on_download, icon="application_put.png", enable=menu.TARGET_ATTACHED)
+            debug.separator()
+            debug.item('&Attach', self.on_attach, icon="connect.png", show=[menu.PROJECT_OPEN, menu.TARGET_DETACHED], hide=[menu.TARGET_ATTACHED, menu.PROJECT_CLOSE])
+            debug.item('&Detach', self.on_detach, icon="disconnect.png", show=menu.TARGET_ATTACHED, hide=menu.TARGET_DETACHED)
 
             # VIEW
-            view = menu.Menu()
-            menu.manager.menu_item(self, view, '&Build Log\tAlt+B', self.on_toggle_build_view, icon="application_view_list.png")
-            menubar.Append(view, '&View')
+            view = menubar.menu("&View")
+            view.item('&Build Log\tAlt+B', self.on_toggle_build_view, icon="application_view_list.png")
 
             # DEVELOPMENT (Remove for production)
-            devel = menu.Menu()
-            menu.manager.menu_item(self, devel, '&Development Stuff Goes Here', lambda x : None)
-            menu.manager.menu_item(self, devel, '&Read Memory', self.on_read_memory)
-            menu.manager.menu_item(self, devel, '&GDB Command...', self.on_gdb_command)
-            menubar.Append(devel, '&Devel')
+            devel = menubar.menu("&Devel")
+            devel.item( 'Development Stuff Goes Here', lambda x : None)
+            devel.item( 'Read Memory', self.on_read_memory)
+            devel.item('&GDB Command...', self.on_gdb_command)
 
             menu.manager.publish(menu.PROJECT_CLOSE)
             menu.manager.publish(menu.TARGET_DETACHED)
-            self.SetMenuBar(menubar)
         
         def browse_for_file(self, message='', dir='', file='', style=wx.FD_OPEN, wildcard=""):
             dlg = wx.FileDialog(self, message=message, defaultDir=dir, defaultFile=file, wildcard=wildcard, style=style)
