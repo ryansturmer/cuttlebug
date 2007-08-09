@@ -90,7 +90,7 @@ class EditorControl(stc.StyledTextCtrl):
         self.mnu_copy = m.item("Copy\tCtrl+C", func=self.on_copy, icon='page_copy.png')
         self.mnu_paste = m.item("Paste\tCtrl+V", func=self.on_paste, icon='paste_plain.png')
         m.separator()
-        m.item("Run to here...", func=self.on_run_to_here, icon="breakpoint.png")
+        m.item("Run to here...", func=self.on_run_to_here, icon="breakpoint.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], show=[menu.TARGET_HALTED,menu.TARGET_ATTACHED])
         self.popup_menu = m
 
     def on_run_to_here(self, evt):
