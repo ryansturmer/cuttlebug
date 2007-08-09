@@ -1,5 +1,5 @@
 import wx
-import view, project, util
+import view, project, util, icons
 import os
 
 class ProjectViewEvent(view.ViewEvent): pass
@@ -45,7 +45,6 @@ class ProjectTree(wx.TreeCtrl):
         self.files = {}
         self.image_list = wx.ImageList(16,16)
         self.SetImageList(self.image_list)
-        self.bind_icons()
         self.set_project(None)
         self.backups_visible = False
 
@@ -72,26 +71,6 @@ class ProjectTree(wx.TreeCtrl):
     def bind_icon(self, extension, icon):
         self.add_art(icon)
         self.icon_bindings[str(extension).lower()] = icon
-
-    def bind_icons(self):
-        self.bind_icon('.c', 'file_c.png')        
-        self.bind_icon('.s', 'file_s.png')
-        self.bind_icon('.ld', 'file_link.png')
-        self.bind_icon('.bz2', 'file_archive.png')
-        self.bind_icon('.gz', 'file_archive.png')
-        self.bind_icon('.zip', 'file_archive.png')
-        self.bind_icon('.tar', 'file_archive.png')
-        self.bind_icon('.ini', 'file_wrench.png')
-        self.bind_icon('.cfg', 'file_wrench.png')
-        self.bind_icon('.py', 'file_py.png')
-        self.bind_icon('.h', 'file_h.png')
-        self.bind_icon('.png', 'file_picture.png')
-        self.bind_icon('.jpg', 'file_picture.png')
-        self.bind_icon('.gif', 'file_picture.png')
-        self.bind_icon('.tif', 'file_picture.png')
-        self.bind_icon('.tiff', 'file_picture.png')
-        self.bind_icon('.sh', 'file_gear.png')
-        self.bind_icon('.script', 'file_gear.png')
 
     def add_art(self, *arts):
         for art in arts:
@@ -134,7 +113,7 @@ class ProjectTree(wx.TreeCtrl):
                 if file not in self.files:
                     if not self.backups_visible and file.endswith("~"):
                         continue
-                    self.add_file(os.path.join(root, file), self.get_file_icon(file))
+                    self.add_file(os.path.join(root, file), icons.get_file_icon(file))
     def update(self):
         self.SetItemText(self.root_item, self.project.general.project_name)
         self.update_file_tree()

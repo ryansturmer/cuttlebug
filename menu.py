@@ -4,14 +4,14 @@ import util
 
 # APPLICATION SPECIFIC
 # pub/sub topics
-PROJECT_OPEN = 0
-PROJECT_CLOSE = 1
+PROJECT_OPEN = 1
+PROJECT_CLOSE = 2
 
-TARGET_ATTACHED = 2
-TARGET_DETACHED = 3
+TARGET_ATTACHED = 3
+TARGET_DETACHED = 4
 
-TARGET_RUNNING = 4
-TARGET_HALTED = 5
+TARGET_RUNNING = 5
+TARGET_HALTED = 6
 
 class MenuItemProxy(object):
 
@@ -64,7 +64,7 @@ class MenuItemProxy(object):
         self.enabled = False
         self.update()
 
-    def build_wx_item(self, menu, window):
+    def build(self, menu, window):
         if self._separator:
             return wx.MenuItem(menu, id=wx.ID_SEPARATOR)
         else:
@@ -91,11 +91,11 @@ class MenuProxy(object):
     def __iter__(self):
         return iter(self._items)
 
-    def build_wx_menu(self, window=None):
+    def build(self, window=None):
         retval = wx.Menu()
         for item in self._items:
             if item.visible:
-                menuitem = item.build_wx_item(retval, window)
+                menuitem = item.build(retval, window)
                 retval.AppendItem(menuitem)
                 if item.enabled:
                     menuitem.Enable()
@@ -111,6 +111,11 @@ class MenuProxy(object):
         self.update()
         return item
 
+    def enable(self): pass
+    def disable(self): pass
+    def show(self): pass
+    def hide(self): pass
+    
     def separator(self):
         item = MenuItemProxy(self.manager, self, separator=True)
         self._items.append(item)
@@ -129,13 +134,14 @@ class MenuBar(wx.MenuBar):
 
     def menu(self, label, enable=None, disable=None, show=None, hide=None):
         retval = MenuProxy(self.manager, self, label)
-        self.Append(retval.build_wx_menu(self.window), label)
+        self.Append(retval.build(self.window), label)
         self._menus[retval] = len(self._menus)
         # TODO Implement subscription for showing/hiding/enabling/disabling at the menu level
         return retval
 
+
     def update(self, menu):
-        self.Replace(self._menus[menu], menu.build_wx_menu(self.window), menu.label)
+        self.Replace(self._menus[menu], menu.build(self.window), menu.label)
 
 class MenuManager(object):
 
@@ -147,10 +153,11 @@ class MenuManager(object):
         window.SetMenuBar(retval)
         return retval
 
-    def menu(self, window, label='', enable=None, disable=None, show=None, hide=None):
-        retval = MenuProxy(self, window, label=label)
+    def menu(self, label='', enable=None, disable=None, show=None, hide=None):
+        retval = MenuProxy(self, None, label=label)
         self.subscribe(retval, enable=enable, disable=disable, show=show, hide=hide)
-
+        return retval
+    
     def subscribe(self, item, enable=None, disable=None, show=None, hide=None):
         for subscription, func in [(enable, item.enable), (disable, item.disable), (show, item.show), (hide, item.hide)]:
             if subscription:
@@ -181,6 +188,20 @@ if __name__ == "__main__":
     frame = wx.Frame(None)
     menubar = manager.menu_bar(frame)
     frame.SetMenuBar(menubar)
+    
+    pmenu = manager.menu()
+    pmenu.item("Popup item 1")
+    pmenu.item("Popup item 2")
+    pmenu.separator()
+    pmenu.item("Popup item 3")
+
+    def on_context_menu(evt):
+        panel.PopupMenu(pmenu.build_wx_menu(panel))
+    
+    # Stuff for popup menus
+    panel = wx.Panel(frame)
+    panel.SetBackgroundColour(wx.BLUE)
+    panel.Bind(wx.EVT_CONTEXT_MENU, on_context_menu)
 
     file = menubar.menu('File')
     edit = menubar.menu('Edit')

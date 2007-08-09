@@ -12,7 +12,7 @@ class LogStream(object):
             self.logger = logger
 
     def write(self, text):
-        self.logger.log(self.level, text)    
+        self.logger.log(self.level, text.strip())    
 
 class LogHandler(logging.Handler):
     def __init__(self, format=None):

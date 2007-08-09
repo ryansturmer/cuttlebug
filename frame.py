@@ -50,7 +50,7 @@ class Frame(wx.Frame):
             project = menubar.menu("&Project")
             project.item('&New Project...', self.on_new_project, icon="package.png")
             project.item('&Open Project...', self.on_open_project)
-            project.item('&Save Project...\tCtrl+S', self.on_save_project, icon="disk.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
+            project.item('&Save Project\tCtrl+S', self.on_save_project, icon="disk.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
             project.separator()
             project.item('Project Options...', self.on_project_options, icon='cog_edit.png', enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
             

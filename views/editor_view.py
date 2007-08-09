@@ -3,8 +3,7 @@ import wx.aui as aui
 import wx.stc as stc
 import os
 import wx
-import view
-
+import view, menu, icons, util
 class EditorView(view.View):
 
     def __init__(self,*args, **kwargs):
@@ -61,14 +60,67 @@ class EditorControl(stc.StyledTextCtrl):
         self.MarkerSetBackground(self.EXECUTION_MARKER, "yellow") 
         self.SetMarginType(1, stc.STC_MARGIN_SYMBOL)
         self.SetMarginWidth(1, 16)
+        self.edited = False
+        self.click_pos = None
         #self.SetMarginMask(1, 1<<31)
+        
+        self.create_popup_menu()
+
+        self.Bind(wx.EVT_RIGHT_DOWN, self.on_context_menu)
+  
+    def on_cut(self, evt):
+        self.Cut()
+
+    def on_copy(self, evt):
+        self.Copy()
+
+    def on_paste(self, evt):
+        self.Paste()
+
+    def __get_project_rel_file_path(self):
+        if self.controller and self.controller.project:
+            return self.controller.project.relative_path(self.file_path)
+        else:
+            return self.file_path
+    project_rel_file_path = property(__get_project_rel_file_path)
+
+    def create_popup_menu(self):
+        m = menu.manager.menu()
+        self.mnu_cut = m.item("Cut\tCtrl+X", func=self.on_cut, icon='cut.png')
+        self.mnu_copy = m.item("Copy\tCtrl+C", func=self.on_copy, icon='page_copy.png')
+        self.mnu_paste = m.item("Paste\tCtrl+V", func=self.on_paste, icon='paste_plain.png')
+        m.separator()
+        m.item("Run to here...", func=self.on_run_to_here, icon="breakpoint.png")
+        self.popup_menu = m
+
+    def on_run_to_here(self, evt):
+        line = self.line_from_point(self.click_pos)
+        self.controller.run_to(self.file_path, line)
+
+    def line_from_point(self, point):
+        return self.LineFromPosition(self.PositionFromPoint(point))
+
+    def on_context_menu(self, evt):
+        self.click_pos = evt.GetPosition()
+        start, end = self.GetSelection()
+        if start == end:
+            self.mnu_cut.hide()
+            self.mnu_copy.hide()
+        else:
+            self.mnu_cut.show()
+            self.mnu_copy.show()
+        self.PopupMenu(self.popup_menu.build(self)) 
+
+    def edit(self):
+        self.edited = True
 
     def get_name(self):
         if self.file_path:
             root, name = os.path.split(self.file_path)
-            return name
         else:
-            return 'Untitled'
+            name = 'Untitled'
+        
+        return (name + "*") if self.edited else name 
 
     def apply_settings(self):
         settings = self.controller.settings.editor
@@ -109,7 +161,7 @@ class EditorControl(stc.StyledTextCtrl):
         self.update_line_numbers()
 
     def remove_exec_marker(self):
-        self.MarkerDeleteAll(1 << self.EXECUTION_MARKER)
+        self.MarkerDeleteAll(self.EXECUTION_MARKER)
 
     def set_exec_marker(self, line):
         if line != None:
@@ -275,6 +327,9 @@ class Notebook(aui.AuiNotebook):
         if path:
             widget.open_file(path)
         self.AddPage(widget, widget.get_name(), True)
+        idx = self.GetPageIndex(widget)
+        if idx >= 0:
+            self.SetPageBitmap(idx, util.get_icon(icons.get_file_icon(path)))
         widget.SetFocus()
         self.Thaw()
         return widget

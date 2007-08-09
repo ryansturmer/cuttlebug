@@ -82,14 +82,17 @@ class Controller(wx.EvtHandler):
     def load_session(self):
         try:
             self.session = util.unpickle_file('.session')
-            #self.frame.manager.LoadPerspective(self.session.perspective)
-            #self.frame.manager.Update()
             if self.session.project_filename:
                 print "trying to load project: %s" % self.session.project_filename
                 try:
                     self.load_project(self.session.project_filename)
                 except Exception,  e:
                     print e
+            
+            #if self.session.perspective:
+                #self.frame.manager.LoadPerspective(self.session.perspective)
+                #self.frame.manager.Update()
+        
         except Exception, e:
             print e
             self.session = project.Session()
@@ -97,7 +100,7 @@ class Controller(wx.EvtHandler):
     def save_session(self):
         #print self.session
         if self.session:
-            #self.session.perspective = self.frame.manager.SavePerspective()
+            self.session.perspective = self.frame.manager.SavePerspective()
             if self.project:
                 self.session.project_filename = self.project.filename
                 print self.project.filename
@@ -114,7 +117,7 @@ class Controller(wx.EvtHandler):
         menu.manager.publish(menu.PROJECT_OPEN)
         self.project_view.set_project(self.project)
         self.session.project_filename = path
-        print self.project
+        #print self.project
 
     def save_project(self):
         self.project.save()
@@ -154,7 +157,7 @@ class Controller(wx.EvtHandler):
             self.error_logger.log(logging.WARN, "Tried to attach from state %d" % self.state)
 
     def exit_attached_state(self):
-        menu.manager.publish(menu.TARGET_DETACHED)
+        pass
         #print "Exiting the ATTACHED state."
 
     def enter_running_state(self):
@@ -174,6 +177,7 @@ class Controller(wx.EvtHandler):
     def enter_idle_state(self):
         #print "Entering the IDLE state"
         self.exit_current_state()
+        menu.manager.publish(menu.TARGET_DETACHED)
         self.frame.statusbar.icon = "disconnect.png"
         self.state = IDLE
 
@@ -229,6 +233,9 @@ class Controller(wx.EvtHandler):
         elif result.cls.lower() == "stopped":
             print result
 
+    def run_to(self, file, line):
+        if self.state == ATTACHED:
+            self.gdb.exec_until(file, line)
 
     # HALT
     def halt(self):
@@ -243,6 +250,8 @@ class Controller(wx.EvtHandler):
     def download(self):
         if self.state == ATTACHED:
             self.gdb.target_download()
+        else:
+            print "Can't download from state %s" % self.state
 
     # ATTACH TO GDB
     def attach(self):
@@ -313,6 +322,7 @@ class Controller(wx.EvtHandler):
     def on_update_locals_view(self, evt):
         if self.state == ATTACHED:
             self.gdb.stack_list_locals(callback=self.on_got_locals_data)
+
     def on_got_locals_data(self, result):
         if hasattr(result, 'locals'):
             update_dict = {}

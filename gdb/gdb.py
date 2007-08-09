@@ -147,7 +147,12 @@ class GDB(util.Process):
    
     def exec_finish(self, callback=None, *args, **kwargs):
         self.__cmd('-exec-finish\n', callback, *args, **kwargs)
-    
+   
+    def exec_until(self, file, line, callback=None, *args, **kwargs):
+        line = int(line)
+        file = str(file)
+        self.__cmd('-exec-until %s:%d\n' % (file, line), callable, *args, **kwargs)
+
     def exec_interrupt(self, callable=None, *args, **kwargs):
         self.__cmd('-exec-interrupt\n', callable, *args, **kwargs)
 
