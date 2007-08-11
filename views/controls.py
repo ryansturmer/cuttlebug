@@ -1,6 +1,6 @@
 import wx.stc as stc
 import os
-import build, prefs, util
+import build,  util
 import wx
 import wx.grid as grid
 import view

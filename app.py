@@ -54,6 +54,7 @@ class Controller(wx.EvtHandler):
 
         #   Editor
         self.editor_view = frame.editor_view
+        self.editor_view.Bind(views.EVT_VIEW_REQUEST_UPDATE, self.on_update_editor_view)
 
         # Logs
         self.log_view = frame.log_view
@@ -246,7 +247,7 @@ class Controller(wx.EvtHandler):
         if result.cls == "done" or result.cls == "stopped":
             self.change_state(ATTACHED)
             print result
-
+            
     def download(self):
         if self.state == ATTACHED:
             self.gdb.target_download()
@@ -287,6 +288,8 @@ class Controller(wx.EvtHandler):
         #print result.frame.line
         self.memory_view.request_update()
         self.locals_view.request_update()
+        self.editor_view.request_update()
+
         self.editor_view.set_exec_location(result.frame.fullname, int(result.frame.line))
         self.gdb.stack_list_locals()
         self.gdb.file_list_globals()
@@ -312,6 +315,7 @@ class Controller(wx.EvtHandler):
         if self.state == ATTACHED:
             start, end = evt.data
             self.gdb.read_memory(start, self.memory_view.stride, end-start, callback=self.on_got_memory_data)
+
     def on_got_memory_data(self, result):
         if hasattr(result, 'memory'):
                 memtable = []
@@ -329,3 +333,9 @@ class Controller(wx.EvtHandler):
             for item in result.locals:
                 update_dict[item.name] = item.value
             self.locals_view.update(update_dict)
+
+    def on_update_editor_view(self, evt):
+        if self.state == ATTACHED:
+            self.gdb.break_list(callback=self.on_got_breakpoint_data)
+    def on_got_breakpoint_data(self, result):
+        print result

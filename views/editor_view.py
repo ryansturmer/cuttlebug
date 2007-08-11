@@ -30,22 +30,37 @@ class EditorView(view.View):
             return
         widget.set_exec_marker(line)
 
+    def set_breakpoint(self, file, line):
+        editor = self.get_file_tab(file)
+        if editor:
+            editor.set_breakpoint_marker(line)
+    
+    def set_breakpoints(self, breakpoints):
+        for file, line in breakpoints:
+            self.set_breakpoint(file, line)
+
     def update_settings(self):
         for editor in self.notebook:
             editor.apply_settings()
             editor.apply_folding_settings()
+
     def save(self):
         self.notebook.save()
 
     def new(self):
         self.notebook.create_file_tab()
 
+    def request_update(self):
+        evt = view.ViewEvent(view.EVT_VIEW_REQUEST_UPDATE, self)
+        wx.PostEvent(self, evt)
+
 class EditorControl(stc.StyledTextCtrl):
     LINE_MARGIN = 0
     SYMBOL_MARGIN = 1
     FOLDING_MARGIN = 2
 
-    EXECUTION_MARKER = 1
+    EXECUTION_MARKER = 2
+    BREAKPOINT_MARKER = 1
     def __init__(self, *args, **kwargs):
         if 'controller' in kwargs:
             self.controller = kwargs.pop('controller')
@@ -56,8 +71,6 @@ class EditorControl(stc.StyledTextCtrl):
         self.file_path = ''
         self.apply_folding_settings()
         self.apply_settings()
-        self.MarkerDefine(self.EXECUTION_MARKER, stc.STC_MARK_ARROW)
-        self.MarkerSetBackground(self.EXECUTION_MARKER, "yellow") 
         self.SetMarginType(1, stc.STC_MARGIN_SYMBOL)
         self.SetMarginWidth(1, 16)
         self.edited = False
@@ -68,6 +81,15 @@ class EditorControl(stc.StyledTextCtrl):
 
         self.Bind(wx.EVT_RIGHT_DOWN, self.on_context_menu)
   
+    def define_markers(self):
+        # Execution Marker (for showing current program location)
+        self.MarkerDefine(self.EXECUTION_MARKER, stc.STC_MARK_ARROW)
+        self.MarkerSetBackground(self.EXECUTION_MARKER, "yellow") 
+        
+        # Breakpoint Marker (for showing user-selected breakpoints)
+        self.MarkerDefine(self.BREAKPOINT_MARKER, stc.STC_MARK_CIRCLE)
+        self.MarkerSetBackground(self.BREAKPOINT, "dark red") 
+
     def on_cut(self, evt):
         self.Cut()
 
@@ -169,6 +191,13 @@ class EditorControl(stc.StyledTextCtrl):
                 pass
             else:
                 self.MarkerAdd(line, self.EXECUTION_MARKER)
+
+    def set_breakpoint_marker(self, line):
+        if line != None:
+            if self.MarkerGet(line) & (1 << self.BREAKPOINT_MARKER):
+                pass
+            else:
+                self.MarkerAdd(line, self.BREAKPOINT_MARKER)
 
     def update_line_numbers(self):
         if self.controller and self.controller.settings.editor.page.show_line_numbers:
@@ -303,21 +332,27 @@ class Notebook(aui.AuiNotebook):
         window = self.get_window()
         if window:
             window.save()
-           
+    
+    def get_file_tab(self, path):
+        path = os.path.abspath(path)
+        for window in self:
+            if not window.file_path: continue
+            p1 = os.path.normcase(path)
+            p2 = os.path.normcase(window.file_path)
+            if p1 == p2:
+                return window
+        return None
 
     def create_file_tab(self, path=None):
         if path:
-            path = os.path.abspath(path)
-            for window in self.get_windows():
-                if not window.file_path:
-                    continue
-                p1 = os.path.normcase(path)
-                p2 = os.path.normcase(window.file_path)
-                if p1 == p2:
-                    window.SetFocus()
-                    return window
+            window = self.get_file_tab(path)
+            if window:
+                window.SetFocus()
+                return window
+
             if not os.path.exists(path):
                 return None
+        
         self.Freeze()
         #if path:
         #    self.close_untitled_tab()

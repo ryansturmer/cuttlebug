@@ -1,7 +1,6 @@
 import threading, subprocess
 import wx
 import app
-import prefs
 import os
 from subprocess import *
 import util

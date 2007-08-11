@@ -166,8 +166,10 @@ class GDB(util.Process):
         self.__cmd('-gdb-exit\n')
     
     def read_memory(self, start_addr, stride, count, callback=None, *args, **kwargs):
-        self.__cmd('-data-read-memory 0x%x u %d %d 1' % (start_addr, stride, count), callback, *args, **kwargs)
+        self.__cmd('-data-read-memory 0x%x u %d %d 1\n' % (start_addr, stride, count), callback, *args, **kwargs)
         
+    def break_list(self, callback=None, *args, **kwargs):
+        self.__cmd('-break-list\n', callback, *args, **kwargs)
 
     def get_register_names(self):
         self.command('-data-list-register-names')
