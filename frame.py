@@ -6,16 +6,19 @@ import styles, style_dialog
 # TODO Application icon
 class Frame(wx.Frame):
 
-        def __init__(self, parent=None, title="Debugger"):
+        def __init__(self, parent=None, title="Cuttlebug"):
             super(Frame, self).__init__(parent, -1, title, size=(1024,768))
-            self.menu_registry = {}
-            self.manager = aui.AuiManager(self)
+
+            self.controller = app.Controller(self)            
 
             self.Bind(wx.EVT_CLOSE, self.on_close)
+
+            # Create frame UI (menus, status, etc)
             self.create_menu_bar()
             self.create_status_bar()
             
             # Create views
+            self.manager = aui.AuiManager(self)
             self.create_build_view()
             self.create_log_view()
             self.create_memory_view()
@@ -23,10 +26,10 @@ class Frame(wx.Frame):
             self.create_register_view()
             self.create_project_view()
             self.create_editor_view()
+            self.controller.setup_logs()
+            self.controller.load_session()
             self.manager.Update()
-
-            self.controller = app.Controller(self)            
-        
+            
         def create_menu_bar(self):
             menubar = menu.manager.menu_bar(self)
 
@@ -122,12 +125,12 @@ class Frame(wx.Frame):
             self.SetStatusBar(self.statusbar)
 
         def create_memory_view(self):
-            self.memory_view = views.MemoryView(self)
+            self.memory_view = views.MemoryView(self, controller=self.controller)
             self.memory_view.info = aui.AuiPaneInfo().Caption('Memory').Right() 
             self.manager.AddPane(self.memory_view, self.memory_view.info)
         
         def create_locals_view(self):
-            self.locals_view = views.LocalsView(self)
+            self.locals_view = views.LocalsView(self, controller=self.controller)
             self.locals_view.info = aui.AuiPaneInfo().Caption('Locals').Right() 
             self.manager.AddPane(self.locals_view, self.locals_view.info)
         
@@ -135,22 +138,22 @@ class Frame(wx.Frame):
             pass
 
         def create_build_view(self):
-            self.build_view = views.BuildView(self)
+            self.build_view = views.BuildView(self, controller=self.controller)
             self.build_view.info = aui.AuiPaneInfo().Caption('Build').Bottom() 
             self.manager.AddPane(self.build_view, self.build_view.info)
         
         def create_log_view(self):
-            self.log_view = views.LogView(self)
+            self.log_view = views.LogView(self, controller = self.controller)
             self.log_view.info = aui.AuiPaneInfo().Caption('Logs').Bottom() 
             self.manager.AddPane(self.log_view, self.log_view.info)
 
         def create_editor_view(self):
-            self.editor_view = views.EditorView(self)
+            self.editor_view = views.EditorView(self, controller=self.controller)
             self.editor_view.info = aui.AuiPaneInfo().CentrePane().PaneBorder(False)
             self.manager.AddPane(self.editor_view, self.editor_view.info)
 
         def create_project_view(self):
-            self.project_view = views.ProjectView(self)
+            self.project_view = views.ProjectView(self, controller=self.controller)
             self.project_view.info = aui.AuiPaneInfo().Caption('Project').Left() 
             self.manager.AddPane(self.project_view, self.project_view.info)
         

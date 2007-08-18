@@ -8,6 +8,21 @@ ATTACHED = 2
 CONNECTED = 3
 RUNNING = 4
 
+class AppEvent(wx.PyEvent):
+    def __init__(self, type, object=None, data=None):
+        super(AppEvent, self).__init__()
+        self.SetEventType(type.typeId)
+        self.SetEventObject(object)
+        self.data = data
+
+
+EVT_APP_PROJECT_OPENED = wx.PyEventBinder(wx.NewEventType())
+EVT_APP_PROJECT_CLOSED = wx.PyEventBinder(wx.NewEventType())
+EVT_APP_TARGET_CONNECTED = wx.PyEventBinder(wx.NewEventType())
+EVT_APP_TARGET_DISCONNECTED = wx.PyEventBinder(wx.NewEventType())
+EVT_APP_TARGET_RUNNING = wx.PyEventBinder(wx.NewEventType())
+EVT_APP_TARGET_HALTED = wx.PyEventBinder(wx.NewEventType())
+
 class Controller(wx.EvtHandler):
 
     def __init__(self, frame=None):
@@ -18,6 +33,7 @@ class Controller(wx.EvtHandler):
         self.gdb = None
         self.frame = frame
         self.project = None
+        
         try:
             self.settings = settings.Settings.load(".settings")
         except Exception, e:
@@ -36,47 +52,26 @@ class Controller(wx.EvtHandler):
         self.Bind(gdb.EVT_GDB_ERROR, self.on_gdb_error)
         self.Bind(gdb.EVT_GDB_STOPPED, self.on_gdb_stopped)
         self.Bind(gdb.EVT_GDB_RUNNING, self.on_gdb_running)
-        
-        # Views
-        #   Build
-        self.build_view = frame.build_view
+              
 
-        #   Memory
-        self.memory_view = frame.memory_view
-        self.memory_view.Bind(views.EVT_VIEW_REQUEST_UPDATE, self.on_update_memory_view)
-
-        self.locals_view = frame.locals_view
-        self.locals_view.Bind(views.EVT_VIEW_REQUEST_UPDATE, self.on_update_locals_view)
- 
-        #   Project
-        self.project_view = frame.project_view
-        self.project_view.Bind(views.EVT_PROJECT_DCLICK_FILE, self.on_project_dclick_file)
-
-        #   Editor
-        self.editor_view = frame.editor_view
-        self.editor_view.Bind(views.EVT_VIEW_REQUEST_UPDATE, self.on_update_editor_view)
-
-        # Logs
-        self.log_view = frame.log_view
-        self.log_view.add_logger(logging.getLogger('stdout'))
+    def setup_logs(self):
+        log_view = self.frame.log_view
+        log_view.add_logger(logging.getLogger('stdout'))
         
         self.mi_logger = logging.getLogger('gdb.mi')
-        self.log_view.add_logger(self.mi_logger)
+        log_view.add_logger(self.mi_logger)
 
         self.gdb_logger = logging.getLogger('gdb.stream')
-        self.log_view.add_logger(self.gdb_logger, format="%(message)s")
+        log_view.add_logger(self.gdb_logger, format="%(message)s")
        
         self.error_logger = logging.getLogger('errors')
-        self.log_view.add_logger(self.error_logger)
+        log_view.add_logger(self.error_logger)
 
         self.build_logger = logging.getLogger("Build")
-        self.log_view.add_logger(self.build_logger, format="%(message)s")
+        log_view.add_logger(self.build_logger, format="%(message)s")
         
-        log.redirect_stdout('stdout')
-      
-        # Session
-        self.load_session()
-    
+        #log.redirect_stdout('stdout')
+        
     def on_project_dclick_file(self, evt):
         self.frame.open_file(evt.data)
 
@@ -109,16 +104,21 @@ class Controller(wx.EvtHandler):
 
     def new_project(self, path):
         if path:
+            project_view = self.frame.project_view
             self.project = project.Project.create(path)
-            self.project_view.set_project(self.project)
+            project_view.set_project(self.project)
             menu.manager.publish(menu.PROJECT_OPEN)
+            evt = AppEvent(EVT_APP_PROJECT_OPENED, self, data=self.project)
+            wx.PostEvent(self, evt)
 
     def load_project(self, path):
+        project_view = self.frame.project_view
         self.project = project.Project.load(path)
         menu.manager.publish(menu.PROJECT_OPEN)
-        self.project_view.set_project(self.project)
+        project_view.set_project(self.project)
         self.session.project_filename = path
-        #print self.project
+        evt = AppEvent(EVT_APP_PROJECT_OPENED, self, data=self.project)
+        wx.PostEvent(self, evt)
 
     def save_project(self):
         self.project.save()
@@ -127,7 +127,7 @@ class Controller(wx.EvtHandler):
         self.frame.open_file(path)
 
     def update_settings(self):
-        self.editor_view.update_settings()
+        self.frame.editor_view.update_settings()
 
     # IDE Functions, Building, Cleaning, Etc..
     def build(self):
@@ -231,6 +231,8 @@ class Controller(wx.EvtHandler):
     def on_running(self, result):
         if result.cls.lower() == "running":
             self.change_state(RUNNING)
+            evt = AppEvent(EVT_APP_TARGET_RUNNING, self)
+            wx.PostEvent(self, evt)
         elif result.cls.lower() == "stopped":
             print result
 
@@ -246,6 +248,8 @@ class Controller(wx.EvtHandler):
     def on_halted(self, result):
         if result.cls == "done" or result.cls == "stopped":
             self.change_state(ATTACHED)
+            evt = AppEvent(EVT_APP_TARGET_HALTED, self)
+            wx.PostEvent(self, evt)
             print result
             
     def download(self):
@@ -286,29 +290,27 @@ class Controller(wx.EvtHandler):
         result = evt.data
         #print result.frame.fullname
         #print result.frame.line
-        self.memory_view.request_update()
-        self.locals_view.request_update()
-        self.editor_view.request_update()
-
-        self.editor_view.set_exec_location(result.frame.fullname, int(result.frame.line))
-        self.gdb.stack_list_locals()
-        self.gdb.file_list_globals()
+        #self.frame.memory_view.request_update()
+        #self.frame.locals_view.request_update()
+        evt = AppEvent(EVT_APP_TARGET_HALTED, self, data=(result.frame.fullname, result.frame.line))
+        wx.PostEvent(self, evt)
 
     def on_gdb_running(self, evt):
         self.change_state(RUNNING)
 
     # BUILD EVENTS
     def on_build_started(self, evt):
+        build_view = self.frame.build_view
         self.state = BUILDING
-        self.build_view.clear()
-        self.build_view.update("Build Started.\n")
+        build_view.clear()
+        build_view.update("Build Started.\n")
 
     def on_build_finished(self, evt):
         self.state = IDLE
-        self.build_view.update("Build completed.\n")
+        self.frame.build_view.update("Build completed.\n")
 
     def on_build_update(self, evt):
-        self.build_view.update(str(evt.data))
+        self.frame.build_view.update(str(evt.data))
 
     # VIEW EVENTS
     def on_update_memory_view(self, evt):

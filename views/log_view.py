@@ -5,8 +5,8 @@ import log
 
 class LogView(view.View):
     
-    def __init__(self, parent):
-        super(LogView, self).__init__(parent, -1, style=wx.BORDER_STATIC, size=(800,150))
+    def __init__(self, parent, controller):
+        super(LogView, self).__init__(parent, -1, style=wx.BORDER_STATIC, size=(800,150), controller=controller)
         self.notebook = aui.AuiNotebook(self, -1, style=wx.BORDER_NONE | aui.AUI_NB_TAB_MOVE | aui.AUI_NB_TAB_SPLIT)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.notebook,1, wx.EXPAND)

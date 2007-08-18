@@ -185,8 +185,8 @@ class MemoryGridControl(grid.Grid):
 
 class MemoryView(view.View):
 
-    def __init__(self, parent, size=1048576, stride=4):
-        super(MemoryView, self).__init__(parent, -1, style=wx.BORDER_STATIC, size=(300, 800))
+    def __init__(self, parent, controller, size=1048576, stride=4):
+        super(MemoryView, self).__init__(parent, -1, style=wx.BORDER_STATIC, size=(300, 800), controller=controller)
         self.grid = MemoryGridControl(self, -1, style=wx.BORDER_NONE, stride=stride, update_callable=self.on_cell_update)
         self.grid.Bind(wx.EVT_SCROLLWIN, self.on_scrolled) 
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -199,10 +199,8 @@ class MemoryView(view.View):
     
     def __get_stride(self):
         return self.grid.stride
-
     def __set_stride(self, stride):
         self.grid.stride = stride
-
     stride = property(__get_stride, __set_stride)
 
     def update(self, base_addr, values):

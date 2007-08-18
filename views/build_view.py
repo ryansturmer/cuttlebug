@@ -8,7 +8,7 @@ class BuildPortalControl(stc.StyledTextCtrl):
 
 class BuildView(wx.Panel):
 
-    def __init__(self, parent):
+    def __init__(self, parent, controller):
         super(BuildView, self).__init__(parent, -1, style=wx.BORDER_STATIC, size=(800,150))
         self.txt = controls.BuildPortalControl(self, -1, style=wx.BORDER_NONE)
         sizer = wx.BoxSizer(wx.VERTICAL)
