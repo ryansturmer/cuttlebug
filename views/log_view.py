@@ -1,7 +1,7 @@
 import wx
-import view
 import wx.aui as aui
-import log
+import view, util, log
+
 
 class LogView(view.View):
     
@@ -20,9 +20,12 @@ class LogView(view.View):
         n = self.notebook.GetPageCount()
         return [self.get_pane(i) for i in range(n)]
 
-    def add_logger(self, logger, format=None):
+    def add_logger(self, logger, format=None, icon=None):
         pane = LogPane(self, logger, format=format)
         self.notebook.AddPage(pane, logger.name)
+        if icon:
+            idx = self.notebook.GetPageIndex(pane)
+            self.notebook.SetPageBitmap(idx, util.get_icon(icon))
 
 class LogPane(wx.Panel):
 
@@ -43,7 +46,6 @@ class LogPane(wx.Panel):
     def listener(self, handler, message):
         line = handler.format(message)
         if not line.endswith("\n"): line += "\n"
-
         wx.CallAfter(self.txt.AppendText, "%s" % line)
 
     # TODO hook these up

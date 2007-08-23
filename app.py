@@ -57,19 +57,19 @@ class Controller(wx.EvtHandler):
 
     def setup_logs(self):
         log_view = self.frame.log_view
-        log_view.add_logger(logging.getLogger('stdout'))
+        log_view.add_logger(logging.getLogger('stdout'), icon="application_osx_terminal.png")
         
         self.mi_logger = logging.getLogger('gdb.mi')
-        log_view.add_logger(self.mi_logger)
+        log_view.add_logger(self.mi_logger, icon="gnu.png")
 
         self.gdb_logger = logging.getLogger('gdb.stream')
-        log_view.add_logger(self.gdb_logger, format="%(message)s")
+        log_view.add_logger(self.gdb_logger, format="%(message)s", icon="gnu.png")
        
         self.error_logger = logging.getLogger('errors')
-        log_view.add_logger(self.error_logger)
+        log_view.add_logger(self.error_logger, icon="stop.png")
 
         self.build_logger = logging.getLogger("Build")
-        log_view.add_logger(self.build_logger, format="%(message)s")
+        log_view.add_logger(self.build_logger, format="%(message)s", icon="brick.png")
         
         log.redirect_stdout('stdout')
         
