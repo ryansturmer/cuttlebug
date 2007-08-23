@@ -140,8 +140,9 @@ class MemoryGridControl(grid.Grid):
 
         row1 = abs(y1)/self.GetDefaultRowSize()
         row2 = abs(y2)/self.GetDefaultRowSize()
-        start_addr = self.GetTable().address_from_row(row1)
-        end_addr = self.GetTable().address_from_row(row2) + self.GetNumberCols()*self.GetTable().stride
+        start_addr = self.GetTable().address_from_row(row1-1 if row1-1 >= 0 else 0)
+        end_addr = self.GetTable().address_from_row(row2+1) + self.GetNumberCols()*self.GetTable().stride
+        print "getting visible address range: %s" % ((start_addr, end_addr),)
         return (start_addr, end_addr)
 
     def set_font(self, face, size=9):
@@ -189,8 +190,9 @@ class MemoryView(view.View):
         super(MemoryView, self).__init__(parent, -1, style=wx.BORDER_STATIC, size=(300, 800), controller=controller)
         self.grid = MemoryGridControl(self, -1, style=wx.BORDER_NONE, stride=stride, update_callable=self.on_cell_update)
         self.grid.Bind(wx.EVT_SCROLLWIN, self.on_scrolled) 
+      #  self.grid.Bind(wx.EVT_SIZE, self.on_size)
         sizer = wx.BoxSizer(wx.VERTICAL)
-        
+        self.fetching = False
         #self.toolbar = wx.ToolBar(self, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
         #util.tool_item(self, self.toolbar, "Menu", func=None, icon="resultset_next.png")
         #sizer.Add(self.toolbar,0, wx.EXPAND)
@@ -203,21 +205,39 @@ class MemoryView(view.View):
         self.grid.stride = stride
     stride = property(__get_stride, __set_stride)
 
+    def on_target_connected(self):
+        self._fetch_data()
+    def on_target_halted(self, file, line):
+        self._fetch_data()
+        
+    def _fetch_data(self):
+        if not self.fetching and self.controller.gdb:
+            start, end = self.grid.visible_address_range()
+            self.controller.gdb.read_memory(start, self.stride, end-start, callback=self._on_data_fetched)
+            self.fetching = True
+            
+    def _on_data_fetched(self, result):
+        self.fetching = False
+        if hasattr(result, 'memory'):
+                memtable = []
+                for entry in result.memory:
+                    memtable.append(int(entry.data[0]))
+                    wx.CallAfter(self.update,int(result.addr,16), memtable)
+        
     def update(self, base_addr, values):
         self.grid.update(base_addr, values)
-
-    def request_update(self, range=None):
-        range = range or self.grid.visible_address_range()
-        evt = view.ViewEvent(view.EVT_VIEW_REQUEST_UPDATE, self, data=range)
-        wx.PostEvent(self, evt)
         
     def on_cell_update(self, addr, value):
         print hex(addr) + "=" + str(value)
 
     def on_scrolled(self, evt):
-        self.request_update(self.grid.visible_address_range())
+        self._fetch_data()
         evt.Skip()
-
+    
+    def on_size(self, evt):
+        self._fetch_data()
+        evt.Skip()
+        
     def on_label_dclick(self, evt):
         print "Got label doubleclick"
 

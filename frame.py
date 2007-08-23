@@ -23,9 +23,11 @@ class Frame(wx.Frame):
             self.create_log_view()
             self.create_memory_view()
             self.create_locals_view()
+            self.create_breakpoint_view()
             self.create_register_view()
             self.create_project_view()
             self.create_editor_view()
+            
             self.controller.setup_logs()
             self.controller.load_session()
             self.manager.Update()
@@ -45,8 +47,14 @@ class Frame(wx.Frame):
             
             # EDIT
             edit = menubar.menu("&Edit")
-            edit.item('&Styles...', self.on_styles)
+            edit.item('&Undo\tCtrl+Z', self.on_undo)
+            edit.item('&Redo\tCtrl+Y', self.on_redo)
             edit.separator()
+            edit.item('Cu&t\tCtrl+X', self.on_cut, icon='cut.png')
+            edit.item('&Copy\tCtrl+C', self.on_copy, icon='page_copy.png')
+            edit.item('&Paste\tCtrl+V', self.on_paste, icon='paste_plain.png')            
+            edit.separator()
+            edit.item('&Styles...', self.on_styles, icon="style.png")
             edit.item('&Options...', self.on_settings, icon='cog_edit.png')
 
             # Project Menu
@@ -87,6 +95,22 @@ class Frame(wx.Frame):
 
             menu.manager.publish(menu.PROJECT_CLOSE)
             menu.manager.publish(menu.TARGET_DETACHED)
+        
+        
+        def on_cut(self, evt):
+            pass
+        
+        def on_copy(self,evt):
+            pass
+        
+        def on_paste(self,evt):
+            pass
+        
+        def on_undo(self,evt):
+            pass
+        
+        def on_redo(self,evt):
+            pass
         
         def browse_for_file(self, message='', dir='', file='', style=wx.FD_OPEN, wildcard=""):
             dlg = wx.FileDialog(self, message=message, defaultDir=dir, defaultFile=file, wildcard=wildcard, style=style)
@@ -129,6 +153,11 @@ class Frame(wx.Frame):
             self.memory_view.info = aui.AuiPaneInfo().Caption('Memory').Right() 
             self.manager.AddPane(self.memory_view, self.memory_view.info)
         
+        def create_breakpoint_view(self):
+            self.breakpoint_view = views.BreakpointView(self, controller=self.controller)
+            self.breakpoint_view.info = aui.AuiPaneInfo().Caption('Breakpoints').Right() 
+            self.manager.AddPane(self.breakpoint_view, self.breakpoint_view.info)
+
         def create_locals_view(self):
             self.locals_view = views.LocalsView(self, controller=self.controller)
             self.locals_view.info = aui.AuiPaneInfo().Caption('Locals').Right() 
@@ -154,12 +183,16 @@ class Frame(wx.Frame):
 
         def create_project_view(self):
             self.project_view = views.ProjectView(self, controller=self.controller)
+            self.project_view.Bind(views.EVT_PROJECT_DCLICK_FILE, self.on_project_dclick_file)
+
             self.project_view.info = aui.AuiPaneInfo().Caption('Project').Left() 
             self.manager.AddPane(self.project_view, self.project_view.info)
         
         def open_file(self, path):
             self.editor_view.notebook.create_file_tab(path)
 
+        def on_project_dclick_file(self, evt):
+            self.open_file(evt.data)
 
         # Event Handlers
         def on_open(self, evt):

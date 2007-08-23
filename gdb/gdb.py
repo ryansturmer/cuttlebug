@@ -174,6 +174,11 @@ class GDB(util.Process):
     def get_register_names(self):
         self.command('-data-list-register-names')
         
+    def break_insert(self, file, line, hardware=False, temporary=False,  callback=None, *args, **kwargs):
+        self.__cmd("-break-insert %s %s %s:%d" % ("-h" if hardware else "", "-t" if temporary else "", file, line), callback, *args, **kwargs)
+        
+    def break_delete(self, num, callback=None, *args, **kwargs):
+        self.__cmd("-break-delete %d" % int(num), callback, *args, **kwargs)
     # Set Executable
     def set_exec(self, file):
         file = os.path.abspath(file)

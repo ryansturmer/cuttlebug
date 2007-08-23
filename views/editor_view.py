@@ -3,7 +3,8 @@ import wx.aui as aui
 import wx.stc as stc
 import os
 import wx
-import view, menu, icons, util
+import view, menu, icons, util, app
+
 class EditorView(view.View):
 
     def __init__(self,*args, **kwargs):
@@ -14,12 +15,16 @@ class EditorView(view.View):
         self.SetSizer(sizer)
         self.files = {}
 
+    def on_target_halted(self, file, line):
+        self.set_exec_location(file, line)
+        self.update_breakpoints()
+        
     def goto(self, file, line):
         widget = self.notebook.create_file_tab(file)
         if not widget:
             return
         widget.SetFocus()
-        widget.GotoLine(line)
+        widget.GotoLine(line+1)
 
     def set_exec_location(self, file, line):
         self.goto(file, line)
@@ -30,14 +35,33 @@ class EditorView(view.View):
             return
         widget.set_exec_marker(line)
 
-    def set_breakpoint(self, file, line):
-        editor = self.get_file_tab(file)
+    def set_breakpoint_marker(self, file, line):
+        editor = self.notebook.get_file_tab(file)
         if editor:
             editor.set_breakpoint_marker(line)
     
-    def set_breakpoints(self, breakpoints):
+    def set_breakpoint_markers(self, breakpoints):
         for file, line in breakpoints:
-            self.set_breakpoint(file, line)
+            self.set_breakpoint_marker(file, line)
+
+    def remove_breakpoint_markers(self):
+        for editor in self.notebook:
+            editor.remove_breakpoint_markers()
+    
+    def update_breakpoints(self):
+        if self.controller.gdb:
+            self.controller.gdb.break_list(callback=self._on_break_list)
+            
+    def _on_break_list(self, data):
+        self.remove_breakpoint_markers()
+        if hasattr(data, 'BreakpointTable'):
+            for item in data.BreakpointTable.body:
+                print item
+                file = item['bkpt']['fullname']
+                line = int(item['bkpt']['line'])
+                self.set_breakpoint_marker(file, line)
+                
+                
 
     def update_settings(self):
         for editor in self.notebook:
@@ -76,10 +100,11 @@ class EditorControl(stc.StyledTextCtrl):
         self.edited = False
         self.click_pos = None
         #self.SetMarginMask(1, 1<<31)
-        
+        self.define_markers()
         self.create_popup_menu()
 
         self.Bind(wx.EVT_RIGHT_DOWN, self.on_context_menu)
+        self.Bind(stc.EVT_STC_UPDATEUI, self.on_update_ui)
   
     def define_markers(self):
         # Execution Marker (for showing current program location)
@@ -88,8 +113,11 @@ class EditorControl(stc.StyledTextCtrl):
         
         # Breakpoint Marker (for showing user-selected breakpoints)
         self.MarkerDefine(self.BREAKPOINT_MARKER, stc.STC_MARK_CIRCLE)
-        self.MarkerSetBackground(self.BREAKPOINT, "dark red") 
-
+        self.MarkerSetBackground(self.BREAKPOINT_MARKER, "dark red") 
+        
+    def on_update_ui(self, evt):
+        self.controller.frame.statusbar.line = self.current_line()+1
+        
     def on_cut(self, evt):
         self.Cut()
 
@@ -112,25 +140,61 @@ class EditorControl(stc.StyledTextCtrl):
         self.mnu_copy = m.item("Copy\tCtrl+C", func=self.on_copy, icon='page_copy.png')
         self.mnu_paste = m.item("Paste\tCtrl+V", func=self.on_paste, icon='paste_plain.png')
         m.separator()
-        m.item("Run to here...", func=self.on_run_to_here, icon="breakpoint.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], show=[menu.TARGET_HALTED,menu.TARGET_ATTACHED])
+        m.item("Run to here...", func=self.on_run_to_here, icon="breakpoint.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
+                                                                                  show=[menu.TARGET_HALTED,menu.TARGET_ATTACHED])
+        self.mnu_set_bp = m.item("Set breakpoint", func=self.on_breakpoint_here, icon="stop.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
+                                                                                show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
+        self.mnu_clear_bp = m.item("Clear breakpoint", func=self.on_clear_breakpoint, icon="stop_disabled.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
+                                                                                show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
         self.popup_menu = m
 
     def on_run_to_here(self, evt):
-        line = self.line_from_point(self.click_pos)
+        line = self.line_from_point(self.click_pos)+1
         self.controller.run_to(self.file_path, line)
 
+    def on_breakpoint_here(self, evt):
+        line = self.line_from_point(self.click_pos)+1
+        print "THIS IS THE LINE: %d" % line
+        self.controller.set_breakpoint(self.file_path, line)
+        
+    def on_clear_breakpoint(self, evt):
+        line = self.line_from_point(self.click_pos)        
+        self.controller.clear_breakpoint(self.file_path, line)
+        
     def line_from_point(self, point):
         return self.LineFromPosition(self.PositionFromPoint(point))
 
+    def current_line(self):
+        return self.LineFromPosition(self.GetCurrentPos())
+    
+    def breakpoint_on_line(self, line):
+        markers = self.MarkerGet(line-1)
+        if(markers & (1 << self.BREAKPOINT_MARKER)):
+            return True
+        return False
+    
     def on_context_menu(self, evt):
         self.click_pos = evt.GetPosition()
         start, end = self.GetSelection()
+        line = self.line_from_point(self.click_pos)
         if start == end:
             self.mnu_cut.hide()
             self.mnu_copy.hide()
         else:
             self.mnu_cut.show()
             self.mnu_copy.show()
+            
+        if self.controller.state == app.ATTACHED:
+            if self.breakpoint_on_line(line):
+                self.mnu_clear_bp.show()
+                self.mnu_set_bp.hide()
+            else:
+                self.mnu_clear_bp.hide()
+                self.mnu_set_bp.show()
+        else:
+            self.mnu_clear_bp.hide()
+            self.mnu_set_bp.hide()
+            
         self.PopupMenu(self.popup_menu.build(self)) 
 
     def edit(self):
@@ -187,17 +251,20 @@ class EditorControl(stc.StyledTextCtrl):
 
     def set_exec_marker(self, line):
         if line != None:
-            if self.MarkerGet(line) & (1 << self.EXECUTION_MARKER):
+            if self.MarkerGet(line-1) & (1 << self.EXECUTION_MARKER):
                 pass
             else:
-                self.MarkerAdd(line, self.EXECUTION_MARKER)
+                self.MarkerAdd(line-1, self.EXECUTION_MARKER)
+
+    def remove_breakpoint_markers(self):
+        self.MarkerDeleteAll(self.BREAKPOINT_MARKER)
 
     def set_breakpoint_marker(self, line):
         if line != None:
-            if self.MarkerGet(line) & (1 << self.BREAKPOINT_MARKER):
+            if self.MarkerGet(line-1) & (1 << self.BREAKPOINT_MARKER):
                 pass
             else:
-                self.MarkerAdd(line, self.BREAKPOINT_MARKER)
+                self.MarkerAdd(line-1, self.BREAKPOINT_MARKER)
 
     def update_line_numbers(self):
         if self.controller and self.controller.settings.editor.page.show_line_numbers:
@@ -209,6 +276,7 @@ class EditorControl(stc.StyledTextCtrl):
                 if n < 4: text += ' ' * (4-n)
                 width = self.TextWidth(stc.STC_STYLE_LINENUMBER, text)
                 self.SetMarginWidth(self.LINE_MARGIN, width)
+                
     def detect_language(self):
         if self.controller:
             path = self.file_path
@@ -317,9 +385,15 @@ class Notebook(aui.AuiNotebook):
         style |= aui.AUI_NB_TAB_MOVE
         style |= aui.AUI_NB_TAB_SPLIT
         super(Notebook, self).__init__(parent, -1, style=style)
+        self.Bind(aui.EVT_AUINOTEBOOK_PAGE_CHANGED, self.on_page_changed)
 
     def __iter__(self):
         return iter(self.get_windows())
+    
+    def on_page_changed(self, evt):
+        window = self.get_window()
+        if window:
+            wx.GetApp().GetTopWindow().controller.frame.statusbar.line = window.current_line()+1
     def get_window(self, index=None):
         if index is None: index = self.GetSelection()
         return self.GetPage(index) if index >= 0 else None
@@ -348,6 +422,7 @@ class Notebook(aui.AuiNotebook):
             window = self.get_file_tab(path)
             if window:
                 window.SetFocus()
+                wx.GetApp().GetTopWindow().controller.frame.statusbar.line = window.current_line()+1
                 return window
 
             if not os.path.exists(path):
@@ -366,6 +441,7 @@ class Notebook(aui.AuiNotebook):
         if idx >= 0:
             self.SetPageBitmap(idx, util.get_icon(icons.get_file_icon(path)))
         widget.SetFocus()
+        wx.GetApp().GetTopWindow().controller.frame.statusbar.line = widget.current_line()+1
         self.Thaw()
         return widget
 

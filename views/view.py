@@ -19,40 +19,38 @@ class View(wx.Panel):
         self.controller = kwargs.pop('controller', None)
         super(View, self).__init__(*args, **kwargs)
         if self.controller:
-            self.controller.Bind(app.EVT_APP_PROJECT_CLOSED, self._on_project_close)
-            self.controller.Bind(app.EVT_APP_PROJECT_OPENED, self._on_project_open)
-            self.controller.Bind(app.EVT_APP_TARGET_CONNECTED, self._target_connected)
-            self.controller.Bind(app.EVT_APP_TARGET_DISCONNECTED, self._on_target_disconnected)
-            self.controller.Bind(app.EVT_APP_TARGET_RUNNING, self._target_running)
-            self.controller.Bind(app.EVT_APP_TARGET_HALTED, self._on_target_halted)
+            self._bind(app.EVT_APP_PROJECT_CLOSED, "on_project_close")
+            self._bind(app.EVT_APP_PROJECT_OPENED, "on_project_open")
+            self._bind(app.EVT_APP_TARGET_CONNECTED, "on_target_connected")
+            self._bind(app.EVT_APP_TARGET_DISCONNECTED, "on_target_disconnected")
+            self._bind(app.EVT_APP_TARGET_RUNNING, "on_target_running")
+            self._bind(app.EVT_APP_TARGET_HALTED, "on_target_halted")
 
+    def _bind(self, event, function_name):
+        if hasattr(self, function_name) and self.controller:
+            handler = getattr(self, "_%s" % function_name)
+            self.controller.Bind(event, handler)
+            
     def _on_project_open(self, evt):
         self.on_project_open(evt.data)
-    def on_project_open(self, project):
-        pass
+        evt.Skip()
     
     def _on_project_close(self, evt):
         self.on_project_close(evt.data)    
-    def on_project_close(self, project):
-        pass
 
     def _on_target_connected(self, evt):
         self.on_target_connected()
-    def on_target_connected(self):
-        pass
+        evt.Skip()
     def _on_target_disconnected(self, evt):
-        self.on_target_disconnected()    
-    def on_target_disconnected(self):
-        pass
+        self.on_target_disconnected()
+        evt.Skip()    
     
     def _on_target_running(self, evt):
         self.on_target_running()
-    def on_target_running(self):
-        pass
+        evt.Skip()
 
     def _on_target_halted(self, evt):
-        self.on_target_halted(evt.data[0], evt.data[1])    
-    def on_target_halted(self, filename, line):
-        pass
+        self.on_target_halted(evt.data[0], evt.data[1])
+        evt.Skip() 
     
     

@@ -30,11 +30,11 @@ class LogHandler(logging.Handler):
             listener(self, record)
 
 def redirect_stdout(logname=None):
-    #sys.stdout = LogStream(logging.getLogger(logname), level=logging.INFO)
+    sys.stdout = LogStream(logging.getLogger(logname), level=logging.INFO)
     pass
 
 def redirect_stderr(logname=None):
-    #sys.stderr = LogStream(logging.getLogger(logname), level=logging.INFO)
+    sys.stderr = LogStream(logging.getLogger(logname), level=logging.INFO)
     pass
 
 # Global stuff

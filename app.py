@@ -33,6 +33,7 @@ class Controller(wx.EvtHandler):
         self.gdb = None
         self.frame = frame
         self.project = None
+        self.breakpoints = {}
         
         try:
             self.settings = settings.Settings.load(".settings")
@@ -70,10 +71,8 @@ class Controller(wx.EvtHandler):
         self.build_logger = logging.getLogger("Build")
         log_view.add_logger(self.build_logger, format="%(message)s")
         
-        #log.redirect_stdout('stdout')
+        log.redirect_stdout('stdout')
         
-    def on_project_dclick_file(self, evt):
-        self.frame.open_file(evt.data)
 
     def load_session(self):
         try:
@@ -150,10 +149,12 @@ class Controller(wx.EvtHandler):
         #print "Entering the ATTACHED state."
         if self.state == IDLE:
             self.gdb.set_exec(self.project.absolute_path(self.project.debug.target))
+            self.halt()
         if self.state == IDLE or self.state == RUNNING:
             self.exit_current_state()
             self.frame.statusbar.icon = "connect.png"
             self.state = ATTACHED
+            self.frame.statusbar.set_state("Halted")
         else:
             self.error_logger.log(logging.WARN, "Tried to attach from state %d" % self.state)
 
@@ -167,6 +168,7 @@ class Controller(wx.EvtHandler):
         if self.state == ATTACHED:
             self.exit_current_state()
             self.frame.statusbar.icon = "connect_green.png"
+            self.frame.statusbar.set_state("Running",blink=True)
             self.state = RUNNING
         else:
             self.error_logger.log(logging.WARN, "Tried to run from state %d" % self.state)
@@ -240,7 +242,34 @@ class Controller(wx.EvtHandler):
         if self.state == ATTACHED:
             self.gdb.exec_until(file, line)
 
-    # HALT
+    def set_breakpoint(self, file, line):
+        print "controller wants to set breakpoint: %s %d" % (file, line)
+        self.gdb.break_insert(file, line, callback=self.on_breakpoint_set)
+    
+    def on_breakpoint_set(self, data):
+        print data
+        filename = data['bkpt']['fullname']
+        line = data['bkpt']['line']
+        self.breakpoints[int(data['bkpt']['number'])] = (filename, line) 
+        wx.CallAfter(self.breakpoint_update)
+        
+    def clear_breakpoint(self, file, line):
+        for key in self.breakpoints:
+           
+            f, l = self.breakpoints[key]
+            print f, l
+            print file, line
+            if f == file and int(l) == int(line):
+                self.gdb.break_delete(key, self.on_breakpoint_cleared, key)
+    def on_breakpoint_cleared(self, data, key):
+        print "clearing breakpoint"
+        del(self.breakpoints[key])
+        wx.CallAfter(self.breakpoint_update)
+
+    def breakpoint_update(self):
+        self.frame.editor_view.update_breakpoints()
+        self.frame.breakpoint_view.update_breakpoints()
+        
     def halt(self):
         print "trying to halt"
         self.gdb.exec_interrupt(self.on_halted)
@@ -248,8 +277,8 @@ class Controller(wx.EvtHandler):
     def on_halted(self, result):
         if result.cls == "done" or result.cls == "stopped":
             self.change_state(ATTACHED)
-            evt = AppEvent(EVT_APP_TARGET_HALTED, self)
-            wx.PostEvent(self, evt)
+        #    evt = AppEvent(EVT_APP_TARGET_HALTED, self)
+        #    wx.PostEvent(self, evt)
             print result
             
     def download(self):
@@ -288,11 +317,7 @@ class Controller(wx.EvtHandler):
     def on_gdb_stopped(self, evt):
         self.change_state(ATTACHED)
         result = evt.data
-        #print result.frame.fullname
-        #print result.frame.line
-        #self.frame.memory_view.request_update()
-        #self.frame.locals_view.request_update()
-        evt = AppEvent(EVT_APP_TARGET_HALTED, self, data=(result.frame.fullname, result.frame.line))
+        evt = AppEvent(EVT_APP_TARGET_HALTED, self, data=(result.frame.fullname, int(result.frame.line)))
         wx.PostEvent(self, evt)
 
     def on_gdb_running(self, evt):

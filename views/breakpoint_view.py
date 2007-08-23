@@ -6,13 +6,13 @@ from odict import OrderedDict
 
 class DictListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.TextEditMixin):
     
-    def __init__(self, parent):
+    def __init__(self, parent, color_changes=False, key_title="Name", value_title="Value"):
         wx.ListCtrl.__init__(self, parent, -1, style=wx.LC_REPORT | wx.LC_VIRTUAL)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         listmix.TextEditMixin.__init__(self)
-
-        self.InsertColumn(0, "Name")
-        self.InsertColumn(1, "Value")
+        self.color_changes = color_changes
+        self.InsertColumn(0, key_title)
+        self.InsertColumn(1, value_title)
         self.SetColumnWidth(0, wx.LIST_AUTOSIZE)
         self.SetColumnWidth(2, wx.LIST_AUTOSIZE)
 
@@ -33,6 +33,8 @@ class DictListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.TextEdit
             return self.__items.values()[item]
 
     def OnGetItemAttr(self, item):
+        if not self.color_changes:
+            return self.blackattr
         key = self.__items.keys()[item]
         if key in self.__changed and self.__changed[key]:
             return self.redattr
@@ -79,11 +81,15 @@ class DictListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.TextEdit
             if key not in items:
                 self.remove_item(key)
 
-class LocalsView(view.View):
+    def clear(self):
+        for key in self:
+            self.remove_item(key)
+            
+class BreakpointView(view.View):
     
     def __init__(self, *args, **kwargs):
-        super(LocalsView, self).__init__(*args, **kwargs)
-        self.list = DictListCtrl(self)
+        super(BreakpointView, self).__init__(*args, **kwargs)
+        self.list = DictListCtrl(self, key_title="File", value_title="Line")
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.list, 1, wx.EXPAND)
         self.SetSizer(sizer)
@@ -95,13 +101,16 @@ class LocalsView(view.View):
         
     def _fetch_data(self):
         if self.controller.gdb:
-            self.controller.gdb.stack_list_locals(callback=self._on_data_fetched)
+            self.controller.gdb.break_list(callback=self._on_data_fetched)
     def _on_data_fetched(self, data):
-        if hasattr(data, 'locals'):
-            update_dict = {}
-            for item in data.locals:
-                update_dict[item.name] = item.value
-            self.update(update_dict)
+        self.list.clear()
+        if hasattr(data, 'BreakpointTable'):
+            for item in data.BreakpointTable.body:
+                file = item['bkpt']['file']
+                line = item['bkpt']['line']
+                self.list[file] = line
 
     def update(self, dict):
         self.list.update(dict) 
+    def update_breakpoints(self):
+        self._fetch_data()

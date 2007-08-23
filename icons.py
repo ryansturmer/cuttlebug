@@ -20,7 +20,12 @@ bindings = {
         '.script': 'file_gear.png' }
 
 def get_file_icon(filename):
-    fn, ext = os.path.splitext(filename)
-    return bindings.get(ext.lower(), 'file_white.png')
+    ext = ""
+    try:
+        fn, ext = os.path.splitext(filename)
+    except:
+        pass
+    finally:
+        return  bindings.get(ext.lower(), 'file_white.png')
 
 
