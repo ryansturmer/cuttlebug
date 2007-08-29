@@ -287,15 +287,18 @@ class StyleDialog(wx.Dialog):
         self.style_manager = style_manager
         self.load()
         sizer = wx.BoxSizer(wx.VERTICAL)
-        #notebook = wx.Notebook(self, -1)
         notebook = aui.AuiNotebook(self, -1, style=wx.BORDER_NONE)
         notebook.SetTabCtrlHeight(32)
         page1 = self.create_global_page(notebook)
         page2 = self.create_app_page(notebook)
         page3 = self.create_language_page(notebook)
+        page4 = self.create_build_page(notebook)
+        
         notebook.AddPage(page1, 'Global Style')
         notebook.AddPage(page2, 'Application Styles')
         notebook.AddPage(page3, 'Language Styles')
+        notebook.AddPage(page4, 'Build Styles')
+
         w, h = page3.GetMinSize()
         h = notebook.GetHeightForPageHeight(h)
         notebook.SetMinSize((w, h))
@@ -319,12 +322,15 @@ class StyleDialog(wx.Dialog):
         self.base_style = style_manager.base_style
         self.app_styles = style_manager.app_styles
         self.languages = style_manager.languages
+        self.build_styles = style_manager.build_styles
+        
     def save(self):
-        data = (self.base_style, self.app_styles, self.languages)
+        data = (self.base_style, self.app_styles, self.build_styles, self.languages)
         data = copy.deepcopy(data)
         self.style_manager.base_style = data[0]
         self.style_manager.app_styles = data[1]
-        self.style_manager.languages = data[2]
+        self.style_manager.build_styles = data[2]
+        self.style_manager.languages = data[3]
         self.style_manager.save()
     def on_change(self, event):
         event.Skip()
@@ -364,6 +370,17 @@ class StyleDialog(wx.Dialog):
         page.SetSizerAndFit(sizer)
         self.app_controls = controls
         return page
+    
+    def create_build_page(self, parent):
+        page = wx.Panel(parent, -1)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        controls = StylePanel(page, self.build_styles)
+        controls.controls.Bind(EVT_STYLE_CHANGED, self.on_app_change)
+        sizer.Add(controls, 1, wx.EXPAND|wx.ALL, 16)
+        page.SetSizerAndFit(sizer)
+        self.build_controls = controls
+        return page
+        
     def create_language_page(self, parent):
         page = wx.Panel(parent, -1)
         sizer = wx.BoxSizer(wx.VERTICAL)

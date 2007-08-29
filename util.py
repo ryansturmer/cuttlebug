@@ -203,22 +203,23 @@ class Process(subprocess.Popen):
         self.stderr_func = stderr
         self.end = end
         self.done = False
-        self.done = False
         super(Process, self).__init__(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, cwd=cwd)
         if start:
             self.start()
 
-        self.stdoutworker = ThreadWorker(self.monitor_stdout, self.stdout_func)
-        self.stdoutworker.start()
+        self.stdoutworker = ThreadWorker(self.monitor_stream, self.stdout_func, self.stdout)
+        self.stderrworker = ThreadWorker(self.monitor_stream, self.stderr_func, self.stderr)
 
-    def monitor_stdout(self, func):
+        self.stdoutworker.start()        
+        self.stderrworker.start()
+
+    def monitor_stream(self, func, stream):
         while True:
-            data = self.stdout.readline()
+            data = stream.readline()
             if data:
                 if func:
                     func(data)
             else:
-                print "Finished monitoring stdout"
                 self.done = True
                 break
         if self.end:

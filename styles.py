@@ -7,6 +7,13 @@ import util
 STYLE_PATH = 'styles.dat'
 DEFAULT_STYLE_PATH = 'default-styles.dat'
 
+STYLE_BUILD_DEFAULT = 0
+STYLE_BUILD_LABEL = 1
+STYLE_BUILD_WARNING = 2
+STYLE_BUILD_ERROR = 3
+STYLE_BUILD_LINENO = 4
+STYLE_BUILD_LINK = 5
+
 def create_color(red, green, blue):
     return wx.Colour(red, green, blue)
     
@@ -28,6 +35,7 @@ class StyleManager(object):
                 pickler = pickle.Unpickler(file)
                 self.base_style = pickler.load()
                 self.app_styles = pickler.load()
+                self.build_styles = pickler.load()
                 self.languages = pickler.load()
                 file.close()
                 return
@@ -35,6 +43,7 @@ class StyleManager(object):
                 pass
         self.base_style = create_base_style()
         self.app_styles = create_app_styles(self.base_style)
+        self.build_styles = create_build_styles(self.base_style)
         self.languages = create_languages(self.base_style)
     def save(self):
         try:
@@ -42,6 +51,7 @@ class StyleManager(object):
             pickler = pickle.Pickler(file, -1)
             pickler.dump(self.base_style)
             pickler.dump(self.app_styles)
+            pickler.dump(self.build_styles)
             pickler.dump(self.languages)
             file.close()
         except:
@@ -161,7 +171,18 @@ def create_app_styles(parent):
         Style(parent, stc.STC_STYLE_LINENUMBER, 'Line Number Margin'),
     ]
     return app_styles
-    
+
+def create_build_styles(parent):
+    build_styles = [
+        Style(parent, STYLE_BUILD_DEFAULT, 'Default'),
+        Style(parent, STYLE_BUILD_LABEL, 'Label'),
+        Style(parent, STYLE_BUILD_WARNING, 'Warning'),
+        Style(parent, STYLE_BUILD_ERROR, 'Error'),
+        Style(parent, STYLE_BUILD_LINENO, 'Line Number'),
+        Style(parent, STYLE_BUILD_LINK, 'Link'),
+    ]
+    return build_styles
+
 def create_languages(base_style):
     result = []
     

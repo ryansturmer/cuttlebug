@@ -1,3 +1,8 @@
+GENERAL
+ * Build+Download+Run path
+   - pre-run command
+ * GDB Wrapper that caches things like breakpoints, etc
+ 
 LOGGER
  * right click menu for log tabs:
    - clear log
@@ -18,29 +23,34 @@ MEMORY VIEW
 GENERIC VIEW
  * creator method
  * store view info inside view object (aui stuff)
- * Fix sizing and snapping on linux
 
 BUILD VIEW
- * colorization
  * callback on build complete
 
 LOCALS VIEW
  * edit support
  * proper fonts
  * right click menus
-EDITOR VIEW
- * styles/colorization/fonts
- * fix bug for files that can't load (user tried to open a binary file, for example)
 
+EDITOR VIEW
+ * fix bug for files that can't load (user tried to open a binary file, for example)
+ * Hlighting of current line
+ * Right click menu
+   - Breakpoints (add, remove, next, previous)
+   - Jump to execution location
+ * Editor history
+ 
+   
 PROJECT VIEW
  * right click menus
  *    Project - Project options, save, save as
- *    Files - 
-
-PROJECT OPTIONS DIALOG
- * Proper hierarchical pages in generic optionsdialog
-
+ *    Files - Open, Delete, etc...
+ * DnD
+ 
 MAIN FRAME
  * View Menu - should have all the views, and should show and hide them correctly
- * Cuttlebug Options - Should have global options for the debugger at large
-
+ * Confirmation/error dialog (for program errors)
+ 
+MISC
+ * Splash Screen
+ * About Box

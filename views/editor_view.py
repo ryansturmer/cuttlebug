@@ -24,7 +24,7 @@ class EditorView(view.View):
         if not widget:
             return
         widget.SetFocus()
-        widget.GotoLine(line+1)
+        widget.GotoLine(line-1)
 
     def set_exec_location(self, file, line):
         self.goto(file, line)
@@ -117,6 +117,7 @@ class EditorControl(stc.StyledTextCtrl):
         
     def on_update_ui(self, evt):
         self.controller.frame.statusbar.line = self.current_line()+1
+        print self.GetStyledText(0,50)
         
     def on_cut(self, evt):
         self.Cut()
@@ -386,6 +387,7 @@ class Notebook(aui.AuiNotebook):
         style |= aui.AUI_NB_TAB_SPLIT
         super(Notebook, self).__init__(parent, -1, style=style)
         self.Bind(aui.EVT_AUINOTEBOOK_PAGE_CHANGED, self.on_page_changed)
+        self.controller = parent.controller
 
     def __iter__(self):
         return iter(self.get_windows())
@@ -408,7 +410,7 @@ class Notebook(aui.AuiNotebook):
             window.save()
     
     def get_file_tab(self, path):
-        path = os.path.abspath(path)
+        path = self.controller.project.absolute_path(path)
         for window in self:
             if not window.file_path: continue
             p1 = os.path.normcase(path)
@@ -432,9 +434,10 @@ class Notebook(aui.AuiNotebook):
         #if path:
         #    self.close_untitled_tab()
         
-        widget = EditorControl(self, -1, style=wx.BORDER_NONE, controller=wx.GetApp().GetTopWindow().controller)
+        widget = EditorControl(self, -1, style=wx.BORDER_NONE, controller=self.controller)
         
         if path:
+            path = self.controller.project.absolute_path(path)
             widget.open_file(path)
         self.AddPage(widget, widget.get_name(), True)
         idx = self.GetPageIndex(widget)

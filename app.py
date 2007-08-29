@@ -119,6 +119,10 @@ class Controller(wx.EvtHandler):
         evt = AppEvent(EVT_APP_PROJECT_OPENED, self, data=self.project)
         wx.PostEvent(self, evt)
 
+    def goto(self, file, line):
+        absolute_file = self.project.absolute_path(file)
+        self.frame.editor_view.goto(absolute_file, line)
+        
     def save_project(self):
         self.project.save()
 
@@ -336,7 +340,8 @@ class Controller(wx.EvtHandler):
 
     def on_build_update(self, evt):
         self.frame.build_view.update(str(evt.data))
-
+        evt.Skip()
+        
     # VIEW EVENTS
     def on_update_memory_view(self, evt):
         if self.state == ATTACHED:
