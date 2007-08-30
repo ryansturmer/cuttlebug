@@ -112,6 +112,10 @@ class Frame(wx.Frame):
         def on_redo(self,evt):
             pass
         
+        def error_msg(self, message, caption="Error"):
+            dialog = wx.MessageDialog(self, message = message, caption=caption, style=wx.ICON_ERROR | wx.OK)
+            return dialog.ShowModal()
+            
         def browse_for_file(self, message='', dir='', file='', style=wx.FD_OPEN, wildcard=""):
             dlg = wx.FileDialog(self, message=message, defaultDir=dir, defaultFile=file, wildcard=wildcard, style=style)
             if dlg.ShowModal() == wx.ID_OK:

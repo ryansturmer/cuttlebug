@@ -166,7 +166,7 @@ class EditorControl(stc.StyledTextCtrl):
         return self.LineFromPosition(self.GetCurrentPos())
     
     def breakpoint_on_line(self, line):
-        markers = self.MarkerGet(line-1)
+        markers = self.MarkerGet(line)
         if(markers & (1 << self.BREAKPOINT_MARKER)):
             return True
         return False

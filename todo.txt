@@ -2,7 +2,7 @@ GENERAL
  * Build+Download+Run path
    - pre-run command
  * GDB Wrapper that caches things like breakpoints, etc
- 
+ * Move to blocking GDB model with spinoff thread for commands (Rather than call-callback method)
 LOGGER
  * right click menu for log tabs:
    - clear log
@@ -41,12 +41,15 @@ EDITOR VIEW
    - Jump to execution location
  * Editor history
  * Fix folding
-   
+ * Hover for local/expression evaluation, address resolution
+ 
 PROJECT VIEW
  * right click menus
  *    Project - Project options, save, save as
  *    Files - Open, Delete, etc...
  * DnD
+ * Currently open files tree
+ 
  
 MAIN FRAME
  * View Menu - should have all the views, and should show and hide them correctly

@@ -4,7 +4,7 @@ import antlr3, GDBMILexer, GDBMIParser
 import util
 
 def escape(s):
-    return s.replace("\\", "/")
+    return s.replace("\\", "\\\\")
 
 class GDBEvent(wx.PyEvent):
     def __init__(self, type, object=None, data=None):
@@ -133,8 +133,8 @@ class GDB(util.Process):
             self.__send(cmd)
 
     # Utility Stuff
-    def command(self, cmd):
-        self.__cmd(cmd)
+    def command(self, cmd, callback=None, *args, **kwargs):
+        self.__cmd('-interpreter-exec console "%s"' % cmd, callback, *args, **kwargs)
    
     def stack_list_locals(self, callback=None, *args, **kwargs):
         self.__cmd('-stack-list-locals 1', callback, *args, **kwargs)
@@ -178,7 +178,7 @@ class GDB(util.Process):
         self.command('-data-list-register-names')
         
     def break_insert(self, file, line, hardware=False, temporary=False,  callback=None, *args, **kwargs):
-        self.__cmd('-break-insert %s %s "%s":%d' % ("-h" if hardware else "", "-t" if temporary else "", escape(file), line), callback, *args, **kwargs)
+        self.__cmd("-break-insert %s %s %s:%d" % ("-h" if hardware else "", "-t" if temporary else "", escape(file), line), callback, *args, **kwargs)
         
     def break_delete(self, num, callback=None, *args, **kwargs):
         self.__cmd("-break-delete %d" % int(num), callback, *args, **kwargs)

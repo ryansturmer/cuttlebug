@@ -78,7 +78,6 @@ class Controller(wx.EvtHandler):
         try:
             self.session = util.unpickle_file('.session')
             if self.session.project_filename:
-                print "trying to load project: %s" % self.session.project_filename
                 try:
                     self.load_project(self.session.project_filename)
                 except Exception,  e:
@@ -291,10 +290,14 @@ class Controller(wx.EvtHandler):
     def attach(self):
         if self.state == IDLE:
             self.gdb = gdb.GDB(notify=self, mi_log=self.mi_logger, console_log=self.gdb_logger, target_log=self.gdb_logger, log_log=self.gdb_logger)
-            self.gdb.command(self.project.debug.attach_cmd)
         else:
             print "Cannot attach to process from state %d" % self.state
-
+    def on_attach_cmd(self, result):
+        if result.cls == "error":
+            self.frame.error_msg(result.msg)
+        else:
+            self.change_state(ATTACHED)
+        
     # DETACH FROM TARGET
     def detach(self):
         if self.gdb:
@@ -303,7 +306,7 @@ class Controller(wx.EvtHandler):
     
     # GDB EVENTS
     def on_gdb_started(self, evt):
-        self.change_state(ATTACHED)
+        self.gdb.command(self.project.debug.attach_cmd, callback=self.on_attach_cmd)
     
     def on_gdb_finished(self, evt):
         self.change_state(IDLE)
