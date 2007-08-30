@@ -57,7 +57,8 @@ class DictListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.TextEdit
 
         self.__items[key] = value
         self.SetItemCount(len(self.__items))
-
+        self.Refresh()
+        
     def __getitem__(self, key):
         return self.__items[key]
 
@@ -71,14 +72,16 @@ class DictListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.TextEdit
         except:
             pass
         self.SetItemCount(len(self.__items))
-
+        self.Refresh()
+        
     def update(self, items):
         for key in items:
             self[key] = items[key]
         for key in self:
             if key not in items:
                 self.remove_item(key)
-
+        self.Refresh()
+        
 class LocalsView(view.View):
     
     def __init__(self, *args, **kwargs):

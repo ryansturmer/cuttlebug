@@ -45,6 +45,8 @@ class BuildPortalControl(stc.StyledTextCtrl):
         location = self.styler.hit_test(pos)
         if location:
             self.controller.goto(*location)
+        event.Skip()
+        
 class BuildStyler(object):
     
     def __init__(self):

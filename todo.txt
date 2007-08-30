@@ -2,6 +2,7 @@ GENERAL
  * Build+Download+Run path
    - pre-run command
  * GDB Wrapper that caches things like breakpoints, etc
+ * Line number+function in status bar while running
  * Move to blocking GDB model with spinoff thread for commands (Rather than call-callback method)
 LOGGER
  * right click menu for log tabs:
@@ -26,7 +27,8 @@ GENERIC VIEW
 
 BUILD VIEW
  * callback on build complete
-
+ * Fix overlapping build bug (building shouldn't be allowed during another build)
+ 
 LOCALS VIEW
  * edit support
  * proper fonts
