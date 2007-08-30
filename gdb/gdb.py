@@ -3,6 +3,9 @@ import os, threading, time, logging
 import antlr3, GDBMILexer, GDBMIParser
 import util
 
+def escape(s):
+    return s.replace("\\", "/")
+
 class GDBEvent(wx.PyEvent):
     def __init__(self, type, object=None, data=None):
         super(GDBEvent, self).__init__()
@@ -175,14 +178,13 @@ class GDB(util.Process):
         self.command('-data-list-register-names')
         
     def break_insert(self, file, line, hardware=False, temporary=False,  callback=None, *args, **kwargs):
-        self.__cmd("-break-insert %s %s %s:%d" % ("-h" if hardware else "", "-t" if temporary else "", file, line), callback, *args, **kwargs)
+        self.__cmd('-break-insert %s %s "%s":%d' % ("-h" if hardware else "", "-t" if temporary else "", escape(file), line), callback, *args, **kwargs)
         
     def break_delete(self, num, callback=None, *args, **kwargs):
         self.__cmd("-break-delete %d" % int(num), callback, *args, **kwargs)
     # Set Executable
     def set_exec(self, file):
-        file = os.path.abspath(file)
-        self.__cmd('-file-exec-and-symbols %s\n' % file)
+        self.__cmd('-file-exec-and-symbols "%s"\n' % escape(file))
 
 
     def OnTerminate(self, *args, **kwargs):

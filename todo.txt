@@ -31,7 +31,8 @@ LOCALS VIEW
  * edit support
  * proper fonts
  * right click menus
-
+ * Doesn't update correctly in windows
+ 
 EDITOR VIEW
  * fix bug for files that can't load (user tried to open a binary file, for example)
  * Hlighting of current line
@@ -39,7 +40,7 @@ EDITOR VIEW
    - Breakpoints (add, remove, next, previous)
    - Jump to execution location
  * Editor history
- 
+ * Fix folding
    
 PROJECT VIEW
  * right click menus

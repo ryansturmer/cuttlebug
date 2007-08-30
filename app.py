@@ -261,12 +261,9 @@ class Controller(wx.EvtHandler):
         for key in self.breakpoints:
            
             f, l = self.breakpoints[key]
-            print f, l
-            print file, line
             if f == file and int(l) == int(line):
                 self.gdb.break_delete(key, self.on_breakpoint_cleared, key)
     def on_breakpoint_cleared(self, data, key):
-        print "clearing breakpoint"
         del(self.breakpoints[key])
         wx.CallAfter(self.breakpoint_update)
 
@@ -275,7 +272,6 @@ class Controller(wx.EvtHandler):
         self.frame.breakpoint_view.update_breakpoints()
         
     def halt(self):
-        print "trying to halt"
         self.gdb.exec_interrupt(self.on_halted)
         
     def on_halted(self, result):

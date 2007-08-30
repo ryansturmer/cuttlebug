@@ -56,7 +56,6 @@ class EditorView(view.View):
         self.remove_breakpoint_markers()
         if hasattr(data, 'BreakpointTable'):
             for item in data.BreakpointTable.body:
-                print item
                 file = item['bkpt']['fullname']
                 line = int(item['bkpt']['line'])
                 self.set_breakpoint_marker(file, line)
@@ -117,7 +116,6 @@ class EditorControl(stc.StyledTextCtrl):
         
     def on_update_ui(self, evt):
         self.controller.frame.statusbar.line = self.current_line()+1
-        print self.GetStyledText(0,50)
         
     def on_cut(self, evt):
         self.Cut()
@@ -155,7 +153,6 @@ class EditorControl(stc.StyledTextCtrl):
 
     def on_breakpoint_here(self, evt):
         line = self.line_from_point(self.click_pos)+1
-        print "THIS IS THE LINE: %d" % line
         self.controller.set_breakpoint(self.file_path, line)
         
     def on_clear_breakpoint(self, evt):

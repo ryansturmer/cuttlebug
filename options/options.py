@@ -186,7 +186,6 @@ class OptionsPanel(wx.Panel):
     def add(self, group, label, widget, key=None, label_on_right=False):
         import widgets
         if group not in self.groups:
-            print self.groups
             box = wx.StaticBox(self, -1, group)
             group_sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
             grid = wx.FlexGridSizer(1,2,8,8)
