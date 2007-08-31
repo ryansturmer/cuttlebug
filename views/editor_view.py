@@ -26,6 +26,9 @@ class EditorView(view.View):
         widget.SetFocus()
         widget.GotoLine(line-1)
 
+    def close(self):
+        self.notebook.close_tab()
+        
     def set_exec_location(self, file, line):
         self.goto(file, line)
         widget = self.notebook.create_file_tab(file)
@@ -104,6 +107,13 @@ class EditorControl(stc.StyledTextCtrl):
 
         self.Bind(wx.EVT_RIGHT_DOWN, self.on_context_menu)
         self.Bind(stc.EVT_STC_UPDATEUI, self.on_update_ui)
+        self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
+        
+    def on_mouse_motion(self, evt):
+        pass
+        #point = evt.GetPosition()
+        #loc = self.PositionFromPoint(point)
+        
   
     def define_markers(self):
         # Execution Marker (for showing current program location)
@@ -125,6 +135,13 @@ class EditorControl(stc.StyledTextCtrl):
 
     def on_paste(self, evt):
         self.Paste()
+
+    def confirm_close(self):
+        return self.controller.frame.confirm(message="Save changes before closing %s?" % self.shortname )
+
+    def __get_shortname(self):
+        return os.path.basename(self.file_path)
+    shortname = property(__get_shortname)
 
     def __get_project_rel_file_path(self):
         if self.controller and self.controller.project:
@@ -382,10 +399,18 @@ class Notebook(aui.AuiNotebook):
         style = wx.BORDER_NONE
         style |= aui.AUI_NB_TAB_MOVE
         style |= aui.AUI_NB_TAB_SPLIT
+        style |= aui.AUI_NB_CLOSE_BUTTON
+        
         super(Notebook, self).__init__(parent, -1, style=style)
+        self.Bind(aui.EVT_AUINOTEBOOK_PAGE_CLOSE, self.on_page_close)
         self.Bind(aui.EVT_AUINOTEBOOK_PAGE_CHANGED, self.on_page_changed)
         self.controller = parent.controller
-
+        
+    def on_page_close(self, event):
+        event.Veto()
+        index = event.GetSelection()
+        self.close_tab(index)
+        
     def __iter__(self):
         return iter(self.get_windows())
     
@@ -406,6 +431,23 @@ class Notebook(aui.AuiNotebook):
         if window:
             window.save()
     
+    def close_tab(self, index=None):
+        self.Freeze()
+        if index is None: index = self.GetSelection()
+        if index >= 0:
+            window = self.get_window(index)
+            save = window.confirm_close()
+            if save == True:
+                #self.recent_path(window.file_path)
+                window.save()
+                self.DeletePage(index)
+                #wx.PostEvent(self, NotebookEvent(EVT_NOTEBOOK_TAB_CLOSED, self))
+            elif save == False:
+                self.DeletePage(index)
+                #wx.PostEvent(self, NotebookEvent(EVT_NOTEBOOK_TAB_CLOSED, self))
+            else:
+                pass # save == None, user cancelled
+        self.Thaw()
     def get_file_tab(self, path):
         path = self.controller.project.absolute_path(path)
         for window in self:
@@ -417,6 +459,7 @@ class Notebook(aui.AuiNotebook):
         return None
 
     def create_file_tab(self, path=None):
+        path = self.controller.project.absolute_path(path)
         if path:
             window = self.get_file_tab(path)
             if window:
@@ -434,7 +477,6 @@ class Notebook(aui.AuiNotebook):
         widget = EditorControl(self, -1, style=wx.BORDER_NONE, controller=self.controller)
         
         if path:
-            path = self.controller.project.absolute_path(path)
             widget.open_file(path)
         self.AddPage(widget, widget.get_name(), True)
         idx = self.GetPageIndex(widget)

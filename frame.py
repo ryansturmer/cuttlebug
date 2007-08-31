@@ -39,7 +39,7 @@ class Frame(wx.Frame):
             file = menubar.menu("&File")
             file.item('&New...\tCtrl+N', self.on_new, icon="page_white_text.png")
             file.item('&Open...\tCtrl+O', self.on_open)
-            file.item('&Close\tCtrl+W', self.on_close)
+            file.item('&Close\tCtrl+W', self.on_close_file)
             file.item('&Save\tCtrl+S', self.on_save, icon="disk.png")
             file.item('&Save As...\tCtrl+Shift+S', self.on_save_as, icon="save_as.png")
             file.separator()
@@ -47,8 +47,8 @@ class Frame(wx.Frame):
             
             # EDIT
             edit = menubar.menu("&Edit")
-            edit.item('&Undo\tCtrl+Z', self.on_undo)
-            edit.item('&Redo\tCtrl+Y', self.on_redo)
+            edit.item('&Undo\tCtrl+Z', self.on_undo, icon='edit-undo.png')
+            edit.item('&Redo\tCtrl+Y', self.on_redo, icon='edit-redo.png')
             edit.separator()
             edit.item('Cu&t\tCtrl+X', self.on_cut, icon='cut.png')
             edit.item('&Copy\tCtrl+C', self.on_copy, icon='page_copy.png')
@@ -67,8 +67,8 @@ class Frame(wx.Frame):
             
             # BUILD
             build = menubar.menu("&Build")
-            build.item('&Build\tF7', self.on_build, icon="brick.png",enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
-            build.item('&Clean\tF8', self.on_clean,enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
+            build.item('&Build\tF7', self.on_build, icon="bricks.png",enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
+            build.item('&Clean\tF8', self.on_clean, icon="edit-clear.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
             build.item('&Rebuild\tF10', self.on_rebuild,enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
            
             # DEBUG (Disabled till a project is opened)
@@ -78,7 +78,7 @@ class Frame(wx.Frame):
             debug.item('&Step Out\tShift+F6', self.on_step_out, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
             debug.item('&Halt\tShift+F5', self.on_halt, icon="control_stop_blue.png", enable=menu.TARGET_RUNNING, disable=[menu.TARGET_HALTED, menu.TARGET_DETACHED])
             debug.separator()
-            debug.item("Download", self.on_download, icon="application_put.png", enable=menu.TARGET_ATTACHED)
+            debug.item("Download", self.on_download, icon="application_put.png", enable=menu.TARGET_ATTACHED, disable=menu.TARGET_DETACHED)
             debug.separator()
             debug.item('&Attach', self.on_attach, icon="connect.png", show=[menu.PROJECT_OPEN, menu.TARGET_DETACHED], hide=[menu.TARGET_ATTACHED, menu.PROJECT_CLOSE])
             debug.item('&Detach', self.on_detach, icon="disconnect.png", show=menu.TARGET_ATTACHED, hide=menu.TARGET_DETACHED)
@@ -116,6 +116,12 @@ class Frame(wx.Frame):
             dialog = wx.MessageDialog(self, message = message, caption=caption, style=wx.ICON_ERROR | wx.OK)
             return dialog.ShowModal()
             
+        def confirm(self, message, caption="Confirmation"):
+            dialog = wx.MessageDialog(self, message=message, caption=caption, style=wx.ICON_QUESTION | wx.YES_NO | wx.CANCEL)
+            response = dialog.ShowModal()
+            if response == wx.ID_CANCEL: return None
+            return True if response == wx.ID_YES else False
+        
         def browse_for_file(self, message='', dir='', file='', style=wx.FD_OPEN, wildcard=""):
             dlg = wx.FileDialog(self, message=message, defaultDir=dir, defaultFile=file, wildcard=wildcard, style=style)
             if dlg.ShowModal() == wx.ID_OK:
@@ -229,8 +235,8 @@ class Frame(wx.Frame):
         def on_save_as(self, evt):
             pass
 
-        def on_close(self, evt):
-            pass
+        def on_close_file(self, evt):
+            self.editor_view.close()
 
         def on_styles(self, evt):
             dialog = style_dialog.StyleDialog(None, self.controller.style_manager)
@@ -254,7 +260,7 @@ class Frame(wx.Frame):
             self.controller.detach()
 
         def on_toggle_build_view(self, evt):
-            self.build_view.info.Show(not self.build_view.info.IsShown())
+            self.build_view.info.Show(True)
             self.manager.Update()
 
         def on_toggle_log_view(self, evt):

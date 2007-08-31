@@ -4,6 +4,8 @@ GENERAL
  * GDB Wrapper that caches things like breakpoints, etc
  * Line number+function in status bar while running
  * Move to blocking GDB model with spinoff thread for commands (Rather than call-callback method)
+ * Syntax colorization for Makefiles and header files
+ 
 LOGGER
  * right click menu for log tabs:
    - clear log
@@ -49,6 +51,7 @@ PROJECT VIEW
  * right click menus
  *    Project - Project options, save, save as
  *    Files - Open, Delete, etc...
+ *    Folders - open in explorer
  * DnD
  * Currently open files tree
  

@@ -282,10 +282,20 @@ class Controller(wx.EvtHandler):
             
     def download(self):
         if self.state == ATTACHED:
-            self.gdb.target_download()
+            self.frame.statusbar.working = True
+            self.frame.statusbar.text = "Downloading to target..."
+            self.gdb.target_download(callback=self.on_downloaded)
         else:
             print "Can't download from state %s" % self.state
 
+    def on_downloaded(self, result):
+        self.frame.statusbar.working = False
+        self.frame.statusbar.text = ""
+        if result.cls == 'error':
+            self.frame.error_msg(result.msg)
+        else:
+            pass
+        
     # ATTACH TO GDB
     def attach(self):
         if self.state == IDLE:

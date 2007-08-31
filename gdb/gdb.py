@@ -159,8 +159,8 @@ class GDB(util.Process):
     def exec_interrupt(self, callable=None, *args, **kwargs):
         self.__cmd('-exec-interrupt\n', callable, *args, **kwargs)
 
-    def target_download(self, callable=None, *args, **kwargs):
-        self.__cmd('-target-download\n', callable, *args, **kwargs)
+    def target_download(self, callback=None, *args, **kwargs):
+        self.__cmd('-target-download\n', callback, *args, **kwargs)
 
     def sig_interrupt(self):
         self.__cmd('\x03\n')
