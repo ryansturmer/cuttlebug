@@ -275,7 +275,7 @@ class Category(object):
         try:
             return self.items[str(attr)]
         except KeyError:
-            raise AttributeError
+            raise AttributeError(attr)
     
     #def __setattr__(self, attr, val):
     #    self.items[str(attr)] = val

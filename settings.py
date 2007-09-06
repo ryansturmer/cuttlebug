@@ -18,7 +18,7 @@ class Settings(util.Category):
 
         self.editor.add_category('cursor')
         self.editor.cursor['visible'] = True
-        self.editor.cursor['period'] = 5
+        self.editor.cursor['period'] = 1000
         self.editor.cursor['width'] = 1
         self.editor.cursor['foreground_color'] = (0,0,0)
         self.editor.cursor['background_color'] = (255,255,255)
@@ -83,7 +83,7 @@ class SettingsDialog(OptionsDialog):
         cursor_panel.add("Selection", "Selection Foreground Color", ColorWidget, key="editor.cursor.foreground_color")
         editor_panel.add("Selection", "Hilight Current Line", CheckboxWidget, key="editor.line_visible")
         cursor_panel.add("Cursor", "Cursor Visible", CheckboxWidget, key="editor.cursor.visible")
-        cursor_panel.add("Cursor", "Cursor Period", SpinWidget, key="editor.cursor.period")
+        cursor_panel.add("Cursor", "Cursor Period (ms)", SpinWidget, key="editor.cursor.period")
 
         # Page
         page_panel = OptionsPanel(self, "Page")

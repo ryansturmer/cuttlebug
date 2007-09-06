@@ -42,6 +42,7 @@ class Frame(wx.Frame):
             file.item('&Close\tCtrl+W', self.on_close_file)
             file.item('&Save\tCtrl+S', self.on_save, icon="disk.png")
             file.item('&Save As...\tCtrl+Shift+S', self.on_save_as, icon="save_as.png")
+            file.item('Save All...\tCtrl+Alt+Shift+S', self.on_save_all, icon="disk.png")
             file.separator()
             file.item('&Exit\tAlt+F4', self.on_exit,icon="door_out.png")
             
@@ -234,7 +235,10 @@ class Frame(wx.Frame):
 
         def on_save_as(self, evt):
             pass
-
+        
+        def on_save_all(self, evt):
+            self.editor_view.save_all()
+            
         def on_close_file(self, evt):
             self.editor_view.close()
 
