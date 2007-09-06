@@ -250,6 +250,15 @@ class Frame(wx.Frame):
             self.Close()
         
         def on_close(self, evt):
+            project = self.controller.project
+            if project.modified:
+                save_confirm = self.confirm("Save project '%s' before quitting?" % project.general.project_name)
+                if save_confirm:
+                    project.save()
+                elif save_confirm == None:
+                    evt.Veto()
+                    return
+                    
             self.controller.save_session()
             evt.Skip()
 
@@ -292,7 +301,6 @@ class Frame(wx.Frame):
             self.controller.step_out()
 
         def on_halt(self, evt):
-            print "halt handler called"
             self.controller.halt()
 
         def on_download(self, evt):

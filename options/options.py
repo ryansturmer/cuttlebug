@@ -232,14 +232,14 @@ class OptionsDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.AddStretchSpacer(1)
         
-        self.btn_cancel = util.button(panel, "Cancel", self.on_cancel)
+        self.btn_cancel = util.button(panel, id=wx.ID_CANCEL, func=self.on_cancel)
         sizer.Add(util.padded(self.btn_cancel, 8), 0, wx.ALIGN_RIGHT)
         
-        self.btn_apply = util.button(panel, "Apply", self.on_apply)
+        self.btn_apply = util.button(panel, id=wx.ID_APPLY, func=self.on_apply)
         self.btn_apply.Disable()
         sizer.Add(util.padded(self.btn_apply, 8), 0, wx.ALIGN_RIGHT)
         
-        self.btn_ok = util.button(panel, "Ok", self.on_ok)
+        self.btn_ok = util.button(panel, id=wx.ID_OK, func=self.on_ok)
         sizer.Add(util.padded(self.btn_ok, 8), 0, wx.ALIGN_RIGHT)
         
         panel.SetSizer(sizer)

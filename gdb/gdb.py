@@ -163,8 +163,8 @@ class GDB(util.Process):
         self.__cmd('-target-download\n', callback, *args, **kwargs)
 
     def sig_interrupt(self):
-        self.__cmd('\x03\n')
-
+        self.sigint()
+        
     def quit(self):
         self.__cmd('-gdb-exit\n')
     

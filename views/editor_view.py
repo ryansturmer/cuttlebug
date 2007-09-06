@@ -15,6 +15,13 @@ class EditorView(view.View):
         self.SetSizer(sizer)
         self.files = {}
 
+    def __get_open_files(self):
+        retval = []
+        for widget in self.notebook:
+            retval.append(widget.file_path)
+        return retval
+    open_files = property(__get_open_files)
+    
     def on_target_halted(self, file, line):
         self.set_exec_location(file, line)
         self.update_breakpoints()
@@ -99,15 +106,15 @@ class EditorControl(stc.StyledTextCtrl):
         self.apply_settings()
         self.SetMarginType(1, stc.STC_MARGIN_SYMBOL)
         self.SetMarginWidth(1, 16)
-        self.edited = False
         self.click_pos = None
         #self.SetMarginMask(1, 1<<31)
         self.define_markers()
         self.create_popup_menu()
-
+        self.SetModEventMask(stc.STC_MOD_INSERTTEXT | stc.STC_MOD_DELETETEXT | stc.STC_PERFORMED_UNDO | stc.STC_PERFORMED_REDO)
         self.Bind(wx.EVT_RIGHT_DOWN, self.on_context_menu)
         self.Bind(stc.EVT_STC_UPDATEUI, self.on_update_ui)
         self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
+        
         
     def on_mouse_motion(self, evt):
         pass
@@ -126,7 +133,11 @@ class EditorControl(stc.StyledTextCtrl):
         
     def on_update_ui(self, evt):
         self.controller.frame.statusbar.line = self.current_line()+1
-        
+    
+    def on_modified(self, evt):
+        print "Modified!"
+        evt.Skip()
+          
     def on_cut(self, evt):
         self.Cut()
 
@@ -212,17 +223,15 @@ class EditorControl(stc.StyledTextCtrl):
             
         self.PopupMenu(self.popup_menu.build(self)) 
 
-    def edit(self):
-        self.edited = True
-
     def get_name(self):
         if self.file_path:
             root, name = os.path.split(self.file_path)
         else:
             name = 'Untitled'
         
-        return (name + "*") if self.edited else name 
-
+        return ("*" + name) if self.GetModify() else name 
+    name = property(get_name)
+    
     def apply_settings(self):
         settings = self.controller.settings.editor
         self.IndicatorSetStyle(1, stc.STC_INDIC_ROUNDBOX)
@@ -351,6 +360,7 @@ class EditorControl(stc.StyledTextCtrl):
                 fp = open(self.file_path, 'w')
                 try:
                     fp.write(self.GetText())
+                    self.SetSavePoint()
                 except:
                     pass
                 finally:
@@ -365,7 +375,7 @@ class EditorControl(stc.StyledTextCtrl):
             text = file.read()
             self.SetText(text)
             self.EmptyUndoBuffer()
-            self.edited = False
+            self.SetSavePoint()
             self.file_path = path
         except IOError:
             self.SetText('')
@@ -417,7 +427,22 @@ class Notebook(aui.AuiNotebook):
     def on_page_changed(self, evt):
         window = self.get_window()
         if window:
-            wx.GetApp().GetTopWindow().controller.frame.statusbar.line = window.current_line()+1
+            self.controller.frame.statusbar.line = window.current_line()+1
+
+#    def update_names(self):
+#        self.Freeze()
+#        for window in self:
+#            idx = self.GetPageIndex()
+#            print self.window.name
+#            self.SetPageText(idx, window.name)
+#        self.Thaw()
+
+    def on_modified(self, evt):
+        widget = evt.GetEventObject()
+        if widget:
+            idx = self.GetPageIndex(widget)
+            self.SetPageText(idx, widget.name)
+            
     def get_window(self, index=None):
         if index is None: index = self.GetSelection()
         return self.GetPage(index) if index >= 0 else None
@@ -430,6 +455,9 @@ class Notebook(aui.AuiNotebook):
         window = self.get_window()
         if window:
             window.save()
+            idx = self.GetPageIndex(window)
+            self.SetPageText(idx, window.name)
+            
     
     def close_tab(self, index=None):
         self.Freeze()
@@ -448,6 +476,8 @@ class Notebook(aui.AuiNotebook):
             else:
                 pass # save == None, user cancelled
         self.Thaw()
+        
+        
     def get_file_tab(self, path):
         path = self.controller.project.absolute_path(path)
         for window in self:
@@ -462,9 +492,10 @@ class Notebook(aui.AuiNotebook):
         path = self.controller.project.absolute_path(path)
         if path:
             window = self.get_file_tab(path)
+
             if window:
                 window.SetFocus()
-                wx.GetApp().GetTopWindow().controller.frame.statusbar.line = window.current_line()+1
+                self.controller.frame.statusbar.line = window.current_line()+1
                 return window
 
             if not os.path.exists(path):
@@ -483,7 +514,8 @@ class Notebook(aui.AuiNotebook):
         if idx >= 0:
             self.SetPageBitmap(idx, util.get_icon(icons.get_file_icon(path)))
         widget.SetFocus()
-        wx.GetApp().GetTopWindow().controller.frame.statusbar.line = widget.current_line()+1
+        self.controller.frame.statusbar.line = widget.current_line()+1
+        widget.Bind(stc.EVT_STC_MODIFIED, self.on_modified)
         self.Thaw()
         return widget
 

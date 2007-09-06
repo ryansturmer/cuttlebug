@@ -16,8 +16,18 @@ class ProjectView(view.View):
         self.SetSizer(sizer)
         self.SetSize((200,-1))
         self.tree.Bind(wx.EVT_LEFT_DCLICK, self.on_left_dclick)
+        self.tree.Bind(wx.EVT_RIGHT_DOWN, self.on_right_click)
 
     def on_left_dclick(self, evt):
+        pt = evt.GetPosition()
+        item, flags = self.tree.HitTest(pt)
+        if item:
+            path = self.tree.GetPyData(item)
+            if path:
+                evt = ProjectViewEvent(EVT_PROJECT_DCLICK_FILE, self, data=path)
+                wx.PostEvent(self, evt)
+
+    def on_right_click(self, evt):
         pt = evt.GetPosition()
         item, flags = self.tree.HitTest(pt)
         if item:
@@ -108,12 +118,14 @@ class ProjectTree(wx.TreeCtrl):
                     self.add_file(root, 'folder_wrench.png')
                 else:
                     self.add_file(root, 'folder.png')
-
+            #print self.files
             for file in files:
+                #print file
                 if file not in self.files:
                     if not self.backups_visible and file.endswith("~"):
                         continue
                     self.add_file(os.path.join(root, file), icons.get_file_icon(file))
+                    
     def update(self):
         self.SetItemText(self.root_item, self.project.general.project_name)
         self.update_file_tree()

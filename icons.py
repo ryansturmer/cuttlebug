@@ -3,6 +3,7 @@ bindings = {
         '.c': 'file_c.png',        
         '.s': 'file_s.png',
         '.ld': 'file_link.png',
+        '.cmd': 'file_link.png',
         '.bz2': 'file_archive.png',
         '.gz': 'file_archive.png',
         '.zip': 'file_archive.png',

@@ -5,8 +5,8 @@ from options import *
 
 class Project(util.Category):
 
-    def __init__(self):
-        super(Project, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(Project, self).__init__(*args, **kwargs)
         self.filename = ''
         # Overview
         self.add_category('general')
@@ -36,6 +36,7 @@ class Project(util.Category):
         if not isinstance(object, Project):
             raise Exception("Could not load %s.  It does not appear to be a project file." % filename)
         object.filename = path
+        object.modified = False
         return object
     
     @staticmethod
@@ -62,6 +63,7 @@ class Project(util.Category):
         fp = open(self.filename,'wb')
         pickle.dump(self, fp)
         fp.close()
+        self.modified = False
 
 class ProjectOptionsDialog(OptionsDialog):
 
@@ -85,6 +87,7 @@ class ProjectOptionsDialog(OptionsDialog):
 
     def create_debug_panel(self):
         panel = OptionsPanel(self, "Debug")
+        panel.add("General", "GDB Executable", TextWidget, key="debug.gdb_executable")
         panel.add("General", "Target", TextWidget, key="debug.target")
         panel.add("Commands", "Attach", TextWidget, key="debug.attach_cmd")
         panel.add("Commands", "Detach", TextWidget, key="debug.detach_cmd")

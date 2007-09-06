@@ -80,6 +80,8 @@ class Controller(wx.EvtHandler):
             if self.session.project_filename:
                 try:
                     self.load_project(self.session.project_filename)
+                    for file in self.session.open_files:
+                        self.open_file(file)
                 except Exception,  e:
                     print e
             
@@ -97,6 +99,7 @@ class Controller(wx.EvtHandler):
             self.session.perspective = self.frame.manager.SavePerspective()
             if self.project:
                 self.session.project_filename = self.project.filename
+                self.session.open_files = self.frame.editor_view.open_files
                 print self.project.filename
             util.pickle_file(self.session, '.session')
 
@@ -272,6 +275,7 @@ class Controller(wx.EvtHandler):
         
     def halt(self):
         self.gdb.exec_interrupt(self.on_halted)
+        #self.gdb.sig_interrupt()
         
     def on_halted(self, result):
         if result.cls == "done" or result.cls == "stopped":
@@ -299,10 +303,15 @@ class Controller(wx.EvtHandler):
     # ATTACH TO GDB
     def attach(self):
         if self.state == IDLE:
-            self.gdb = gdb.GDB(notify=self, mi_log=self.mi_logger, console_log=self.gdb_logger, target_log=self.gdb_logger, log_log=self.gdb_logger)
+            self.frame.statusbar.working = True
+            self.frame.statusbar.text = "Starting GDB and attaching to target..."
+            self.gdb = gdb.GDB(cmd = "%s -n -q -i mi" % self.project.debug.gdb_executable, notify=self, mi_log=self.mi_logger, console_log=self.gdb_logger, target_log=self.gdb_logger, log_log=self.gdb_logger)
         else:
             print "Cannot attach to process from state %d" % self.state
     def on_attach_cmd(self, result):
+        self.frame.statusbar.working = False
+        self.frame.statusbar.text = ""
+
         if result.cls == "error":
             self.frame.error_msg(result.msg)
         else:
@@ -330,8 +339,9 @@ class Controller(wx.EvtHandler):
     def on_gdb_stopped(self, evt):
         self.change_state(ATTACHED)
         result = evt.data
-        evt = AppEvent(EVT_APP_TARGET_HALTED, self, data=(result.frame.fullname, int(result.frame.line)))
-        wx.PostEvent(self, evt)
+        print result
+        #evt = AppEvent(EVT_APP_TARGET_HALTED, self, data=(result.frame.fullname, int(result.frame.line)))
+        #wx.PostEvent(self, evt)
 
     def on_gdb_running(self, evt):
         self.change_state(RUNNING)

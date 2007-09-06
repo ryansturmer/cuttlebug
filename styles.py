@@ -321,13 +321,13 @@ def create_languages(base_style):
         line_comment='//',
         block_comment=('/*', '*/'),
     )
-    result.append(c)
+    #result.append(c)
     
     # C++
     style = Style(base_style, name='C++ Base Style')
     cpp = Language(
-        name='C++',
-        extensions=['h', 'hpp', 'hxx', 'cpp', 'cxx', 'cc'],
+        name='C/C++',
+        extensions=['c','h', 'hpp', 'hxx', 'cpp', 'cxx', 'cc'],
         lexer=stc.STC_LEX_CPP,
         base_style=style,
         styles=[
@@ -420,13 +420,14 @@ def create_languages(base_style):
         line_comment='',
         block_comment=('/*', '*/'),
     )
-    result.append(css)
+    #result.append(css)
     
     # HTML
-    style = Style(base_style, name='HTML Base Style')
+    style = Style(base_style, name='XML Base Style')
     html = Language(
-        name='HTML',
-        extensions=['html', 'htm', 'shtml', 'shtm', 'xhtml'],
+        name='XML',
+        #extensions=['html', 'htm', 'shtml', 'shtm', 'xhtml'],
+        extensions=['xml'],
         lexer=stc.STC_LEX_HTML,
         base_style=style,
         styles=[
@@ -455,7 +456,7 @@ def create_languages(base_style):
         line_comment='',
         block_comment=('<!--', '-->'),
     )
-    result.append(html)
+    #result.append(html)
     
     return result
     

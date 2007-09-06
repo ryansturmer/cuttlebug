@@ -53,11 +53,11 @@ def tool_item(window, toolbar, label, func, icon):
         window.Bind(wx.EVT_TOOL, func, id=item.GetId())
     return item
 
-def button(window, label, func=None, icon=None):
+def button(window, label='', func=None, icon=None, id=-1):
     #if icon and isinstance(icon, str):
     #    button = wx.BitmapButton(window, -1, bitmap=get_icon(icon), label=text, style=wx.BU_LEFT)
     #else:
-    button = wx.Button(window, -1, label)
+    button = wx.Button(window, id, label)
     if func:
         button.Bind(wx.EVT_BUTTON, func)
     return button
@@ -203,7 +203,13 @@ class Process(subprocess.Popen):
         self.stderr_func = stderr
         self.end = end
         self.done = False
-        super(Process, self).__init__(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, cwd=cwd)
+        try:
+            #import win32process
+            #flags = win32process.CREATE_NEW_PROCESS_GROUP
+            flags = 0
+        except:
+            flags = 0
+        super(Process, self).__init__(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, cwd=cwd, creationflags = flags)
         if start:
             self.start()
 
@@ -225,25 +231,37 @@ class Process(subprocess.Popen):
         if self.end:
             self.end()
 
+    def sigint(self):        
+        import win32api, win32con
+        print "Issuing SIGINT"
+        win32api.GenerateConsoleCtrlEvent(win32con.CTRL_C_EVENT, self.pid)
+
 class Category(object):
 
     def __init__(self, name='', parent=None):
         # TODO ordered dict later?
+        self.parent = parent
         self.items = dict()
         self.name = str(name)
         #self.parent = parent
         self.__modified = False
-        self.modified = False
-    '''
+    
     def __get_modified(self):
         return self.__modified
 
     def __set_modified(self, x):
-        self.__modified = bool(x)
-        if self.modified and self.parent:
-            self.parent.modified = True
+        if x:
+            if self.parent:
+                self.parent.modified = True
+            self.__modified = True
+        else:
+            for item in self:
+                if isinstance(item, Category):
+                    item.modified = False
+            self.__modified = False
+
     modified = property(__get_modified, __set_modified)
-    '''
+    
     def __setstate__(self, data):
       self.__dict__.update(data)
 
@@ -282,9 +300,19 @@ class Category(object):
     def add_category(self, name):
         if name in self:
             raise ProjectError("Already a category called '%s'" % name)
-        self[name] = Category(name)
+        newcat = Category(name, parent=self)
+        self[name] = newcat
         self.modified = True
-
+        return newcat
+    
+    def walk(self):
+        for item in self:
+            if isinstance(item, Category):
+                for subitem in item.walk():
+                    yield subitem
+            else:
+                yield item
+                
     def __iter__(self):
         return iter(self.items)
 
@@ -313,14 +341,16 @@ def unpickle_file(filename):
 
 
 if __name__ == "__main__":
-    import os
-    import recipe
-    import subprocess
-    def prn(s):
-        print s
 
-    p = Process("python -u subprocess_test.py")
-
-    while True: pass
-
+    cat = Category("Top")
+    cat2 = cat.add_category("middle")
+    cat['middle.submiddle1'] = 1
+    cat['middle.submiddle2'] = 2
+    cat['middle.submiddle3'] = 3
+    cat2.add_category("Bottom")
+    cat.modified = False
+    print cat
+    print cat.modified
+    cat.middle['submiddle1'] = 50
+    print cat.modified
 
