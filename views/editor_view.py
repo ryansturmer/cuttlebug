@@ -77,9 +77,19 @@ class EditorView(view.View):
             editor.apply_settings()
             editor.apply_folding_settings()
 
+    def __get_has_unsaved_files(self):
+        for window in self.notebook:
+            if window.GetModify():
+                return True
+        return False
+    has_unsaved_files = property(__get_has_unsaved_files)
+    
     def save(self):
         self.notebook.save()
 
+    def save_all(self):
+        self.notebook.save_all()
+        
     def new(self):
         self.notebook.create_file_tab()
 
@@ -137,7 +147,13 @@ class EditorControl(stc.StyledTextCtrl):
     def on_modified(self, evt):
         print "Modified!"
         evt.Skip()
-          
+    
+    def on_undo(self, evt):
+        self.Undo()
+    
+    def on_redo(self, evt):
+        self.Redo()
+        
     def on_cut(self, evt):
         self.Cut()
 
@@ -163,6 +179,9 @@ class EditorControl(stc.StyledTextCtrl):
 
     def create_popup_menu(self):
         m = menu.manager.menu()
+        self.mnu_undo = m.item("Undo\tCtrl+Z", func=self.on_undo, icon="edit-undo.png")
+        self.mnu_redo = m.item("Redo\tCtrl+Y", func=self.on_undo, icon="edit-redo.png")
+        m.separator()
         self.mnu_cut = m.item("Cut\tCtrl+X", func=self.on_cut, icon='cut.png')
         self.mnu_copy = m.item("Copy\tCtrl+C", func=self.on_copy, icon='page_copy.png')
         self.mnu_paste = m.item("Paste\tCtrl+V", func=self.on_paste, icon='paste_plain.png')
@@ -459,6 +478,11 @@ class Notebook(aui.AuiNotebook):
             self.SetPageText(idx, window.name)
             
     
+    def save_all(self):
+        for window in self:
+            if window.GetModify():
+                window.save()
+                
     def close_tab(self, index=None):
         self.Freeze()
         if index is None: index = self.GetSelection()

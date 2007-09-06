@@ -67,9 +67,9 @@ class Frame(wx.Frame):
             
             # BUILD
             build = menubar.menu("&Build")
-            build.item('&Build\tF7', self.on_build, icon="bricks.png",enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
+            build.item('&Build\tF7', self.on_build, icon="brick.png",enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
+            build.item('&Rebuild\tF10', self.on_rebuild, icon="rebuild.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
             build.item('&Clean\tF8', self.on_clean, icon="edit-clear.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
-            build.item('&Rebuild\tF10', self.on_rebuild,enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
            
             # DEBUG (Disabled till a project is opened)
             debug = menubar.menu("&Debug")
@@ -255,6 +255,13 @@ class Frame(wx.Frame):
                 save_confirm = self.confirm("Save project '%s' before quitting?" % project.general.project_name)
                 if save_confirm:
                     project.save()
+                elif save_confirm == None:
+                    evt.Veto()
+                    return
+            if self.editor_view.has_unsaved_files:
+                save_confirm = self.confirm("Save modified files before quitting?")
+                if save_confirm:
+                    self.editor_view.save_all()
                 elif save_confirm == None:
                     evt.Veto()
                     return
