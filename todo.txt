@@ -4,7 +4,8 @@ GENERAL
  * GDB Wrapper that caches things like breakpoints, etc
  * Line number+function in status bar while running
  * Move to blocking GDB model with spinoff thread for commands (Rather than call-callback method)
- * Syntax colorization for Makefiles and header files
+ * Syntax colorization for Makefiles
+ * Printing support
  
 LOGGER
  * right click menu for log tabs:
@@ -30,6 +31,8 @@ GENERIC VIEW
 BUILD VIEW
  * callback on build complete
  * Fix overlapping build bug (building shouldn't be allowed during another build)
+ * Stop build button
+ * Auto scrolling of build output
  
 LOCALS VIEW
  * edit support
@@ -39,13 +42,18 @@ LOCALS VIEW
  
 EDITOR VIEW
  * fix bug for files that can't load (user tried to open a binary file, for example)
- * Hlighting of current line
+ * Hilighting of current line
  * Right click menu
    - Breakpoints (add, remove, next, previous)
    - Jump to execution location
  * Editor history
  * Fix folding
  * Hover for local/expression evaluation, address resolution
+ * Tab right click menu
+   - Close page
+   - Save page
+ * Check disk periodically for updated files and reload
+ * Hilighting of current line
  
 PROJECT VIEW
  * right click menus
@@ -54,11 +62,19 @@ PROJECT VIEW
  *    Folders - open in explorer
  * DnD
  * Currently open files tree
- 
+ * Correct double click behavior
+ * Currently open files group
+ * Star for modified project
+ * Periodic refresh of file view
  
 MAIN FRAME
  * View Menu - should have all the views, and should show and hide them correctly
  * Confirmation/error dialog (for program errors)
+ 
+BREAKPOINT VIEW
+ * If breakpoint set FAILS, the target can be convinced that it's running when it's not
+   - Maybe some timer based polling of the GDB session that allows for correction of state
+ * Distinction between hardware and software breakpoints
  
 MISC
  * Splash Screen

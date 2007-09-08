@@ -3,22 +3,23 @@ import wx
 import wx.lib.mixins.listctrl as listmix
 import sys
 from odict import OrderedDict
+import util
 
-class DictListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.TextEditMixin):
+class BreakpointListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, util.ArtListMixin):
+    TYPE = 0
+    LOCATION = 1
     
-    def __init__(self, parent, color_changes=False, key_title="Name", value_title="Value"):
-        wx.ListCtrl.__init__(self, parent, -1, style=wx.LC_REPORT | wx.LC_VIRTUAL)
+    def __init__(self, parent):
+        wx.ListCtrl.__init__(self, parent, -1, style=wx.LC_VIRTUAL | wx.LC_REPORT | wx.LC_HRULES )
         listmix.ListCtrlAutoWidthMixin.__init__(self)
-        listmix.TextEditMixin.__init__(self)
-        self.color_changes = color_changes
-        self.InsertColumn(0, key_title)
-        self.InsertColumn(1, value_title)
-        self.SetColumnWidth(0, wx.LIST_AUTOSIZE)
-        self.SetColumnWidth(2, wx.LIST_AUTOSIZE)
-
+        util.ArtListMixin.__init__(self, wx.IMAGE_LIST_SMALL)
+        self.add_art('stop.png', 'stop_disabled.png')
+        self.InsertColumn(0, '')
+        self.InsertColumn(1, "Location")
+        self.SetColumnWidth(0, 24)
+        self.SetColumnWidth(1, wx.LIST_AUTOSIZE)
         self.SetItemCount(0)
-        self.__items = OrderedDict()
-        self.__changed = {}
+        self.__items = []
 
         # Attributes (for changing list item colors)
         self.redattr = wx.ListItemAttr()
@@ -26,70 +27,39 @@ class DictListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.TextEdit
         self.blackattr = wx.ListItemAttr()
         self.blackattr.SetTextColour("black")
 
+    def OnGetItemColumnImage(self, item, col):
+        #return -1
+        if col == 0:
+            #return 0
+            return self.get_art_idx('stop.png')
+        else:
+            return -1
+
+    def OnGetItemImage(self, item):
+        return 0
+    
     def OnGetItemText(self, item, col):
         if col == 0:
-            return self.__items.keys()[item]
+            return ''
         else:
-            return self.__items.values()[item]
-
+            return self.__items[item]
+        
     def OnGetItemAttr(self, item):
-        if not self.color_changes:
-            return self.blackattr
-        key = self.__items.keys()[item]
-        if key in self.__changed and self.__changed[key]:
-            return self.redattr
-        else:
-            return self.blackattr
-
-    def __contains__(self, key):
-        return key in self.__items
-
-    def __setitem__(self, key, value):
-        changed = False
-        try:
-            old_value = self.__items[key]
-            if value != old_value:
-                changed = True
-        except:
-            changed = True
-        if changed:
-            self.__changed[key] = True
-        else:
-            self.__changed[key] = False
-
-        self.__items[key] = value
-        self.SetItemCount(len(self.__items))
-
-    def __getitem__(self, key):
-        return self.__items[key]
-
-    def __iter__(self):
-        return iter(self.__items.keys()[:])
-
-    def remove_item(self, key):
-        try:
-            self.__items.pop(key)
-            self.__changed.pop(key)
-        except:
-            pass
-        self.SetItemCount(len(self.__items))
-
-    def update(self, items):
-        for key in items:
-            self[key] = items[key]
-        for key in self:
-            if key not in items:
-                self.remove_item(key)
+        return self.blackattr
 
     def clear(self):
-        for key in self:
-            self.remove_item(key)
-            
+        self.SetItemCount(0)
+        self.__items = []
+        
+    def add(self,item):
+        self.__items.append(item)
+        self.SetItemCount(len(self.__items))
+    
 class BreakpointView(view.View):
     
     def __init__(self, *args, **kwargs):
         super(BreakpointView, self).__init__(*args, **kwargs)
-        self.list = DictListCtrl(self, key_title="File", value_title="Line")
+        self.list = BreakpointListCtrl(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.list, 1, wx.EXPAND)
         self.SetSizer(sizer)
@@ -105,12 +75,12 @@ class BreakpointView(view.View):
     def _on_data_fetched(self, data):
         self.list.clear()
         if hasattr(data, 'BreakpointTable'):
+            self.list.clear()
             for item in data.BreakpointTable.body:
                 file = item['bkpt']['file']
-                line = item['bkpt']['line']
-                self.list[file] = line
+                line = int(item['bkpt']['line'])
+                self.list.add("%s:%d" % (file, line))
+            self.list.Refresh()
 
-    def update(self, dict):
-        self.list.update(dict) 
     def update_breakpoints(self):
         self._fetch_data()

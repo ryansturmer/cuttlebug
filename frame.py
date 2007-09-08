@@ -38,11 +38,11 @@ class Frame(wx.Frame):
             # FILE
             file = menubar.menu("&File")
             file.item('&New...\tCtrl+N', self.on_new, icon="page_white_text.png")
-            file.item('&Open...\tCtrl+O', self.on_open)
+            file.item('&Open...\tCtrl+O', self.on_open, icon="folder_page.png")
             file.item('&Close\tCtrl+W', self.on_close_file)
             file.item('&Save\tCtrl+S', self.on_save, icon="disk.png")
             file.item('&Save As...\tCtrl+Shift+S', self.on_save_as, icon="save_as.png")
-            file.item('Save All...\tCtrl+Alt+Shift+S', self.on_save_all, icon="disk.png")
+            file.item('Save All...\tCtrl+Alt+Shift+S', self.on_save_all, icon="disk_cascade.png")
             file.separator()
             file.item('&Exit\tAlt+F4', self.on_exit,icon="door_out.png")
             
@@ -50,6 +50,7 @@ class Frame(wx.Frame):
             edit = menubar.menu("&Edit")
             edit.item('&Undo\tCtrl+Z', self.on_undo, icon='edit-undo.png')
             edit.item('&Redo\tCtrl+Y', self.on_redo, icon='edit-redo.png')
+            edit.separator()
             edit.separator()
             edit.item('Cu&t\tCtrl+X', self.on_cut, icon='cut.png')
             edit.item('&Copy\tCtrl+C', self.on_copy, icon='page_copy.png')
@@ -62,15 +63,15 @@ class Frame(wx.Frame):
             project = menubar.menu("&Project")
             project.item('&New Project...', self.on_new_project, icon="package.png")
             project.item('&Open Project...', self.on_open_project)
-            project.item('&Save Project\tCtrl+S', self.on_save_project, icon="disk.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
+            project.item('&Save Project\tCtrl+S', self.on_save_project, icon="package_save.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
             project.separator()
             project.item('Project Options...', self.on_project_options, icon='cog_edit.png', enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
             
             # BUILD
             build = menubar.menu("&Build")
-            build.item('&Build\tF7', self.on_build, icon="brick.png",enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
-            build.item('&Rebuild\tF10', self.on_rebuild, icon="rebuild.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
-            build.item('&Clean\tF8', self.on_clean, icon="edit-clear.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
+            build.item('&Build\tF7', self.on_build, icon="brick.png",enable=[menu.PROJECT_OPEN, menu.BUILD_FINISHED], disable=[menu.PROJECT_CLOSE, menu.BUILD_STARTED])
+            build.item('&Rebuild\tF10', self.on_rebuild, icon="rebuild.png", enable=[menu.PROJECT_OPEN, menu.BUILD_FINISHED], disable=[menu.PROJECT_CLOSE, menu.BUILD_STARTED])
+            build.item('&Clean\tF8', self.on_clean, icon="edit-clear.png", enable=[menu.PROJECT_OPEN, menu.BUILD_FINISHED], disable=[menu.PROJECT_CLOSE, menu.BUILD_STARTED])
            
             # DEBUG (Disabled till a project is opened)
             debug = menubar.menu("&Debug")
@@ -99,19 +100,19 @@ class Frame(wx.Frame):
         
         
         def on_cut(self, evt):
-            pass
+            self.editor_view.cut()
         
         def on_copy(self,evt):
-            pass
+            self.editor_view.copy()
         
         def on_paste(self,evt):
-            pass
+            self.editor_view.paste()
         
         def on_undo(self,evt):
-            pass
+            self.editor_view.undo()
         
         def on_redo(self,evt):
-            pass
+            self.editor_view.redo()
         
         def error_msg(self, message, caption="Error"):
             dialog = wx.MessageDialog(self, message = message, caption=caption, style=wx.ICON_ERROR | wx.OK)
@@ -255,13 +256,14 @@ class Frame(wx.Frame):
         
         def on_close(self, evt):
             project = self.controller.project
-            if project.modified:
-                save_confirm = self.confirm("Save project '%s' before quitting?" % project.general.project_name)
-                if save_confirm:
-                    project.save()
-                elif save_confirm == None:
-                    evt.Veto()
-                    return
+            if project:
+                if project.modified:
+                    save_confirm = self.confirm("Save project '%s' before quitting?" % project.general.project_name)
+                    if save_confirm:
+                        project.save()
+                    elif save_confirm == None:
+                        evt.Veto()
+                        return
             if self.editor_view.has_unsaved_files:
                 save_confirm = self.confirm("Save modified files before quitting?")
                 if save_confirm:

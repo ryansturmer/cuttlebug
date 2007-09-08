@@ -13,6 +13,9 @@ TARGET_DETACHED = 4
 TARGET_RUNNING = 5
 TARGET_HALTED = 6
 
+BUILD_STARTED = 7
+BUILD_FINISHED = 8
+
 class MenuItemProxy(object):
 
     def __init__(self, parent, label='', func=None, icon=None, kind=wx.ITEM_NORMAL, separator=False):
@@ -20,7 +23,7 @@ class MenuItemProxy(object):
         
         self._label = label
         self._func = func
-        self._separator = bool(separator)
+        self.separator = bool(separator)
         self.kind = kind
         self.visible = True
         self.enabled = True
@@ -29,7 +32,7 @@ class MenuItemProxy(object):
     def __get_icon(self):
         return self._icon
     def __set_icon(self, icon):
-        if self._separator:
+        if self.separator:
             return
 
         if isinstance(icon, str):
@@ -65,7 +68,7 @@ class MenuItemProxy(object):
         self.update()
 
     def build(self, menu, window):
-        if self._separator:
+        if self.separator:
             return wx.MenuItem(menu, id=wx.ID_SEPARATOR)
         else:
             menuitem = wx.MenuItem(menu, id=-1, text=self._label, kind=self.kind)
@@ -92,18 +95,34 @@ class MenuProxy(object):
         return iter(self._items)
 
     def build(self, window=None):
+        items = []
         retval = wx.Menu()
-        for item in self._items:
-            if item.visible:
-                menuitem = item.build(retval, window)
-                retval.AppendItem(menuitem)
-                if item.enabled:
-                    menuitem.Enable()
-                else:
-                    menuitem.Enable(False)
-             
-        return retval
+        
+        # Trim out everything that's invisible
+        visible_items = [item for item in self._items if item.visible]
 
+        trimmed_items = []
+        if visible_items:
+            for i in range(len(visible_items)-1):
+                item = visible_items[i]
+                next_item = visible_items[i+1]
+                if not (item.separator and next_item.separator):
+                    trimmed_items.append(item)
+            trimmed_items.append(visible_items[-1])
+
+        if trimmed_items:
+            while trimmed_items[-1].separator:
+                trimmed_items.pop(-1)
+        
+        for item in trimmed_items:
+            menuitem = item.build(retval, window)    
+            retval.AppendItem(menuitem)
+            if item.enabled:
+                menuitem.Enable()
+            else:
+                menuitem.Enable(False)            
+
+        return retval
     def item(self, label, func=None, icon=None, kind=wx.ITEM_NORMAL, disable=None, enable=None, show=None, hide=None):
         item = MenuItemProxy(self, label=label, func=func, icon=icon, kind=kind)
         self.manager.subscribe(item, enable=enable, disable=disable, show=show, hide=hide)

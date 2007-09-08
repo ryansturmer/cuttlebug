@@ -41,6 +41,9 @@ class Settings(util.Category):
         self.editor.indent['tab_width'] = 4
         self.editor.indent['use_tabs'] = False
 
+        self.add_category('debug')
+        self.debug['jump_to_exec_location'] = False
+
     @staticmethod
     def load(filename):
         print "loading settings from %s" % filename
@@ -93,9 +96,13 @@ class SettingsDialog(OptionsDialog):
         page_panel.add("Wrap", "Wrap", CheckboxWidget, key="editor.page.wrap", label_on_right=True)
         page_panel.add("Wrap", "Horizontal Scrollbar", CheckboxWidget, key="editor.page.horizontal_scrollbar", label_on_right=True)
 
+        debug_panel = OptionsPanel(self, "Debug")
+        debug_panel.add("Runninig", "Jump to Execution Location on HALT", CheckboxWidget, key="debug.jump_to_exec_location")
+        
         self.add_panel(editor_panel, icon='style.png')
         self.add_panel(cursor_panel, parent=editor_panel, icon='textfield_rename.png')
         self.add_panel(page_panel, parent=editor_panel, icon='page.png')
+        self.add_panel(debug_panel, icon='bug.png')
      
     @staticmethod
     def show(parent, settings=None):

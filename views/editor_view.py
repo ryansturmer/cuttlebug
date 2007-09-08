@@ -15,6 +15,10 @@ class EditorView(view.View):
         self.SetSizer(sizer)
         self.files = {}
 
+    def __get_current_editor(self):
+        return self.notebook.get_window()
+    current_editor = property(__get_current_editor)
+    
     def __get_open_files(self):
         retval = []
         for widget in self.notebook:
@@ -23,7 +27,8 @@ class EditorView(view.View):
     open_files = property(__get_open_files)
     
     def on_target_halted(self, file, line):
-        self.set_exec_location(file, line)
+        goto = self.controller.settings.debug.jump_to_exec_location
+        self.set_exec_location(file, line, goto=goto)
         self.update_breakpoints()
         
     def goto(self, file, line):
@@ -36,16 +41,35 @@ class EditorView(view.View):
     def close(self):
         self.notebook.close_tab()
         
-    def set_exec_location(self, file, line):
-        self.goto(file, line)
+    def cut(self):
+        window = self.current_editor.Cut()
+
+    def copy(self):
+        window = self.current_editor.Copy()
+
+    def paste(self):
+        window = self.current_editor.Paste()
+
+    def undo(self):
+        window = self.current_editor.Undo()
+
+    def redo(self):
+        window = self.current_editor.Redo()
+        
+        
+    def set_exec_location(self, file, line, goto = False):
         widget = self.notebook.create_file_tab(file)
         for window in self.notebook:
             window.remove_exec_marker()
         if not widget:
             return
         widget.set_exec_marker(line)
-
+        if goto:
+            self.goto(file, line)
+            
+            
     def set_breakpoint_marker(self, file, line):
+        file = os.path.normcase(file)
         editor = self.notebook.get_file_tab(file)
         if editor:
             editor.set_breakpoint_marker(line)
@@ -127,7 +151,7 @@ class EditorControl(stc.StyledTextCtrl):
         
         
     def on_mouse_motion(self, evt):
-        pass
+        evt.Skip()
         #point = evt.GetPosition()
         #loc = self.PositionFromPoint(point)
         
@@ -139,13 +163,12 @@ class EditorControl(stc.StyledTextCtrl):
         
         # Breakpoint Marker (for showing user-selected breakpoints)
         self.MarkerDefine(self.BREAKPOINT_MARKER, stc.STC_MARK_CIRCLE)
-        self.MarkerSetBackground(self.BREAKPOINT_MARKER, "dark red") 
+        self.MarkerSetBackground(self.BREAKPOINT_MARKER, "red") 
         
     def on_update_ui(self, evt):
         self.controller.frame.statusbar.line = self.current_line()+1
     
     def on_modified(self, evt):
-        print "Modified!"
         evt.Skip()
     
     def on_undo(self, evt):
@@ -186,13 +209,22 @@ class EditorControl(stc.StyledTextCtrl):
         self.mnu_copy = m.item("Copy\tCtrl+C", func=self.on_copy, icon='page_copy.png')
         self.mnu_paste = m.item("Paste\tCtrl+V", func=self.on_paste, icon='paste_plain.png')
         m.separator()
-        m.item("Run to here...", func=self.on_run_to_here, icon="breakpoint.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
+        self.mnu_runtohere = m.item("Run to here...", func=self.on_run_to_here, icon="breakpoint.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
                                                                                   show=[menu.TARGET_HALTED,menu.TARGET_ATTACHED])
+        self.mnu_runtohere.hide()
+        
+        self.mnu_jumptopc = m.item("Go to exec location...", func=self.on_go_to_pc, icon="pc_marker.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
+                                                                                  show=[menu.TARGET_HALTED,menu.TARGET_ATTACHED])
+        self.mnu_jumptopc.hide()
+        
         self.mnu_set_bp = m.item("Set breakpoint", func=self.on_breakpoint_here, icon="stop.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
                                                                                 show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
         self.mnu_clear_bp = m.item("Clear breakpoint", func=self.on_clear_breakpoint, icon="stop_disabled.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
                                                                                 show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
         self.popup_menu = m
+
+    def on_go_to_pc(self, evt):
+        evt.Skip()
 
     def on_run_to_here(self, evt):
         line = self.line_from_point(self.click_pos)+1
@@ -203,7 +235,7 @@ class EditorControl(stc.StyledTextCtrl):
         self.controller.set_breakpoint(self.file_path, line)
         
     def on_clear_breakpoint(self, evt):
-        line = self.line_from_point(self.click_pos)        
+        line = self.line_from_point(self.click_pos)+1        
         self.controller.clear_breakpoint(self.file_path, line)
         
     def line_from_point(self, point):
@@ -388,6 +420,7 @@ class EditorControl(stc.StyledTextCtrl):
                 pass
 
     def open_file(self, path):
+        path = os.path.normpath(path)
         file = None
         try:
             file = open(path, 'r')
@@ -488,7 +521,7 @@ class Notebook(aui.AuiNotebook):
         if index is None: index = self.GetSelection()
         if index >= 0:
             window = self.get_window(index)
-            save = window.confirm_close()
+            save = window.confirm_close() if window.GetModify() else False
             if save == True:
                 #self.recent_path(window.file_path)
                 window.save()
@@ -503,7 +536,7 @@ class Notebook(aui.AuiNotebook):
         
         
     def get_file_tab(self, path):
-        path = self.controller.project.absolute_path(path)
+        path = os.path.abspath(path)
         for window in self:
             if not window.file_path: continue
             p1 = os.path.normcase(path)

@@ -160,7 +160,7 @@ class Controller(wx.EvtHandler):
             self.exit_current_state()
             self.frame.statusbar.icon = "connect.png"
             self.state = ATTACHED
-            self.frame.statusbar.set_state("Halted")
+            #self.frame.statusbar.set_state("Halted")
         else:
             self.error_logger.log(logging.WARN, "Tried to attach from state %d" % self.state)
 
@@ -250,21 +250,24 @@ class Controller(wx.EvtHandler):
 
     def set_breakpoint(self, file, line):
         print "controller wants to set breakpoint: %s %d" % (file, line)
-        self.gdb.break_insert(file, line, callback=self.on_breakpoint_set)
+        self.gdb.break_insert(os.path.normpath(file), line, callback=self.on_breakpoint_set)
     
     def on_breakpoint_set(self, data):
-        print data
-        filename = data['bkpt']['fullname']
-        line = data['bkpt']['line']
-        self.breakpoints[int(data['bkpt']['number'])] = (filename, line) 
+        if data.cls == 'error':
+            self.frame.error_msg(data.msg)
+            return
+        number = int(data.bkpt.number)
+        filename = os.path.normpath(data['bkpt']['fullname'])
+        line = int(data['bkpt']['line'])
+        self.breakpoints[number] = (filename, line) 
         wx.CallAfter(self.breakpoint_update)
         
     def clear_breakpoint(self, file, line):
         for key in self.breakpoints:
-           
             f, l = self.breakpoints[key]
-            if f == file and int(l) == int(line):
+            if f == file and l == line:
                 self.gdb.break_delete(key, self.on_breakpoint_cleared, key)
+                
     def on_breakpoint_cleared(self, data, key):
         del(self.breakpoints[key])
         wx.CallAfter(self.breakpoint_update)
@@ -277,13 +280,19 @@ class Controller(wx.EvtHandler):
         self.gdb.exec_interrupt(self.on_halted)
         #self.gdb.sig_interrupt()
         
+    def set_exec_location(self, file, line, goto=False):
+        self.frame.editor_view.set_exec_location(file, line, goto)
+        
     def on_halted(self, result):
-        if result.cls == "done" or result.cls == "stopped":
+        pass
+        '''
+        if result.cls == "stopped":
             self.change_state(ATTACHED)
-        #    evt = AppEvent(EVT_APP_TARGET_HALTED, self)
-        #    wx.PostEvent(self, evt)
             print result
-            
+            evt = AppEvent(EVT_APP_TARGET_HALTED, self, data=(result.frame.fullname, int(result.frame.line)))
+            wx.PostEvent(self, evt)
+            print result
+        ''' 
     def download(self):
         if self.state == ATTACHED:
             self.frame.statusbar.working = True
@@ -339,9 +348,15 @@ class Controller(wx.EvtHandler):
     def on_gdb_stopped(self, evt):
         self.change_state(ATTACHED)
         result = evt.data
-        print result
-        #evt = AppEvent(EVT_APP_TARGET_HALTED, self, data=(result.frame.fullname, int(result.frame.line)))
-        #wx.PostEvent(self, evt)
+        try:
+            filename = os.path.normpath(result.frame.fullname)
+            line = int(result.frame.line)            
+        except:
+            self.frame.statusbar.set_state("Halted in the weeds.")
+            return
+        self.frame.statusbar.set_state("Halted at %s:%d" % (os.path.basename(filename), line))
+        evt = AppEvent(EVT_APP_TARGET_HALTED, self, data=(filename, line))
+        wx.PostEvent(self, evt)
 
     def on_gdb_running(self, evt):
         self.change_state(RUNNING)
@@ -350,12 +365,16 @@ class Controller(wx.EvtHandler):
     def on_build_started(self, evt):
         build_view = self.frame.build_view
         self.state = BUILDING
+        menu.manager.publish(menu.BUILD_STARTED)
+        self.frame.statusbar.working = True
+        self.frame.statusbar.text = "Performing build step..."
         build_view.clear()
-        build_view.update("Build Started.\n")
 
     def on_build_finished(self, evt):
         self.state = IDLE
-        self.frame.build_view.update("Build completed.\n")
+        self.frame.statusbar.working = False
+        self.frame.statusbar.text = ""
+        menu.manager.publish(menu.BUILD_FINISHED)
 
     def on_build_update(self, evt):
         self.frame.build_view.update(str(evt.data))

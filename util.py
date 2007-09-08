@@ -339,6 +339,30 @@ def unpickle_file(filename):
     object.filename = path
     return object
 
+class ArtListMixin(object):
+    def __init__(self, *args, **kwargs):
+        self.__art = {}
+        self.__image_list = wx.ImageList(16,16)
+        self.__args = args
+        self.__kwargs = kwargs
+        
+    def clear_art(self):
+        self.__art = {}
+        self.__image_list = wx.ImageList(16,16)
+        self.SetImageList(self.image_list) 
+    
+    def get_art(self, name):
+        il = self.GetImageList(*self.__args, **self.__kwargs)
+        return il.GetBitmap(self.__art[name])
+        
+    def get_art_idx(self, name):
+        return self.__art[name]
+    
+    def add_art(self, *arts):
+        for art in arts:
+            if art not in self.__art:
+                self.__art[art] = self.__image_list.Add(get_icon(art))
+        self.SetImageList(self.__image_list, *self.__args, **self.__kwargs)
 
 if __name__ == "__main__":
 
