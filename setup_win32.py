@@ -24,7 +24,7 @@ def get_data_files():
         result = tree(src)
         result = [('.', item[1]) for item in result]
         return result
-    data_files = []
+    data_files = ['default-styles.dat']
     data_files += tree('./tests')
     data_files += tree('./icons')
     return data_files

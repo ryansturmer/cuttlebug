@@ -2,8 +2,8 @@ import view
 import wx
 import wx.lib.mixins.listctrl as listmix
 import sys
-from odict import OrderedDict
 import util
+import menu
 
 class BreakpointListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, util.ArtListMixin):
     TYPE = 0
@@ -20,13 +20,16 @@ class BreakpointListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, util.ArtLi
         self.SetColumnWidth(1, wx.LIST_AUTOSIZE)
         self.SetItemCount(0)
         self.__items = []
-
+        
         # Attributes (for changing list item colors)
         self.redattr = wx.ListItemAttr()
         self.redattr.SetTextColour("red")
         self.blackattr = wx.ListItemAttr()
         self.blackattr.SetTextColour("black")
-
+        
+        self.create_popup_menu()
+        self.Bind(wx.EVT_RIGHT_DOWN, self.on_context_menu)
+        
     def OnGetItemColumnImage(self, item, col):
         #return -1
         if col == 0:
@@ -54,7 +57,21 @@ class BreakpointListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, util.ArtLi
     def add(self,item):
         self.__items.append(item)
         self.SetItemCount(len(self.__items))
+
+    def create_popup_menu(self):
+        m = menu.manager.menu()        
+        self.mnu_clear_bp = m.item("Clear breakpoint", func=self.on_clear_breakpoint, icon="stop_disabled.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
+                                                                                show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
+        self.popup_menu = m
     
+    def on_context_menu(self, evt):
+        print "Context menu"
+        self.click_pos = evt.GetPosition()            
+        self.PopupMenu(self.popup_menu.build(self))     
+        
+    def on_clear_breakpoint(self, evt):
+        evt.Skip()
+        
 class BreakpointView(view.View):
     
     def __init__(self, *args, **kwargs):
@@ -84,3 +101,4 @@ class BreakpointView(view.View):
 
     def update_breakpoints(self):
         self._fetch_data()
+    

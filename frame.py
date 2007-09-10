@@ -235,7 +235,7 @@ class Frame(wx.Frame):
             self.editor_view.save()
 
         def on_save_as(self, evt):
-            pass
+            self.editor_view.save_as()
         
         def on_save_all(self, evt):
             self.editor_view.save_all()

@@ -111,6 +111,9 @@ class EditorView(view.View):
     def save(self):
         self.notebook.save()
 
+    def save_as(self):
+        self.notebook.save_as()
+
     def save_all(self):
         self.notebook.save_all()
         
@@ -506,11 +509,24 @@ class Notebook(aui.AuiNotebook):
     def save(self):
         window = self.get_window()
         if window:
+            if not window.file_path:
+                self.save_as()
             window.save()
             idx = self.GetPageIndex(window)
             self.SetPageText(idx, window.name)
             
-    
+    def save_as(self):
+        window = self.get_window()
+        if window:
+            frame = self.controller.frame
+            project = self.controller.project
+            dir = project.directory if project else ""
+            file = frame.browse_for_file(message="Save...", dir=dir, style=wx.FD_SAVE)
+            window.file_path = file
+            window.save()
+            idx = self.GetPageIndex(window)
+            self.SetPageText(idx, window.name)
+                    
     def save_all(self):
         for window in self:
             if window.GetModify():
@@ -546,8 +562,8 @@ class Notebook(aui.AuiNotebook):
         return None
 
     def create_file_tab(self, path=None):
-        path = self.controller.project.absolute_path(path)
         if path:
+            path = self.controller.project.absolute_path(path)
             window = self.get_file_tab(path)
 
             if window:

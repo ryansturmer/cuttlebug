@@ -44,14 +44,15 @@ EDITOR VIEW
  * fix bug for files that can't load (user tried to open a binary file, for example)
  * Hilighting of current line
  * Right click menu
-   - Breakpoints (add, remove, next, previous)
    - Jump to execution location
  * Editor history
  * Fix folding
  * Hover for local/expression evaluation, address resolution
  * Tab right click menu
    - Close page
-   - Save page
+   - Close all
+   - Close others
+   - Save page/Save page as...
  * Check disk periodically for updated files and reload
  * Hilighting of current line
  
