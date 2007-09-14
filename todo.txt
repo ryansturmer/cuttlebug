@@ -55,6 +55,7 @@ EDITOR VIEW
    - Save page/Save page as...
  * Check disk periodically for updated files and reload
  * Hilighting of current line
+ * Tooltips for file tabs
  
 PROJECT VIEW
  * right click menus
@@ -76,6 +77,9 @@ BREAKPOINT VIEW
  * If breakpoint set FAILS, the target can be convinced that it's running when it's not
    - Maybe some timer based polling of the GDB session that allows for correction of state
  * Distinction between hardware and software breakpoints
+ * Better breakpoint model in gdb object
+ * disabling breakpoints
+ * Update views properly when breakpoint is deleted
  
 MISC
  * Splash Screen

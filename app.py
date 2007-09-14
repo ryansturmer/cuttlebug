@@ -295,25 +295,22 @@ class Controller(wx.EvtHandler):
         ''' 
     def download(self):
         if self.state == ATTACHED:
-            self.frame.statusbar.working = True
-            self.frame.statusbar.text = "Downloading to target..."
+            wx.CallAfter(self.frame.start_busy, "Downloading to target...")
             self.gdb.target_download(callback=self.on_downloaded)
         else:
             print "Can't download from state %s" % self.state
 
     def on_downloaded(self, result):
-        self.frame.statusbar.working = False
-        self.frame.statusbar.text = ""
+        wx.CallAfter(self.frame.stop_busy)
         if result.cls == 'error':
-            self.frame.error_msg(result.msg)
+            wx.CallAfter(self.frame.error_msg, result.msg)
         else:
             pass
         
     # ATTACH TO GDB
     def attach(self):
         if self.state == IDLE:
-            self.frame.statusbar.working = True
-            self.frame.statusbar.text = "Starting GDB and attaching to target..."
+            wx.CallAfter(self.frame.start_busy, "Attaching to GDB...")
             self.gdb = gdb.GDB(cmd = "%s -n -q -i mi" % self.project.debug.gdb_executable, notify=self, mi_log=self.mi_logger, console_log=self.gdb_logger, target_log=self.gdb_logger, log_log=self.gdb_logger)
         else:
             print "Cannot attach to process from state %d" % self.state

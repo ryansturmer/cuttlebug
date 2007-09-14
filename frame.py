@@ -98,7 +98,14 @@ class Frame(wx.Frame):
             menu.manager.publish(menu.PROJECT_CLOSE)
             menu.manager.publish(menu.TARGET_DETACHED)
         
-        
+        def start_busy(self, message=''):
+            self.statusbar.working = True
+            self.statusbar.message = message
+            
+        def stop_busy(self):
+            self.statusbar.working = False
+            self.statusbar.message = ''
+            
         def on_cut(self, evt):
             self.editor_view.cut()
         
@@ -115,6 +122,9 @@ class Frame(wx.Frame):
             self.editor_view.redo()
         
         def error_msg(self, message, caption="Error"):
+            wx.CallAfter(self._error_msg, message, caption)
+            
+        def _error_msg(self, message, caption):
             dialog = wx.MessageDialog(self, message = message, caption=caption, style=wx.ICON_ERROR | wx.OK)
             return dialog.ShowModal()
             
