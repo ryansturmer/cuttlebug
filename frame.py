@@ -30,6 +30,8 @@ class Frame(wx.Frame):
             
             self.controller.setup_logs()
             self.controller.load_session()
+            self.controller.setup_gdb()
+            
             self.manager.Update()
             
         def create_menu_bar(self):
@@ -165,6 +167,7 @@ class Frame(wx.Frame):
             else:
                 print "GDB Session not attached"
 
+        
         def create_status_bar(self):
             self.statusbar = controls.StatusBar(self)
             self.statusbar.icon = "disconnect.png"
@@ -328,3 +331,5 @@ class Frame(wx.Frame):
 
         def on_download(self, evt):
             self.controller.download()
+
+        

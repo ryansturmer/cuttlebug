@@ -75,27 +75,19 @@ class EditorView(view.View):
             editor.set_breakpoint_marker(line)
     
     def set_breakpoint_markers(self, breakpoints):
-        for file, line in breakpoints:
-            self.set_breakpoint_marker(file, line)
+        for bkpt in breakpoints:
+            self.set_breakpoint_marker(bkpt.fullname, bkpt.line)
 
     def remove_breakpoint_markers(self):
         for editor in self.notebook:
             editor.remove_breakpoint_markers()
     
     def update_breakpoints(self):
-        if self.controller.gdb:
-            self.controller.gdb.break_list(callback=self._on_break_list)
-            
-    def _on_break_list(self, data):
+        self.Freeze()
         self.remove_breakpoint_markers()
-        if hasattr(data, 'BreakpointTable'):
-            for item in data.BreakpointTable.body:
-                file = item['bkpt']['fullname']
-                line = int(item['bkpt']['line'])
-                self.set_breakpoint_marker(file, line)
-                
-                
-
+        self.set_breakpoint_markers(self.controller.gdb.breakpoints)
+        self.Thaw()
+        
     def update_settings(self):
         for editor in self.notebook:
             editor.apply_settings()
@@ -239,7 +231,7 @@ class EditorControl(stc.StyledTextCtrl):
         
     def on_clear_breakpoint(self, evt):
         line = self.line_from_point(self.click_pos)+1        
-        self.controller.clear_breakpoint(self.file_path, line)
+        self.controller.clear_breakpoint_byfile(self.file_path, line)
         
     def line_from_point(self, point):
         return self.LineFromPosition(self.PositionFromPoint(point))

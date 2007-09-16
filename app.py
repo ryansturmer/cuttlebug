@@ -30,7 +30,7 @@ class Controller(wx.EvtHandler):
 
         self.style_manager = styles.StyleManager()
         self.state = IDLE
-        self.gdb = None
+        self.gdb = gdb.GDB()
         self.frame = frame
         self.project = None
         self.breakpoints = {}
@@ -46,15 +46,20 @@ class Controller(wx.EvtHandler):
         self.Bind(build.EVT_BUILD_STARTED, self.on_build_started)
         self.Bind(build.EVT_BUILD_UPDATE, self.on_build_update)
         
-        # GDB events 
-        self.Bind(gdb.EVT_GDB_STARTED, self.on_gdb_started)
-        self.Bind(gdb.EVT_GDB_FINISHED, self.on_gdb_finished)
-        self.Bind(gdb.EVT_GDB_UPDATE, self.on_gdb_update)
-        self.Bind(gdb.EVT_GDB_ERROR, self.on_gdb_error)
-        self.Bind(gdb.EVT_GDB_STOPPED, self.on_gdb_stopped)
-        self.Bind(gdb.EVT_GDB_RUNNING, self.on_gdb_running)
+ #       self.Bind(gdb.EVT_GDB_UPDATE, self.on_breakpoint_update)
               
 
+    def setup_gdb(self):
+        g = gdb.GDB(mi_log=self.mi_logger, console_log=self.gdb_logger, target_log=self.gdb_logger, log_log=self.gdb_logger)
+        g.Bind(gdb.EVT_GDB_STARTED, self.on_gdb_started)
+        g.Bind(gdb.EVT_GDB_FINISHED, self.on_gdb_finished)
+        g.Bind(gdb.EVT_GDB_ERROR, self.on_gdb_error)
+        g.Bind(gdb.EVT_GDB_STOPPED, self.on_gdb_stopped)
+        g.Bind(gdb.EVT_GDB_RUNNING, self.on_gdb_running)
+        g.Bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, self.on_update_breakpoints)
+
+        self.gdb = g
+  
     def setup_logs(self):
         log_view = self.frame.log_view
         log_view.add_logger(logging.getLogger('stdout'), icon="application_osx_terminal.png")
@@ -248,33 +253,36 @@ class Controller(wx.EvtHandler):
         if self.state == ATTACHED:
             self.gdb.exec_until(file, line)
 
+    #
+    # BREAKPOINTS
+    #
     def set_breakpoint(self, file, line):
-        print "controller wants to set breakpoint: %s %d" % (file, line)
-        self.gdb.break_insert(os.path.normpath(file), line, callback=self.on_breakpoint_set)
-    
-    def on_breakpoint_set(self, data):
-        if data.cls == 'error':
-            self.frame.error_msg(data.msg)
-            return
-        number = int(data.bkpt.number)
-        filename = os.path.normpath(data['bkpt']['fullname'])
-        line = int(data['bkpt']['line'])
-        self.breakpoints[number] = (filename, line) 
-        wx.CallAfter(self.breakpoint_update)
-        
-    def clear_breakpoint(self, file, line):
-        for key in self.breakpoints:
-            f, l = self.breakpoints[key]
-            if f == file and l == line:
-                self.gdb.break_delete(key, self.on_breakpoint_cleared, key)
-                
-    def on_breakpoint_cleared(self, data, key):
-        del(self.breakpoints[key])
-        wx.CallAfter(self.breakpoint_update)
+        self.gdb.break_insert(os.path.normpath(file), line, callback=self.on_gdb_done)
 
-    def breakpoint_update(self):
+    def clear_breakpoint(self, number):
+        self.gdb.break_delete(number, callback=self.on_gdb_done)
+
+    def clear_breakpoint_byfile(self, file, line):
+        for bkpt in self.gdb.breakpoints:
+            f, l = os.path.normpath(bkpt.file), bkpt.line
+            if f == file and l == line:
+                self.gdb.break_delete(key, self.on_gdb_done, key)
+    
+    def disable_breakpoint(self, number):
+        self.gdb.break_disable(number, callback=self.on_gdb_done)
+
+    def enable_breakpoint(self, number):
+        self.gdb.break_enable(number, callback=self.on_gdb_done)                
+
+    def on_update_breakpoints(self, evt):
         self.frame.editor_view.update_breakpoints()
-        self.frame.breakpoint_view.update_breakpoints()
+        self.frame.breakpoint_view.update()
+
+
+    def on_gdb_done(self, data):
+        if data.cls == 'error':
+            wx.CallAfter(self.frame.error_msg, data.msg)
+                
         
     def halt(self):
         self.gdb.exec_interrupt(self.on_halted)
@@ -311,7 +319,8 @@ class Controller(wx.EvtHandler):
     def attach(self):
         if self.state == IDLE:
             wx.CallAfter(self.frame.start_busy, "Attaching to GDB...")
-            self.gdb = gdb.GDB(cmd = "%s -n -q -i mi" % self.project.debug.gdb_executable, notify=self, mi_log=self.mi_logger, console_log=self.gdb_logger, target_log=self.gdb_logger, log_log=self.gdb_logger)
+            self.gdb.cmd = "%s -n -q -i mi" % self.project.debug.gdb_executable
+            self.gdb.start()
         else:
             print "Cannot attach to process from state %d" % self.state
     def on_attach_cmd(self, result):
@@ -335,9 +344,6 @@ class Controller(wx.EvtHandler):
     
     def on_gdb_finished(self, evt):
         self.change_state(IDLE)
-
-    def on_gdb_update(self, evt):
-        pass
     
     def on_gdb_error(self, evt):
         self.error_logger.log(logging.ERROR, evt.data)
@@ -378,6 +384,8 @@ class Controller(wx.EvtHandler):
         evt.Skip()
         
     # VIEW EVENTS
+    
+        
     def on_update_memory_view(self, evt):
         if self.state == ATTACHED:
             start, end = evt.data
