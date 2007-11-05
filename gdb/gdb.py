@@ -2,6 +2,7 @@ import wx
 import os, threading, time, logging
 import antlr3, GDBMILexer, GDBMIParser
 import util, odict
+from gdbvars import Type, Variable, GDBVarModel
 
 def escape(s):
     return s.replace("\\", "\\\\")
@@ -21,6 +22,10 @@ EVT_GDB_ERROR = wx.PyEventBinder(wx.NewEventType())
 EVT_GDB_UPDATE = wx.PyEventBinder(wx.NewEventType())
 
 EVT_GDB_UPDATE_BREAKPOINTS = wx.PyEventBinder(wx.NewEventType())
+
+EVT_GDB_UPDATE_VARS = wx.PyEventBinder(wx.NewEventType())
+
+
 #EVT_GDB_EXECUTE_UPDATE
 #EVT_GDB_LOCALS_UPDATE
 #EVT_GDB_MEMORY_UPDATE
@@ -42,7 +47,7 @@ class GDB(wx.EvtHandler):
 
         # Parser for GDBMI commands
         self.cmd = cmd
-
+        self.vars = GDBVarModel(self)
     def start(self):
         self.__clear()
         self.subprocess = util.Process(self.cmd, start=self.on_start, stdout=self.on_stdout, end=self.on_end)
@@ -50,10 +55,17 @@ class GDB(wx.EvtHandler):
     def __clear(self):
         self.buffer = ''
         self.pending = {} # Pending commands
+        
+        self.__varnames = {} # Variable names pending
+        self.__varname_idx = 0
+        
         self.token = 1    # Command token (increments on each command
         self.breakpoints = BreakpointTable(self)
+        self.locals = []
+        self.vars = GDBVarModel(self)
         self.__lexer = GDBMILexer.GDBMILexer(None)
         self.__parser = GDBMIParser.GDBMIParser(None)
+        self.__deleted = []
         
     def __parse(self, string):
         '''
@@ -125,15 +137,17 @@ class GDB(wx.EvtHandler):
                 elif result.cls == 'stopped':
                     self.post_event(GDBEvent(EVT_GDB_STOPPED, self, data=result))
                     self.__update_breakpoints()
+                    self.stack_list_locals()
+                    self.var_update()
+                    
                 elif result.cls == 'running':
                     self.post_event(GDBEvent(EVT_GDB_RUNNING, self, data=result))
                 else:
                     self.post_event(GDBEvent(EVT_GDB_UPDATE, self, data=result))
-
+        
     def __update_breakpoints(self, data=None):
         self.__cmd('-break-list\n', self.__process_breakpoint_update)
     def __process_breakpoint_update(self, data):
-        print data
         if hasattr(data, 'BreakpointTable'):
             self.breakpoints.clear()
             for item in data.BreakpointTable.body:
@@ -147,7 +161,7 @@ class GDB(wx.EvtHandler):
                     bp = Breakpoint(number, fullname, line, enabled=enabled, address=address)
                     self.breakpoints[number] = bp
         wx.PostEvent(self, GDBEvent(EVT_GDB_UPDATE_BREAKPOINTS, self, data=self.breakpoints))
-                
+                        
     def post_event(self, evt):
         wx.PostEvent(self, evt)
     
@@ -158,7 +172,7 @@ class GDB(wx.EvtHandler):
     def __cmd(self, cmd, callback=None, internal_callback=None):
         if cmd[-1] != '\n':
             cmd += '\n'
-        if callback:
+        if callback or internal_callback:
             self.__send(str(self.token) + cmd)
             self.pending[self.token] = (callback, internal_callback)
             self.token += 1
@@ -169,9 +183,103 @@ class GDB(wx.EvtHandler):
     def command(self, cmd, callback=None):
         self.__cmd('-interpreter-exec console "%s"' % cmd, callback)
    
-    def stack_list_locals(self, callback=None):
-        self.__cmd('-stack-list-locals 1', callback)
+    def cmd(self, cmd, callback=None):
+        self.__cmd(cmd, callback)
+        
+    def var_create(self, expression, floating=False, frame=None, callback=None):
+        if floating:
+            frame = "@"
+        else:
+            frame = "*" if frame == None else frame
+        name = "cvar%d" % self.__varname_idx # We keep our own names so we can track expressions
+        self.__varname_idx += 1
+        self.__varnames[name] = expression
+        self.__cmd('-var-create %s %s %s' % (name, frame, expression), callback=callback, internal_callback = self.__on_var_created)
 
+    def __on_var_created(self, data):
+        # Created variable info
+        try:
+            type = Type.parse(data.type)
+            numchild = int(data.numchild)
+            name = data.name
+            expression = self.__varnames.pop(name)
+            value = [] if numchild else data.value
+        except Exception, e:
+            print "Exception creating variable: %s" % e
+            print data
+        # Update the model and notify
+        self.vars.add(name, Variable(name, expression, type, children=numchild, data=value))
+        self.post_event(GDBEvent(EVT_GDB_UPDATE_VARS, self, data=[name]))
+        
+    def var_delete(self, name, callback=None):
+        self.__deleted.append(name)
+        self.vars.remove(name)
+        self.__cmd('-var-delete %s' % name, callback, self.__on_var_deleted)
+    def __on_var_deleted(self, data):
+        var = self.__deleted.pop()
+        self.post_event(GDBEvent(EVT_GDB_UPDATE_VARS, self, data=[var]))
+                
+    
+    def var_update(self, name=None, callback=None):
+        self.__cmd('-var-update --all-values %s' % (name or '*'), callback=callback, internal_callback = self.__on_var_updated)
+    def __on_var_updated(self, data):
+        print self.vars
+        if hasattr(data,'changelist'):
+            names = [item['name'] for item in data.changelist if item['in_scope'] != 'false']
+            for item in data.changelist:
+                if 'value' in item:
+                    self.vars.vars[item['name']].data = item['value']
+                if 'in_scope' in item:
+                    if item['in_scope'] == 'false':
+                        pass
+                        #self.var_delete(item['name'])
+        if names:
+            self.post_event(GDBEvent(EVT_GDB_UPDATE_VARS, self, data=names))
+    
+    def var_list_children(self, name, callback=None):
+        self.__cmd('-var-list-children --all-values %s' % name, internal_callback=self.__on_var_list_children, callback=callback)
+    def __on_var_list_children(self, data):
+        kids = []
+        updated_kids =[]
+        for item in data.children:
+            child = item['child']
+            numchild = int(child['numchild'])
+            value = [] if numchild else child['value']
+            type = Type.parse(child['type'])
+            expression = child['exp']
+            name = child['name']
+            parent = GDBVarModel.parent_name(name)
+            if name not in self.vars:
+                self.vars.add(name, Variable(name, expression, type, children=numchild, data=value))
+                updated_kids.append(name)
+            kids.append(name)
+        if parent:
+            self.vars[parent].data = kids
+
+        if updated_kids:
+            self.post_event(GDBEvent(EVT_GDB_UPDATE_VARS, self, data=kids))
+            
+    def var_assign(self, name, value, callback=None):
+        self.__cmd('-var-assign %s %s' % (name, value), internal_callback=self.__on_var_assign, callback=callback)
+    def __on_var_assign(self, data):
+        print data
+        self.var_update()
+        
+    def stack_list_locals(self, callback=None):
+        self.__cmd('-stack-list-locals 0', callback, internal_callback = self.__on_list_locals)
+
+    def __on_list_locals(self, data):
+        if hasattr(data, 'locals'):
+            self.locals = []
+            for entry in data.locals:                    
+                self.locals.append(entry['name'])
+        for expr in self.locals:
+            try: 
+                self.vars.name_from_expr(expr)
+            except Exception, e: 
+                print e
+                self.var_create(expr)
+        
     def file_list_globals(self, file='', callback=None):
         self.__cmd('-symbol-list-variables', callback)
 
@@ -212,10 +320,7 @@ class GDB(wx.EvtHandler):
         
     def break_insert(self, file, line, hardware=False, temporary=False, callback=None):
         self.__cmd('-break-insert %s %s %s:%d' % ("-h" if hardware else "", "-t" if temporary else "", os.path.normpath(file), line), callback=callback, internal_callback=self.__update_breakpoints)
-        
-#    def break_insert(self, file, line, hardware=False, temporary=False,  callback=None, *args, **kwargs):
-#        self.__cmd('-break-insert %s %s %s:%d' % ("-h" if hardware else "", "-t" if temporary else "", os.path.normpath(file), line), callback, *args, **kwargs)
-        
+                
     def break_delete(self, num, callback=None):
         self.__cmd("-break-delete %d" % int(num), callback, internal_callback=self.__update_breakpoints)
 
@@ -234,23 +339,35 @@ class GDB(wx.EvtHandler):
         self.post_event(GDBEvent(EVT_GDB_FINISHED, self))
 
 
+
 class BreakpointTable(object):
     def __init__(self, parent):
-        self.breakpoints = odict.OrderedDict()
+        self.__data = odict.OrderedDict()
         self.parent = parent
         
-    def __setitem__(self, key, bp):
-        self.breakpoints[int(key)] = bp
+    def __setitem__(self, key, val):
+        self.__data[int(key)] = val
         
     def __str__(self):
-        return '\n'.join([str(self.breakpoints[num]) for num in sorted(self.breakpoints)])
+        return '\n'.join([str(self.__data[num]) for num in sorted(self.__data)])
         
     def clear(self):
-        self.breakpoints = {}
+        self.__data= odict.OrderedDict()
     
     def __iter__(self):
-        return iter([self.breakpoints[key] for key in sorted(self.breakpoints.keys())])
-    
+        return iter([self.__data[key] for key in sorted(self.__data.keys())])
+
+    def remove(self, item):
+        try:
+            del self.__data[key]
+        except:
+            pass
+
+    def get_number(self, file, line):
+        for key, breakpoint in self.__data.iteritems():
+            if breakpoint.line == line and breakpoint.fullname == file: return key
+        raise KeyError
+                    
 class Breakpoint(object):
     
     def __init__(self, number, fullname, line, enabled=True, address=None):

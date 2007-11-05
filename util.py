@@ -3,6 +3,19 @@ import os, threading, subprocess, pickle
 
 from os.path import abspath, dirname, normcase, normpath, splitdrive
 from os.path import join as path_join, commonprefix
+
+def rgb(r,g,b,a=255):
+    return wx.Colour(r,g,b,a)
+
+class Updater(object):
+    def __init__(self):
+        self.__listeners = []
+        
+    def post_update(self):
+        for listener in self.__listener:
+            if callable(listener):
+                listener(self)
+                
 class FontEnumerator(wx.FontEnumerator):
     def __init__(self):
         super(FontEnumerator, self).__init__()

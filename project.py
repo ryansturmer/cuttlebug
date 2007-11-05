@@ -25,6 +25,8 @@ class Project(util.Category):
         self["debug.gdb_executable"] = "arm-elf-gdb"
         self["debug.attach_cmd"] = "target async localhost:3333"
         self["debug.detach_cmd"] = ""
+        self["debug.post_attach_cmd"] = "monitor halt"
+        self["debug.pre_detach_cmd"] = ""
         self["debug.target"] = "build/main.elf"
         
     @staticmethod
@@ -91,6 +93,8 @@ class ProjectOptionsDialog(OptionsDialog):
         panel.add("General", "Target", TextWidget, key="debug.target")
         panel.add("Commands", "Attach", TextWidget, key="debug.attach_cmd")
         panel.add("Commands", "Detach", TextWidget, key="debug.detach_cmd")
+        panel.add("Commands", "Post-Attach", TextWidget, key="debug.post_attach_cmd")
+        panel.add("Commands", "Pre-Detach", TextWidget, key="debug.pre_detach_cmd")
         self.add_panel(panel, icon='bug.png')
 
     @staticmethod

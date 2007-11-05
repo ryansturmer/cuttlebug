@@ -68,15 +68,15 @@ class EditorView(view.View):
             self.goto(file, line)
             
             
-    def set_breakpoint_marker(self, file, line):
+    def set_breakpoint_marker(self, file, line, disabled=False):
         file = os.path.normcase(file)
         editor = self.notebook.get_file_tab(file)
         if editor:
-            editor.set_breakpoint_marker(line)
+            editor.set_breakpoint_marker(line, disabled=disabled)
     
     def set_breakpoint_markers(self, breakpoints):
         for bkpt in breakpoints:
-            self.set_breakpoint_marker(bkpt.fullname, bkpt.line)
+            self.set_breakpoint_marker(bkpt.fullname, bkpt.line, not bkpt.enabled)
 
     def remove_breakpoint_markers(self):
         for editor in self.notebook:
@@ -121,8 +121,10 @@ class EditorControl(stc.StyledTextCtrl):
     SYMBOL_MARGIN = 1
     FOLDING_MARGIN = 2
 
-    EXECUTION_MARKER = 2
-    BREAKPOINT_MARKER = 1
+    EXECUTION_MARKER = 1
+    BREAKPOINT_MARKER = 2
+    DISABLED_BREAKPOINT_MARKER = 3
+    
     def __init__(self, *args, **kwargs):
         if 'controller' in kwargs:
             self.controller = kwargs.pop('controller')
@@ -144,7 +146,6 @@ class EditorControl(stc.StyledTextCtrl):
         self.Bind(stc.EVT_STC_UPDATEUI, self.on_update_ui)
         self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
         
-        
     def on_mouse_motion(self, evt):
         evt.Skip()
         #point = evt.GetPosition()
@@ -159,6 +160,10 @@ class EditorControl(stc.StyledTextCtrl):
         # Breakpoint Marker (for showing user-selected breakpoints)
         self.MarkerDefine(self.BREAKPOINT_MARKER, stc.STC_MARK_CIRCLE)
         self.MarkerSetBackground(self.BREAKPOINT_MARKER, "red") 
+
+        # Disabled Breakpoint Marker (for breakpoints that aren't currently active)
+        self.MarkerDefine(self.DISABLED_BREAKPOINT_MARKER, stc.STC_MARK_CIRCLE)
+        self.MarkerSetBackground(self.DISABLED_BREAKPOINT_MARKER, "grey") 
         
     def on_update_ui(self, evt):
         self.controller.frame.statusbar.line = self.current_line()+1
@@ -329,12 +334,20 @@ class EditorControl(stc.StyledTextCtrl):
     def remove_breakpoint_markers(self):
         self.MarkerDeleteAll(self.BREAKPOINT_MARKER)
 
-    def set_breakpoint_marker(self, line):
-        if line != None:
-            if self.MarkerGet(line-1) & (1 << self.BREAKPOINT_MARKER):
-                pass
-            else:
-                self.MarkerAdd(line-1, self.BREAKPOINT_MARKER)
+    def set_breakpoint_marker(self, line, disabled=False):
+        marker = self.DISABLED_BREAKPOINT_MARKER if disabled else self.BREAKPOINT_MARKER
+        current_marker = self.MarkerGet(line-1)
+        if current_marker & (1 << marker):
+            return
+        
+        if disabled:
+            if current_marker & (1 << self.BREAKPOINT_MARKER):
+                self.MarkerDelete(line-1, self.BREAKPOINT_MARKER)
+            self.MarkerAdd(line-1, marker)
+        else:
+            if current_marker & (1 << self.DISABLED_BREAKPOINT_MARKER): 
+                self.MarkerDelete(line-1, self.DISABLED_BREAKPOINT_MARKER)
+            self.MarkerAdd(line-1, marker)
 
     def update_line_numbers(self):
         if self.controller and self.controller.settings.editor.page.show_line_numbers:
@@ -400,6 +413,14 @@ class EditorControl(stc.StyledTextCtrl):
         self.StyleSetBackground(id, s.create_background())
         self.StyleSetForeground(id, s.create_foreground())
     
+    def style_line(self, line, style):
+        start = self.PositionFromLine(line)
+        end = self.GetLineEndPosition(line)
+        print start
+        print end
+        self.StartStyling(start, 0x1f)
+        self.SetStyling(wx.stc.STC_STYLE_BRACEBAD, end-start)
+
     def save(self):
         if self.file_path:
             try:
@@ -430,6 +451,7 @@ class EditorControl(stc.StyledTextCtrl):
             if file:
                 file.close()
         self.detect_language()
+        self.style_line(5, 38)
 
     def apply_folding_settings(self):
         if self.controller and self.controller.settings.editor.fold:

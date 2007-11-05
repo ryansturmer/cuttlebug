@@ -57,18 +57,18 @@ class Controller(wx.EvtHandler):
         g.Bind(gdb.EVT_GDB_STOPPED, self.on_gdb_stopped)
         g.Bind(gdb.EVT_GDB_RUNNING, self.on_gdb_running)
         g.Bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, self.on_update_breakpoints)
-
+        g.Bind(gdb.EVT_GDB_UPDATE_VARS, self.on_update_vars)
         self.gdb = g
   
     def setup_logs(self):
         log_view = self.frame.log_view
-        log_view.add_logger(logging.getLogger('stdout'), icon="application_osx_terminal.png")
+        log_view.add_logger(logging.getLogger('stdout'), icon="application_osx_terminal.png", format="%(message)s")
         
         self.mi_logger = logging.getLogger('gdb.mi')
         log_view.add_logger(self.mi_logger, icon="gnu.png")
 
         self.gdb_logger = logging.getLogger('gdb.stream')
-        log_view.add_logger(self.gdb_logger, format="%(message)s", icon="gnu.png")
+        log_view.add_logger(self.gdb_logger, format="%(message)s", icon="gnu.png", on_input=self.gdb_input_handler)
        
         self.error_logger = logging.getLogger('errors')
         log_view.add_logger(self.error_logger, icon="stop.png")
@@ -79,35 +79,36 @@ class Controller(wx.EvtHandler):
         log.redirect_stdout('stdout')
         
 
+    def gdb_input_handler(self, txt):
+        if self.state == ATTACHED:
+            try:
+                self.gdb.command(txt)
+            except Exception, e:
+                print e
+            
     def load_session(self):
         try:
-            self.session = util.unpickle_file('.session')
-            if self.session.project_filename:
-                try:
-                    self.load_project(self.session.project_filename)
-                    for file in self.session.open_files:
+            settings.load_session()
+            project_filename = settings.session_get('project_filename')
+            try:
+                self.load_project(project_filename)
+                open_files = settings.session_get('open_files')
+                if open_files:
+                    for file in open_files:
                         self.open_file(file)
-                except Exception,  e:
-                    print e
-            
-            #if self.session.perspective:
-                #self.frame.manager.LoadPerspective(self.session.perspective)
-                #self.frame.manager.Update()
+            except Exception,  e:
+                print e
         
         except Exception, e:
-            print e
-            self.session = project.Session()
+            self.session = {}
     
     def save_session(self):
-        #print self.session
-        if self.session:
-            self.session.perspective = self.frame.manager.SavePerspective()
-            if self.project:
-                self.session.project_filename = self.project.filename
-                self.session.open_files = self.frame.editor_view.open_files
-                print self.project.filename
-            util.pickle_file(self.session, '.session')
-
+        self.session['perspective'] = self.frame.manager.SavePerspective()
+        if self.project:
+            settings.session_set('project_filename', self.project.filename)
+            settings.session_set('open_files', self.frame.editor_view.open_files)
+        settings.save_session()
+        
     def new_project(self, path):
         if path:
             project_view = self.frame.project_view
@@ -126,6 +127,15 @@ class Controller(wx.EvtHandler):
         evt = AppEvent(EVT_APP_PROJECT_OPENED, self, data=self.project)
         wx.PostEvent(self, evt)
 
+    def unload_project(self):
+        if self.project:
+            self.project = None
+            menu.manager.publish(menu.PROJECT_CLOSE)
+            self.frame.project_view.set_project(None)
+            settings.session_set('project_filename', '')
+            evt = AppEvent(EVT_APP_PROJECT_CLOSED, self)
+            wx.PostEvent(self, evt)
+            
     def goto(self, file, line):
         absolute_file = self.project.absolute_path(file)
         self.frame.editor_view.goto(absolute_file, line)
@@ -160,6 +170,7 @@ class Controller(wx.EvtHandler):
         #print "Entering the ATTACHED state."
         if self.state == IDLE:
             self.gdb.set_exec(self.project.absolute_path(self.project.debug.target))
+            self.frame.locals_view.set_model(self.gdb.vars)
             self.halt()
         if self.state == IDLE or self.state == RUNNING:
             self.exit_current_state()
@@ -264,9 +275,9 @@ class Controller(wx.EvtHandler):
 
     def clear_breakpoint_byfile(self, file, line):
         for bkpt in self.gdb.breakpoints:
-            f, l = os.path.normpath(bkpt.file), bkpt.line
+            f, l = os.path.normpath(bkpt.fullname), bkpt.line
             if f == file and l == line:
-                self.gdb.break_delete(key, self.on_gdb_done, key)
+                self.gdb.break_delete(self.gdb.breakpoints.get_number(file, line), self.on_gdb_done, key)
     
     def disable_breakpoint(self, number):
         self.gdb.break_disable(number, callback=self.on_gdb_done)
@@ -278,7 +289,9 @@ class Controller(wx.EvtHandler):
         self.frame.editor_view.update_breakpoints()
         self.frame.breakpoint_view.update()
 
-
+    def on_update_vars(self, evt):
+        self.frame.locals_view.update(evt.data)
+    
     def on_gdb_done(self, data):
         if data.cls == 'error':
             wx.CallAfter(self.frame.error_msg, data.msg)
@@ -335,7 +348,10 @@ class Controller(wx.EvtHandler):
     # DETACH FROM TARGET
     def detach(self):
         if self.gdb:
-            self.gdb.quit()
+            try:
+                self.gdb.quit()
+            except:
+                pass
         self.change_state(IDLE)
     
     # GDB EVENTS

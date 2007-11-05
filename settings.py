@@ -2,7 +2,26 @@ import wx
 import util
 from options import *
 import os, pickle
+session = {}
 
+def load_session(filename='.session'):
+    global session
+    session = util.unpickle_file(filename)
+    if not isinstance(session, dict):
+        session = {}
+        
+def save_session(filename = '.session'):
+    global session
+    util.pickle_file(session,filename)
+
+def session_get(key):
+    global session
+    return session.get(key, None)
+
+def session_set(key, value):
+    global session
+    session[key] = value
+    
 class Settings(util.Category):
 
     def __init__(self):

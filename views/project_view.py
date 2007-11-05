@@ -16,25 +16,21 @@ class ProjectView(view.View):
         self.SetSizer(sizer)
         self.SetSize((200,-1))
         self.tree.Bind(wx.EVT_LEFT_DCLICK, self.on_left_dclick)
-        self.tree.Bind(wx.EVT_RIGHT_DOWN, self.on_right_click)
+#        self.tree.Bind(wx.EVT_RIGHT_DOWN, self.on_right_click)
 
     def on_left_dclick(self, evt):
         pt = evt.GetPosition()
         item, flags = self.tree.HitTest(pt)
-        if item:
+        if item and item.IsOk():
             path = self.tree.GetPyData(item)
             if path:
-                evt = ProjectViewEvent(EVT_PROJECT_DCLICK_FILE, self, data=path)
-                wx.PostEvent(self, evt)
-
-    def on_right_click(self, evt):
-        pt = evt.GetPosition()
-        item, flags = self.tree.HitTest(pt)
-        if item:
-            path = self.tree.GetPyData(item)
-            if path:
-                evt = ProjectViewEvent(EVT_PROJECT_DCLICK_FILE, self, data=path)
-                wx.PostEvent(self, evt)
+                if os.path.isfile(path):
+                    evt = ProjectViewEvent(EVT_PROJECT_DCLICK_FILE, self, data=path)
+                    wx.PostEvent(self, evt)
+                elif os.path.isdir(path):
+                    self.tree.Expand(item)
+            else:
+                self.tree.Expand(item)
         
     def set_project(self, project):
         self.project = project
@@ -57,7 +53,13 @@ class ProjectTree(wx.TreeCtrl):
         self.SetImageList(self.image_list)
         self.set_project(None)
         self.backups_visible = False
+        self.Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.on_get_tooltip)
 
+    def on_get_tooltip(self, evt):
+        item = evt.GetItem()
+        if item == self.root_item:
+            if self.project:
+                evt.SetToolTip(self.project.directory)
     def show_backups(self, show):
         self.backups_visible = bool(show)
 
@@ -99,6 +101,8 @@ class ProjectTree(wx.TreeCtrl):
         super(ProjectTree, self).SetItemImage(item, self.art[name], style)
 
     def add_file(self, file, icon):
+        if file in self.files:
+            return
         parent, fn = os.path.split(file)
         parent_item = self.files[parent]
 

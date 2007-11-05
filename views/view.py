@@ -1,6 +1,7 @@
 import wx
 import log
 import app
+import gdb
 
 class ViewEvent(wx.PyEvent):
     def __init__(self, type, object=None, data=None):
@@ -25,11 +26,24 @@ class View(wx.Panel):
             self._bind(app.EVT_APP_TARGET_DISCONNECTED, "on_target_disconnected")
             self._bind(app.EVT_APP_TARGET_RUNNING, "on_target_running")
             self._bind(app.EVT_APP_TARGET_HALTED, "on_target_halted")
+            
+#            self._bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, "on_breakpoint_update")
+ #           self._bind(gdb.EVT_GDB_UPDATE_LOCALS, "on_locals_update")
+
 
     def _bind(self, event, function_name):
         if hasattr(self, function_name) and self.controller:
+            print "Binding %s to %s" % (self, function_name)
             handler = getattr(self, "_%s" % function_name)
             self.controller.Bind(event, handler)
+
+    def _on_breakpoint_update(self, evt):
+        self.on_breakpoint_update(evt.data)
+        evt.Skip()
+
+    def _on_locals_update(self, evt):
+        self.on_locals_update(evt.data)
+        evt.Skip()
             
     def _on_project_open(self, evt):
         self.on_project_open(evt.data)
@@ -37,7 +51,8 @@ class View(wx.Panel):
     
     def _on_project_close(self, evt):
         self.on_project_close(evt.data)    
-
+        evt.Skip()
+        
     def _on_target_connected(self, evt):
         self.on_target_connected()
         evt.Skip()

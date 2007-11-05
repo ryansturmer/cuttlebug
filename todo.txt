@@ -56,6 +56,8 @@ EDITOR VIEW
  * Check disk periodically for updated files and reload
  * Hilighting of current line
  * Tooltips for file tabs
+ * Apply styles to open files
+ * Clearing breakpoints is broken
  
 PROJECT VIEW
  * right click menus

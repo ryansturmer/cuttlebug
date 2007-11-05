@@ -100,6 +100,9 @@ class Style(object):
         self._underline = underline
         self._foreground = foreground
         self._background = background
+    def __int__(self):
+        return self._number
+    
     def __cmp__(self, other):
         return cmp(self.preview, other.preview)
     def __setattr__(self, name, value):
@@ -169,6 +172,7 @@ def create_app_styles(parent):
         Style(parent, stc.STC_STYLE_CONTROLCHAR, 'Control Character'),
         Style(parent, stc.STC_STYLE_INDENTGUIDE, 'Indentation Guides'),
         Style(parent, stc.STC_STYLE_LINENUMBER, 'Line Number Margin'),
+        Style(parent, 38, 'Execution Position')
     ]
     return app_styles
 

@@ -107,7 +107,7 @@ class BreakpointListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, util.ArtLi
         self.breakpoints = items
         self.SetItemCount(len(items))
         self.Refresh()
-        self.Thaw()        
+        self.Thaw()
         
 class BreakpointView(view.View):
     
@@ -117,9 +117,10 @@ class BreakpointView(view.View):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.list, 1, wx.EXPAND)
         self.SetSizer(sizer)
-#        .Bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, self._fetch_data)
         
-
+    def on_breakpoint_update(self, data):
+        print "Processing breakpoint update..."
+        
     def update(self):
         self.list.update(self.controller.gdb.breakpoints)
     

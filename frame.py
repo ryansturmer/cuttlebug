@@ -64,7 +64,8 @@ class Frame(wx.Frame):
             # Project Menu
             project = menubar.menu("&Project")
             project.item('&New Project...', self.on_new_project, icon="package.png")
-            project.item('&Open Project...', self.on_open_project)
+            project.item('&Open Project...', self.on_open_project, icon="package_add.png")
+            project.item('&Close Project', self.on_close_project, icon='package_delete.png', enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
             project.item('&Save Project\tCtrl+S', self.on_save_project, icon="package_save.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
             project.separator()
             project.item('Project Options...', self.on_project_options, icon='cog_edit.png', enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
@@ -101,12 +102,12 @@ class Frame(wx.Frame):
             menu.manager.publish(menu.TARGET_DETACHED)
         
         def start_busy(self, message=''):
-            self.statusbar.working = True
             self.statusbar.message = message
+            self.statusbar.working = True
             
         def stop_busy(self):
-            self.statusbar.working = False
             self.statusbar.message = ''
+            self.statusbar.working = False
             
         def on_cut(self, evt):
             self.editor_view.cut()
@@ -185,7 +186,7 @@ class Frame(wx.Frame):
 
         def create_locals_view(self):
             self.locals_view = views.LocalsView(self, controller=self.controller)
-            self.locals_view.info = aui.AuiPaneInfo().Caption('Locals').Right() 
+            self.locals_view.info = aui.AuiPaneInfo().Caption('Variables').Right() 
             self.manager.AddPane(self.locals_view, self.locals_view.info)
         
         def create_register_view(self):
@@ -235,6 +236,18 @@ class Frame(wx.Frame):
                 path = dialog.GetPaths()[0]
                 self.controller.load_project(path)
 
+        def on_close_project(self, evt):
+            project = self.controller.project
+            if project:
+                if project.modified:
+                    save_confirm = self.confirm("Save project '%s' before closing?" % project.general.project_name)
+                    if save_confirm:
+                        project.save()
+                    elif save_confirm == None:
+                        evt.Veto()
+                        return
+                self.controller.unload_project()
+        
         def on_new_project(self, evt):
             if self.controller.project:
                 pass
@@ -286,6 +299,7 @@ class Frame(wx.Frame):
                     return
                     
             self.controller.save_session()
+            self.controller.detach()
             evt.Skip()
 
         def on_attach(self, evt):
