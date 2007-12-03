@@ -33,11 +33,14 @@ class VarTree(wx.TreeCtrl):
     
     def on_start_edit(self, evt):
         item = evt.GetItem()
-        entry = self.GetPyData(item)
-        if not entry or entry not in self.model or self.model[entry].children > 0:
-            evt.Veto()
+        if item.IsOk() and item != self.root_item:
+            entry = self.GetPyData(item)
+            if not entry or entry not in self.model or self.model[entry].children > 0:
+                evt.Veto()
+            else:
+                evt.Skip()
         else:
-            evt.Skip()
+            evt.Veto()
             
     def on_end_edit(self, evt):
         item = evt.GetItem()

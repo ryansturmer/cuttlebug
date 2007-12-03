@@ -1,0 +1,12 @@
+<?xml version="1.0">
+	<project>
+		{% for item_name in category recursive %}
+			{% set item = category[item_name] %}
+			{% if item.children %}
+				{{ loop(item) }}
+			{% else %}
+				{{ item }}
+			{% endif %}
+		{% endfor %}
+	</project>
+</xml>

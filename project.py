@@ -2,33 +2,38 @@ import pickle, os
 from odict import OrderedDict
 import util
 from options import *
-
+from jinja2 import Environment, PackageLoader
+env = Environment(loader=PackageLoader('app', 'templates'))
+project_template = env.get_template('project.xml')
 class Project(util.Category):
 
     def __init__(self, *args, **kwargs):
+        '''
+        Don't call the constructor directly.  Use Project.create(filename) instead.
+        '''
         super(Project, self).__init__(*args, **kwargs)
         self.filename = ''
         # Overview
-        self.add_category('general')
-        self["general.project_name"] = "Untitled Project"
-        self["general.project_description"] = ""
-        self["general.files"] = []
+        general = self.add_category('general')
+        general.add_item('project_name', 'Untitled Project')
+        general.add_item('project_description', '')
+        general.add_item('project_files', [])
         
         # Build
-        self.add_category('build')
-        self["build.build_cmd"] = "make"
-        self["build.clean_cmd"] = "make clean"
-        self["build.rebuild_cmd"]= "make clean; make"
+        build = self.add_category('build')
+        build.add_item('build_cmd', 'make')
+        build.add_item('clean_cmd', 'clean')
+        build.add_item('rebuild_cmd', 'make clean; make')
         
         # Debug
-        self.add_category('debug')
-        self["debug.gdb_executable"] = "arm-elf-gdb"
-        self["debug.attach_cmd"] = "target async localhost:3333"
-        self["debug.detach_cmd"] = ""
-        self["debug.post_attach_cmd"] = "monitor halt"
-        self["debug.pre_detach_cmd"] = ""
-        self["debug.target"] = "build/main.elf"
-        
+        debug = self.add_category('debug')
+        debug.add_item("gdb_executable","arm-elf-gdb")
+        debug.add_item("attach_cmd", "target async localhost:3333")
+        debug.add_item("detach_cmd", "")
+        debug.add_item("post_attach_cmd", "monitor_halt")
+        debug.add_item("pre_detach_cmd", "")
+        debug.add_item("target", "build/main.elf")
+                
     @staticmethod
     def load(filename):
         path = os.path.abspath(filename)
@@ -63,7 +68,7 @@ class Project(util.Category):
 
     def save(self):
         fp = open(self.filename,'wb')
-        pickle.dump(self, fp)
+        fp.write(project_template.render(category=self))
         fp.close()
         self.modified = False
 

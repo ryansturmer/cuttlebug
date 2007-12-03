@@ -1,5 +1,6 @@
 import wx
 import os, threading, subprocess, pickle
+import odict
 
 from os.path import abspath, dirname, normcase, normpath, splitdrive
 from os.path import join as path_join, commonprefix
@@ -252,47 +253,35 @@ class Process(subprocess.Popen):
 class Category(object):
 
     def __init__(self, name='', parent=None):
-        # TODO ordered dict later?
         self.parent = parent
-        self.items = dict()
+        self.items = odict.OrderedDict()
         self.name = str(name)
-        #self.parent = parent
         self.__modified = False
     
+    def reset(self):
+        self.modified = False
+
     def __get_modified(self):
         return self.__modified
 
     def __set_modified(self, x):
-        if x:
+        if x: # If modified, all our ancestors should be modified
             if self.parent:
                 self.parent.modified = True
             self.__modified = True
-        else:
+        else: # If not modified, all our children should be not modified
             for item in self:
                 if isinstance(item, Category):
                     item.modified = False
             self.__modified = False
-
     modified = property(__get_modified, __set_modified)
-    
-    def __setstate__(self, data):
-      self.__dict__.update(data)
-
-    def reset(self):
-        self.modified = False
-    
-    #def __getstate__(self):
-    #    return self.__dict__
-
+        
     def __getattr__(self, attr):
         try:
             return self.items[str(attr)]
         except KeyError:
             raise AttributeError(attr)
-    
-    #def __setattr__(self, attr, val):
-    #    self.items[str(attr)] = val
-    
+    '''    
     def __getitem__(self, idx):
         names = idx.split(".")
         if len(names) == 1:
@@ -304,20 +293,25 @@ class Category(object):
     def __setitem__(self, idx, val):
         names = idx.split(".")
         if len(names) == 1:
+            self.items[idx] # Force a KeyError if not already a member
             self.items[idx] = val
             self.modified = True
         else:
             next = self.items[names[0]]
             next[".".join(names[1:])] = val
-
+    '''
     def add_category(self, name):
         if name in self:
             raise ProjectError("Already a category called '%s'" % name)
         newcat = Category(name, parent=self)
-        self[name] = newcat
+        self.add_item(name, newcat)
         self.modified = True
         return newcat
     
+    def add_item(self, key, value):
+        self.items[key] = value
+        self.modified = True
+        
     def walk(self):
         for item in self:
             if isinstance(item, Category):
@@ -330,10 +324,14 @@ class Category(object):
         return iter(self.items)
 
     def __str__(self):
-        return str(self.items)
+        return "<Category '%s' : %s>" % (self.name, self.items)
     def __repr__(self):
         return str(self)
 
+    def __get_children(self):
+        return self.items.keys()
+    children = property(__get_children)
+    
 def pickle_file(object, filename):
         try:
             del(object.filename)

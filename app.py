@@ -30,7 +30,7 @@ class Controller(wx.EvtHandler):
 
         self.style_manager = styles.StyleManager()
         self.state = IDLE
-        self.gdb = gdb.GDB()
+        self.gdb = gdb.session
         self.frame = frame
         self.project = None
         self.breakpoints = {}
@@ -50,7 +50,11 @@ class Controller(wx.EvtHandler):
               
 
     def setup_gdb(self):
-        g = gdb.GDB(mi_log=self.mi_logger, console_log=self.gdb_logger, target_log=self.gdb_logger, log_log=self.gdb_logger)
+        g = gdb.session
+        g.mi_log = self.mi_logger
+        g.console_log = self.gdb_logger
+        g.target_log = self.gdb_logger
+        g.log_log = self.gdb_logger        
         g.Bind(gdb.EVT_GDB_STARTED, self.on_gdb_started)
         g.Bind(gdb.EVT_GDB_FINISHED, self.on_gdb_finished)
         g.Bind(gdb.EVT_GDB_ERROR, self.on_gdb_error)

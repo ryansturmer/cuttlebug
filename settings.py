@@ -28,40 +28,40 @@ class Settings(util.Category):
         super(self.__class__, self).__init__()
         self.filename = ''
         # Overview
-        self.add_category('editor')
-        self.editor['view_whitespace'] = False
-        self.editor['line_visible'] = True
+        editor = self.add_category('editor')
+        editor.add_item('view_whitespace', False)
+        editor.add_item('line_visible', False)
 
-        self.editor['fold'] = True
-        self.editor['folding_margin_size'] = 16
+        editor.add_item('fold', True)
+        editor.add_item('fold_margin_size', 16)
 
-        self.editor.add_category('cursor')
-        self.editor.cursor['visible'] = True
-        self.editor.cursor['period'] = 1000
-        self.editor.cursor['width'] = 1
-        self.editor.cursor['foreground_color'] = (0,0,0)
-        self.editor.cursor['background_color'] = (255,255,255)
-        self.editor.cursor['selection_foreground_color'] = (0,0,255)
-        self.editor.cursor['selection_background_color'] = (255,0,0)
+        cursor = editor.add_category('cursor')
+        cursor.add_item('visible', True)
+        cursor.add_item('period', 1000)
+        cursor.add_item('width', 1)
+        cursor.add_item('foreground_color', (0,0,0))
+        cursor.add_item('background_color', (255,255,255))
+        cursor.add_item('selection_foreground_color', (0,0,255))
+        cursor.add_item('selection_background_color', (255,0,0))
 
-        self.editor.add_category('page')
-        self.editor.page['wrap'] = False
-        self.editor.page['edge_column'] = 1
-        self.editor.page['edge_mode'] = 0
-        self.editor.page['end_at_last_line'] = False
-        self.editor.page['horizontal_scrollbar'] = True
-        self.editor.page['margin_left'] = 0
-        self.editor.page['margin_right'] = 0
-        self.editor.page['show_line_numbers'] = True  
-        self.editor.add_category('indent')
-        self.editor.indent['backspace_unindents'] = True
-        self.editor.indent['indentation_guides'] = True
-        self.editor.indent['tab_indents'] = True
-        self.editor.indent['tab_width'] = 4
-        self.editor.indent['use_tabs'] = False
+        page = editor.add_category('page')
+        page.add_item('wrap', False)
+        page.add_item('edge_column', 1)
+        page.add_item('edge_mode', 0)
+        page.add_item('end_at_last_line', False)
+        page.add_item('horizontal_scrollbar', True)
+        page.add_item('margin_left', 0)
+        page.add_item('margin_right', 0)
+        page.add_item('show_line_numbers', True)
+        indent = editor.add_category('indent')
+        indent.add_item('backspace_unindents', True)
+        indent.add_item('indentation_guides', True)
+        indent.add_item('tab_indents', True)
+        indent.add_item('tab_width', 4)
+        indent.add_item('use_tabs', False)
 
-        self.add_category('debug')
-        self.debug['jump_to_exec_location'] = False
+        debug = self.add_category('debug')
+        debug.add_item('jump_to_exec_location', False)
 
     @staticmethod
     def load(filename):
