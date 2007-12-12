@@ -4,11 +4,11 @@ import wx.stc as stc
 import util, build, app, notebook, controls, views, project, settings, menu
 import styles, style_dialog
 # TODO Application icon
-class Frame(wx.Frame):
+class Frame(util.PersistedFrame):
 
         def __init__(self, parent=None, title="Cuttlebug"):
             super(Frame, self).__init__(parent, -1, title, size=(1024,768))
-
+            self.SetIcon(wx.Icon('icons/cuttlebug.png', wx.BITMAP_TYPE_PNG))
             self.controller = app.Controller(self)            
 
             self.Bind(wx.EVT_CLOSE, self.on_close)
@@ -44,7 +44,7 @@ class Frame(wx.Frame):
             file.item('&Close\tCtrl+W', self.on_close_file)
             file.item('&Save\tCtrl+S', self.on_save, icon="disk.png")
             file.item('&Save As...\tCtrl+Shift+S', self.on_save_as, icon="save_as.png")
-            file.item('Save All...\tCtrl+Alt+Shift+S', self.on_save_all, icon="disk_cascade.png")
+            file.item('Save All\tCtrl+Alt+Shift+S', self.on_save_all, icon="disk_cascade.png")
             file.separator()
             file.item('&Exit\tAlt+F4', self.on_exit,icon="door_out.png")
             
@@ -148,7 +148,7 @@ class Frame(wx.Frame):
                 return None
 
         def error(self, message="Unspecified Error."):
-            dlg = wx.MessageDialog(self, message=message, style=wx.ICON_ERROR)
+            dlg = wx.MessageDialog(self, message=str(message), style=wx.ICON_ERROR)
             dlg.ShowModal()
 
         def on_project_options(self, evt):
@@ -168,7 +168,9 @@ class Frame(wx.Frame):
             else:
                 print "GDB Session not attached"
 
-        
+        def add_view(self, view):
+            self.manager.AddPane(view, view.info)
+            
         def create_status_bar(self):
             self.statusbar = controls.StatusBar(self)
             self.statusbar.icon = "disconnect.png"
@@ -246,6 +248,10 @@ class Frame(wx.Frame):
                     elif save_confirm == None:
                         evt.Veto()
                         return
+                close_source_windows = self.confirm("Close open project source files?")
+                if close_source_windows:
+                    for file in self.editor_view.open_files:
+                        self.editor_view.close(file)
                 self.controller.unload_project()
         
         def on_new_project(self, evt):

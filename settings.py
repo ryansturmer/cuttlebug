@@ -2,16 +2,19 @@ import wx
 import util
 from options import *
 import os, pickle
+from lxml import etree
 session = {}
 
 def load_session(filename='.session'):
     global session
+    print "loading session"
     session = util.unpickle_file(filename)
     if not isinstance(session, dict):
         session = {}
         
 def save_session(filename = '.session'):
     global session
+    print "saving session"
     util.pickle_file(session,filename)
 
 def session_get(key):
@@ -65,15 +68,31 @@ class Settings(util.Category):
 
     @staticmethod
     def load(filename):
-        print "loading settings from %s" % filename
         path = os.path.abspath(filename)
         fp = open(path, 'r')
-        object = pickle.load(fp)
-        fp.close()
-        if not isinstance(object, Settings):
-            raise Exception("Could not load %s.  It does not appear to be a settings file." % filename)
-        object.filename = path
-        return object
+        tree = etree.parse(fp)
+        settings = Settings()
+        settings.filename = path
+        settings.modified = False
+        def walk(current_cat, element):
+            for item in element:
+                if item.tag == "category":
+                    name = item.get('name')
+                    if name not in current_cat:
+                        cat = current_cat.add_category(name)
+                    else:
+                        cat = current_cat[name]
+                    walk(cat, item)
+                elif item.tag == "item":
+                    name, value = item.get('name'), item.text.strip()
+                    if name not in current_cat:
+                        current_cat[name] = eval(value)
+                    else:
+                        current_cat.add_item(name, eval(value))
+                else:
+                    pass # We could log an error here or something
+        walk(settings, tree.getroot())
+        return settings
     
     @staticmethod
     def create(filename):
@@ -83,9 +102,10 @@ class Settings(util.Category):
         return settings
     
     def save(self):
-        fp = open(self.filename,'w')
-        pickle.dump(self, fp)
+        fp = open(self.filename,'wb')
+        fp.write(util.settings_template.render(category=self))
         fp.close()
+        self.modified = False
 
 class SettingsDialog(OptionsDialog):
 

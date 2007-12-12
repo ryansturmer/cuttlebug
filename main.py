@@ -1,5 +1,7 @@
 import wx, log
-import frame
+import util, frame, settings
+from jinja2 import Environment, PackageLoader
+
 
 def set_path():
     import os
@@ -25,6 +27,7 @@ def show_splash():
 def run():
     set_path()
     activate_psyco()
+    settings.load_session()
     app = wx.PySimpleApp()
     splash = show_splash()
     import frame

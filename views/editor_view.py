@@ -38,9 +38,11 @@ class EditorView(view.View):
         widget.SetFocus()
         widget.GotoLine(line-1)
 
-    def close(self):
-        self.notebook.close_tab()
-        
+    def close(self, filename=None):
+        if not filename:
+            self.notebook.close_tab()
+        else:
+            self.notebook.close_file(filename)
     def cut(self):
         window = self.current_editor.Cut()
 
@@ -111,10 +113,6 @@ class EditorView(view.View):
         
     def new(self):
         self.notebook.create_file_tab()
-
-    def request_update(self):
-        evt = view.ViewEvent(view.EVT_VIEW_REQUEST_UPDATE, self)
-        wx.PostEvent(self, evt)
 
 class EditorControl(stc.StyledTextCtrl):
     LINE_MARGIN = 0
@@ -459,7 +457,7 @@ class EditorControl(stc.StyledTextCtrl):
             self.SetMarginType(self.FOLDING_MARGIN, stc.STC_MARGIN_SYMBOL)
             self.SetMarginMask(self.FOLDING_MARGIN, stc.STC_MASK_FOLDERS)
             self.SetMarginSensitive(self.FOLDING_MARGIN, True)
-            self.SetMarginWidth(self.FOLDING_MARGIN, self.controller.settings.editor.folding_margin_size)
+            self.SetMarginWidth(self.FOLDING_MARGIN, self.controller.settings.editor.fold_margin_size)
             self.MarkerDefine(stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_BOXPLUSCONNECTED, "white", "#666666")
             self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_BOXMINUSCONNECTED, "white", "#666666")
             self.MarkerDefine(stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNER, "white", "#666666")
@@ -546,6 +544,11 @@ class Notebook(aui.AuiNotebook):
             if window.GetModify():
                 window.save()
                 
+    def close_file(self, filename):
+        widget = self.get_file_tab(filename)
+        idx = self.GetPageIndex(widget)
+        self.close_tab(index=idx)
+        
     def close_tab(self, index=None):
         self.Freeze()
         if index is None: index = self.GetSelection()

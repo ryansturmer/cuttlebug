@@ -1,10 +1,49 @@
 import wx
 import os, threading, subprocess, pickle
 import odict
-
+from jinja2 import Environment, PackageLoader
 from os.path import abspath, dirname, normcase, normpath, splitdrive
 from os.path import join as path_join, commonprefix
 
+jinja_env = Environment(loader=PackageLoader('dummy', 'templates'))
+settings_template = jinja_env.get_template('settings.xml')
+project_template = jinja_env.get_template('project.xml')
+
+class PersistedFrame(wx.Frame):
+    
+    def __init__(self, *args, **kwargs):
+        super(PersistedFrame, self).__init__(*args, **kwargs)
+        self.Bind(wx.EVT_CLOSE, self.on_persist)
+        import settings
+        try:
+            (maximized, x, y, width, height) = settings.session_get(str(self.__class__))
+            self.SetPosition((x,y))
+            self.SetSize((width, height))
+            if maximized:
+                self.Maximize()
+        except Exception, e:
+            print "Couldn't load persisted window data: %s" % e
+        
+    def on_persist(self, evt):
+        print "Close event fired"
+        maximized = self.IsMaximized()
+        x,y = self.GetPosition()
+        width,height = self.GetSize()
+        print (maximized, x, y, width, height)
+        import settings
+        if not self.IsIconized():
+            try:
+                print "saving persisted window data"
+                settings.session_set(str(self.__class__), (maximized, x, y, width, height))
+                settings.save_session()
+            except Exception, e:
+                print "Couldn't persist window: %s" % e
+            finally:
+                evt.Skip()
+        else:
+            print "Skipping save of data due to iconized window"
+            evt.Skip()
+            
 def rgb(r,g,b,a=255):
     return wx.Colour(r,g,b,a)
 
@@ -258,6 +297,9 @@ class Category(object):
         self.name = str(name)
         self.__modified = False
     
+    def __contains__(self, item):
+        return item in self.items
+    
     def reset(self):
         self.modified = False
 
@@ -281,7 +323,7 @@ class Category(object):
             return self.items[str(attr)]
         except KeyError:
             raise AttributeError(attr)
-    '''    
+       
     def __getitem__(self, idx):
         names = idx.split(".")
         if len(names) == 1:
@@ -299,7 +341,7 @@ class Category(object):
         else:
             next = self.items[names[0]]
             next[".".join(names[1:])] = val
-    '''
+    
     def add_category(self, name):
         if name in self:
             raise ProjectError("Already a category called '%s'" % name)
@@ -313,7 +355,7 @@ class Category(object):
         self.modified = True
         
     def walk(self):
-        for item in self:
+        for key, item in self:
             if isinstance(item, Category):
                 for subitem in item.walk():
                     yield subitem
@@ -321,7 +363,7 @@ class Category(object):
                 yield item
                 
     def __iter__(self):
-        return iter(self.items)
+        return iter(self.items.iteritems())
 
     def __str__(self):
         return "<Category '%s' : %s>" % (self.name, self.items)
@@ -333,11 +375,6 @@ class Category(object):
     children = property(__get_children)
     
 def pickle_file(object, filename):
-        try:
-            del(object.filename)
-        except:
-            pass
-        
         fp = open(os.path.abspath(filename),'wb')
         pickle.dump(object, fp, -1)
         fp.close()
@@ -347,7 +384,6 @@ def unpickle_file(filename):
     fp = open(path, 'r')
     object = pickle.load(fp)
     fp.close()
-    object.filename = path
     return object
 
 class ArtListMixin(object):
@@ -374,18 +410,4 @@ class ArtListMixin(object):
             if art not in self.__art:
                 self.__art[art] = self.__image_list.Add(get_icon(art))
         self.SetImageList(self.__image_list, *self.__args, **self.__kwargs)
-
-if __name__ == "__main__":
-
-    cat = Category("Top")
-    cat2 = cat.add_category("middle")
-    cat['middle.submiddle1'] = 1
-    cat['middle.submiddle2'] = 2
-    cat['middle.submiddle3'] = 3
-    cat2.add_category("Bottom")
-    cat.modified = False
-    print cat
-    print cat.modified
-    cat.middle['submiddle1'] = 50
-    print cat.modified
 

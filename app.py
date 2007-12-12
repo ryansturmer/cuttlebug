@@ -38,7 +38,6 @@ class Controller(wx.EvtHandler):
         try:
             self.settings = settings.Settings.load(".settings")
         except Exception, e:
-            print e
             self.settings = settings.Settings.create(".settings")
         
         # Build events
@@ -92,7 +91,7 @@ class Controller(wx.EvtHandler):
             
     def load_session(self):
         try:
-            settings.load_session()
+            #settings.load_session()
             project_filename = settings.session_get('project_filename')
             try:
                 self.load_project(project_filename)
@@ -104,10 +103,12 @@ class Controller(wx.EvtHandler):
                 print e
         
         except Exception, e:
+            print e
+            print "Couldn't load session.  Creating empty session"
             self.session = {}
     
     def save_session(self):
-        self.session['perspective'] = self.frame.manager.SavePerspective()
+        #self.session['perspective'] = self.frame.manager.SavePerspective()
         if self.project:
             settings.session_set('project_filename', self.project.filename)
             settings.session_set('open_files', self.frame.editor_view.open_files)
@@ -127,7 +128,7 @@ class Controller(wx.EvtHandler):
         self.project = project.Project.load(path)
         menu.manager.publish(menu.PROJECT_OPEN)
         project_view.set_project(self.project)
-        self.session.project_filename = path
+        settings.session_set('project_filename', path)
         evt = AppEvent(EVT_APP_PROJECT_OPENED, self, data=self.project)
         wx.PostEvent(self, evt)
 
@@ -335,9 +336,13 @@ class Controller(wx.EvtHandler):
     # ATTACH TO GDB
     def attach(self):
         if self.state == IDLE:
-            wx.CallAfter(self.frame.start_busy, "Attaching to GDB...")
             self.gdb.cmd = "%s -n -q -i mi" % self.project.debug.gdb_executable
-            self.gdb.start()
+            try:
+                self.gdb.start()
+            except Exception, e:
+                self.frame.error(e)
+                return
+            wx.CallAfter(self.frame.start_busy, "Attaching to GDB...")
         else:
             print "Cannot attach to process from state %d" % self.state
     def on_attach_cmd(self, result):
@@ -360,8 +365,12 @@ class Controller(wx.EvtHandler):
     
     # GDB EVENTS
     def on_gdb_started(self, evt):
-        self.gdb.command(self.project.debug.attach_cmd, callback=self.on_attach_cmd)
-    
+        try:
+            self.gdb.command(self.project.debug.attach_cmd, callback=self.on_attach_cmd)
+        except Exception, e:
+            self.frame.error(e)
+            wx.CallAfter(self.frame.stop_busy)
+
     def on_gdb_finished(self, evt):
         self.change_state(IDLE)
     

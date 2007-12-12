@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
-<project version="1.0">
+<settings version="1.0">
 {%- for key, value in category recursive %}
   {%- if value.children %}
     <category name="{{key}}">
         {{- loop(value)}}
     </category>
   {% else %}
-        <item name="{{key|escape}}"> 
+        <item name="{{key|escape}}">
         {{value.__repr__()|escape}}
         </item>
   {%- endif %}
 {%- endfor -%}
-</project>
+</settings>

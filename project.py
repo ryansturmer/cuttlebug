@@ -3,8 +3,8 @@ from odict import OrderedDict
 import util
 from options import *
 from jinja2 import Environment, PackageLoader
-env = Environment(loader=PackageLoader('app', 'templates'))
-project_template = env.get_template('project.xml')
+from lxml import etree
+
 class Project(util.Category):
 
     def __init__(self, *args, **kwargs):
@@ -23,7 +23,7 @@ class Project(util.Category):
         build = self.add_category('build')
         build.add_item('build_cmd', 'make')
         build.add_item('clean_cmd', 'clean')
-        build.add_item('rebuild_cmd', 'make clean; make')
+        build.add_item('rebuild_cmd', '"make clean"; make')
         
         # Debug
         debug = self.add_category('debug')
@@ -38,13 +38,30 @@ class Project(util.Category):
     def load(filename):
         path = os.path.abspath(filename)
         fp = open(path, 'r')
-        object = pickle.load(fp)
-        fp.close()
-        if not isinstance(object, Project):
-            raise Exception("Could not load %s.  It does not appear to be a project file." % filename)
-        object.filename = path
-        object.modified = False
-        return object
+        tree = etree.parse(fp)
+        project = Project()
+        project.filename = path
+        project.modified = False
+        def walk(current_cat, element):
+            for item in element:
+                if item.tag == "category":
+                    name = item.get('name')
+                    if name not in current_cat:
+                        cat = current_cat.add_category(name)
+                    else:
+                        cat = current_cat[name]
+                    walk(cat, item)
+                elif item.tag == "item":
+                    name, value = item.get('name'), item.text.strip()
+                    if name not in current_cat:
+                        current_cat[name] = eval(value)
+                    else:
+                        current_cat.add_item(name, eval(value))
+                else:
+                    pass # We could log an error here or something
+        walk(project, tree.getroot())
+        project.modified = False
+        return project
     
     @staticmethod
     def create(filename):
@@ -68,7 +85,7 @@ class Project(util.Category):
 
     def save(self):
         fp = open(self.filename,'wb')
-        fp.write(project_template.render(category=self))
+        fp.write(util.project_template.render(category=self))
         fp.close()
         self.modified = False
 
@@ -112,4 +129,5 @@ class Session(object):
     def __init__(self):
         self.project_filename = None
 
- 
+if __name__ == "__main__":
+	Project.create('test_project.xml') 
