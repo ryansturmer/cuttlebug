@@ -3,8 +3,39 @@ import wx.aui as aui
 import wx.stc as stc
 import os
 import wx
-import view, menu, icons, util, app
+import util, view, menu, icons, util, app
 
+class QuickFindBar(wx.Panel):
+    
+    def __init__(self, *args, **kwargs):
+        super(QuickFindBar, self).__init__(*args, **kwargs)
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        btn = wx.BitmapButton(self, -1, util.get_icon('ex.png'))
+        lbl = wx.StaticText(self, -1, "Find:")
+        txt = wx.TextCtrl(self, -1)
+        sizer.Add(util.padded(btn, 3),0,wx.CENTER)
+        sizer.Add(lbl,0, wx.CENTER)
+        sizer.Add(txt,0, wx.CENTER)
+        self.SetSizer(sizer)
+        btn.Bind(wx.EVT_BUTTON, self.on_close)
+        
+    def hide(self):
+        parent = self.GetParent()
+        parent.Freeze()
+        self.Hide()
+        parent.Layout()
+        parent.Thaw()
+
+    def show(self):
+        parent = self.GetParent()
+        parent.Freeze()
+        self.Show()
+        parent.Layout()
+        parent.Thaw()
+    
+    def on_close(self,event):
+        self.hide()
+        
 class EditorView(view.View):
 
     def __init__(self,*args, **kwargs):
@@ -512,7 +543,7 @@ class Notebook(aui.AuiNotebook):
             
     def get_window(self, index=None):
         if index is None: index = self.GetSelection()
-        return self.GetPage(index) if index >= 0 else None
+        return self.GetPage(index).editor if index >= 0 else None
 
     def get_windows(self):
         n = self.GetPageCount()
@@ -595,17 +626,26 @@ class Notebook(aui.AuiNotebook):
         #if path:
         #    self.close_untitled_tab()
         
-        widget = EditorControl(self, -1, style=wx.BORDER_NONE, controller=self.controller)
+        panel = wx.Panel(self)
+        edit_widget = EditorControl(panel, -1, style=wx.BORDER_NONE, controller=self.controller)
+        quick_find_bar = QuickFindBar(panel)
+        panel.editor = edit_widget
+        panel.find_bar = quick_find_bar
+        #quick_find_bar.Hide()
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(edit_widget, 1, wx.EXPAND)
+        sizer.Add(quick_find_bar, 0)
+        panel.SetSizer(sizer)
         
         if path:
-            widget.open_file(path)
-        self.AddPage(widget, widget.get_name(), True)
-        idx = self.GetPageIndex(widget)
+            edit_widget.open_file(path)
+        self.AddPage(panel, edit_widget.get_name(), True)
+        idx = self.GetPageIndex(panel)
         if idx >= 0:
             self.SetPageBitmap(idx, util.get_icon(icons.get_file_icon(path)))
-        widget.SetFocus()
-        self.controller.frame.statusbar.line = widget.current_line()+1
-        widget.Bind(stc.EVT_STC_MODIFIED, self.on_modified)
+        edit_widget.SetFocus()
+        self.controller.frame.statusbar.line = edit_widget.current_line()+1
+        edit_widget.Bind(stc.EVT_STC_MODIFIED, self.on_modified)
         self.Thaw()
-        return widget
+        return edit_widget
 
