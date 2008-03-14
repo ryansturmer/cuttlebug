@@ -7,14 +7,12 @@ session = {}
 
 def load_session(filename='.session'):
     global session
-    print "loading session"
     session = util.unpickle_file(filename)
     if not isinstance(session, dict):
         session = {}
         
 def save_session(filename = '.session'):
     global session
-    print "saving session"
     util.pickle_file(session,filename)
 
 def session_get(key):

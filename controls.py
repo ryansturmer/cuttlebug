@@ -59,13 +59,15 @@ class StatusBar(wx.StatusBar):
         return self.icon
     icon = property(__get_icon, __set_icon)
 
-    def set_state(self, text, blink=False):
+    def set_state(self, text, blink=False, color=wx.BLACK):
+        #TODO Put COLOR support in here
         self._state = text
         if text and blink:
             self.state_timer.Start(500)
         else:
             self.state_timer.Stop()
         self.SetStatusText(text, self.STATE)
+        
     def get_state(self): return self._state
     
     def __set_text(self, text):
@@ -89,6 +91,9 @@ class StatusBar(wx.StatusBar):
     def on_work_timer(self, evt):
         if self.__working:
             self.gauge.Pulse()
+        else:
+            self.gauge.SetValue(0)
+            
     def on_state_timer(self, evt):
         if self.state_on:
             self.state_on = False

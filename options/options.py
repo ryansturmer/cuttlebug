@@ -148,8 +148,8 @@ class TreeBook(wx.Panel):
         self.sizer.Add(panel, 1, wx.EXPAND)
         panel.Hide()
         self.Layout()
-        #if self.current_panel == self.empty_panel:
-        #    self.tree.SelectItem(node, True)
+        if self.current_panel == self.empty_panel:
+            self.tree.SelectItem(node, True)
         self.Thaw()
 
     def __show_panel(self, panel):
@@ -198,7 +198,7 @@ class OptionsPanel(wx.Panel):
             w = widget
         else:
             w = widget(self, -1)
-        w.Bind(EVT_OPTION_CHANGED, self.on_change)
+
         if key:
             self.bind(w, key)
 
@@ -208,6 +208,8 @@ class OptionsPanel(wx.Panel):
         else:
             self.groups[group].Add(wx.StaticText(self, -1, str(label)), 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
             self.groups[group].Add(w, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
+
+        w.Bind(EVT_OPTION_CHANGED, self.on_change)
 
     def on_change(self, evt):
         self.parent.change()

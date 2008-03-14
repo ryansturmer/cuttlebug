@@ -1,10 +1,18 @@
 import wx
-import view, project, util, icons
+import view, project, util, icons , menu
 import os
+#TODO selectable hiding of certain file extensions (from project settings)
+#TODO renaming of files
+#TODO close all project files when closing a project
+#TODO fix kookiness in the modification of project attributes (save isn't always prompted, confirmation is broken, et al)
 
 class ProjectViewEvent(view.ViewEvent): pass
 
 EVT_PROJECT_DCLICK_FILE = wx.PyEventBinder(wx.NewEventType())
+
+MNU_PROJECT = 0
+MNU_FILE = 1
+MNU_FILES = 2
 
 class ProjectView(view.View):
 
@@ -15,9 +23,18 @@ class ProjectView(view.View):
         sizer.Add(self.tree, 1, wx.EXPAND)
         self.SetSizer(sizer)
         self.SetSize((200,-1))
+        self.setup_menus()        
         self.tree.Bind(wx.EVT_LEFT_DCLICK, self.on_left_dclick)
-#        self.tree.Bind(wx.EVT_RIGHT_DOWN, self.on_right_click)
-
+        self.tree.Bind(wx.EVT_RIGHT_DOWN, self.on_right_click)
+        self.tree.Bind(wx.EVT_KEY_DOWN, self.on_key)
+        self.selected_file = ''
+        self.selected_item = None
+        
+    def on_key(self, evt):
+        item = self.tree.GetSelection()
+        print item
+        evt.Skip()
+        
     def on_left_dclick(self, evt):
         pt = evt.GetPosition()
         item, flags = self.tree.HitTest(pt)
@@ -32,6 +49,31 @@ class ProjectView(view.View):
             else:
                 self.tree.Expand(item)
         
+    def setup_menus(self):
+        manager = menu.MenuManager()
+        pmenu = manager.menu()
+        pmenu.item("Open in shell", icon='application_osx_terminal.png', show=(MNU_FILE, MNU_FILES), hide=(MNU_PROJECT,), func=self.on_open_in_shell)
+        pmenu.item("Rename...", show=(MNU_FILE, MNU_PROJECT), hide=(MNU_FILES), func=self.on_rename)
+        pmenu.separator()
+        pmenu.item("Create File...", show=MNU_FILES, hide=(MNU_FILE, MNU_PROJECT), func=self.on_new_file, icon='page_white_text.png')
+        pmenu.item("Create Folder...", show=MNU_FILES, hide=(MNU_FILE, MNU_PROJECT), func=self.on_new_folder, icon='folder_add.png')
+        pmenu.item("Refresh", show=MNU_FILES, hide=(MNU_FILE, MNU_PROJECT), func=self.on_refresh, icon='arrow_refresh.png')
+        self.menu_manager = manager
+        self.context_menu = pmenu
+        
+    def on_new_file(self, evt):
+        filename = util.get_text(self.controller.frame, "Enter new filename:", title="New File...")
+        if filename:
+            fp = open(os.path.join(self.project.directory, filename), 'w')
+            fp.close()
+            self.tree.update_file_tree()
+
+    def on_new_folder(self, evt):
+        foldername = util.get_text(self.controller.frame, "Enter new folder name:", title="New Folder...")
+        if foldername:
+            import shutil
+            os.mkdir(os.path.join(self.project.directory, foldername))
+            self.tree.update_file_tree()
     def set_project(self, project):
         self.project = project
         self.tree.set_project(project)
@@ -41,11 +83,44 @@ class ProjectView(view.View):
 
     def update(self):
         self.tree.update()
-
+    
+    def on_right_click(self, evt):
+        pt = evt.GetPosition()
+        item, flags = self.tree.HitTest(pt)
+        if item and item.IsOk():
+            self.selected_item = item
+            self.tree.SelectItem(item)
+            if item == self.tree.files_item:
+                self.menu_manager.publish(MNU_FILES)
+                self.selected_file = os.path.split(self.tree.project.filename)[0]
+            elif item == self.tree.root_item:
+                self.menu_manager.publish(MNU_PROJECT)
+            else:
+                self.menu_manager.publish(MNU_FILE)
+                self.selected_file = self.tree.GetPyData(item)
+            self.tree.PopupMenu(self.context_menu.build(self.tree))
+            
+    def on_open_in_shell(self, evt):
+        if self.selected_file:
+            util.launch(self.selected_file)
+            
+    def on_rename(self, evt):
+        if self.selected_item == self.tree.root_item:
+            name = util.get_text(self.controller.frame, "Enter new name for project '%s':" % self.project.general.project_name, title="Rename Project", default=self.project.general.project_name)
+            if name != None:
+                self.project.general.project_name = name
+        else:
+            print "RENAMING OF FILES NOT YET SUPPORTED"
+        self.tree.update()
+    
+    def on_refresh(self, evt):
+        self.tree.update_file_tree()
+            
 class ProjectTree(wx.TreeCtrl):
 
     def __init__(self, parent, id):
         super(ProjectTree, self).__init__(parent, id)
+        self.files_item = None
         self.art = {}
         self.icon_bindings = {}
         self.files = {}
@@ -112,6 +187,7 @@ class ProjectTree(wx.TreeCtrl):
         self.SetItemImage(item, icon)
 
     def update_file_tree(self):
+        #TODO sort files
         if not self.project:
             return
         self.files[self.project.directory] = self.files_item

@@ -174,7 +174,7 @@ class Controller(wx.EvtHandler):
         menu.manager.publish(menu.TARGET_ATTACHED)
         #print "Entering the ATTACHED state."
         if self.state == IDLE:
-            self.gdb.set_exec(self.project.absolute_path(self.project.debug.target))
+            self.gdb.set_exec(self.project.absolute_path(self.project.program.target))
             self.frame.locals_view.set_model(self.gdb.vars)
             self.halt()
         if self.state == IDLE or self.state == RUNNING:
@@ -209,6 +209,9 @@ class Controller(wx.EvtHandler):
         self.exit_current_state()
         menu.manager.publish(menu.TARGET_DETACHED)
         self.frame.statusbar.icon = "disconnect.png"
+        self.frame.statusbar.working = False
+        self.frame.statusbar.text = ""
+
         self.state = IDLE
 
     def exit_idle_state(self):
@@ -264,6 +267,8 @@ class Controller(wx.EvtHandler):
             wx.PostEvent(self, evt)
         elif result.cls.lower() == "stopped":
             print result
+        else:
+            print "UNEXPECTED PROBLEM WHILE RUNNING"
 
     def run_to(self, file, line):
         if self.state == ATTACHED:
@@ -327,16 +332,22 @@ class Controller(wx.EvtHandler):
             print "Can't download from state %s" % self.state
 
     def on_downloaded(self, result):
+        if result.cls == 'error':
+            wx.CallAfter(self.frame.error_msg, result.msg)
+        else:
+            #TODO: This is a hack, not cross-platform compatible.
+            self.gdb.set("$pc", self.project.program.entry_point, self.on_at_entry_point)
+        
+    def on_at_entry_point(self, result):
         wx.CallAfter(self.frame.stop_busy)
         if result.cls == 'error':
             wx.CallAfter(self.frame.error_msg, result.msg)
         else:
-            pass
-        
+            self.frame.statusbar.text = "Ready!"
     # ATTACH TO GDB
     def attach(self):
         if self.state == IDLE:
-            self.gdb.cmd = "%s -n -q -i mi" % self.project.debug.gdb_executable
+            self.gdb.cmd_string = "%s -n -q -i mi" % self.project.debug.gdb_executable
             try:
                 self.gdb.start()
             except Exception, e:
@@ -348,7 +359,6 @@ class Controller(wx.EvtHandler):
     def on_attach_cmd(self, result):
         self.frame.statusbar.working = False
         self.frame.statusbar.text = ""
-
         if result.cls == "error":
             self.frame.error_msg(result.msg)
         else:
@@ -366,6 +376,7 @@ class Controller(wx.EvtHandler):
     # GDB EVENTS
     def on_gdb_started(self, evt):
         try:
+            self.gdb.command('set target-async on')
             self.gdb.command(self.project.debug.attach_cmd, callback=self.on_attach_cmd)
         except Exception, e:
             self.frame.error(e)
@@ -384,7 +395,7 @@ class Controller(wx.EvtHandler):
             filename = os.path.normpath(result.frame.fullname)
             line = int(result.frame.line)            
         except:
-            self.frame.statusbar.set_state("Halted in the weeds.")
+            self.frame.statusbar.set_state("Halted in the weeds.", color=wx.RED)
             return
         self.frame.statusbar.set_state("Halted at %s:%d" % (os.path.basename(filename), line))
         evt = AppEvent(EVT_APP_TARGET_HALTED, self, data=(filename, line))
@@ -396,14 +407,14 @@ class Controller(wx.EvtHandler):
     # BUILD EVENTS
     def on_build_started(self, evt):
         build_view = self.frame.build_view
-        self.state = BUILDING
+        #self.state = BUILDING
         menu.manager.publish(menu.BUILD_STARTED)
         self.frame.statusbar.working = True
         self.frame.statusbar.text = "Performing build step..."
         build_view.clear()
 
     def on_build_finished(self, evt):
-        self.state = IDLE
+        #self.state = IDLE
         self.frame.statusbar.working = False
         self.frame.statusbar.text = ""
         menu.manager.publish(menu.BUILD_FINISHED)
@@ -413,8 +424,7 @@ class Controller(wx.EvtHandler):
         evt.Skip()
         
     # VIEW EVENTS
-    
-        
+
     def on_update_memory_view(self, evt):
         if self.state == ATTACHED:
             start, end = evt.data

@@ -1,4 +1,0 @@
-&"target remote localhost:3333\n"
-&"localhost:3333: Connection refused.\n"
-^error,msg="localhost:3333: Connection refused."
-(gdb)

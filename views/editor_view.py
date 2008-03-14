@@ -5,19 +5,79 @@ import os
 import wx
 import util, view, menu, icons, util, app
 
+#TODO fix code folding
+#TODO fix updating the colorization settings so you don't have to close and reopen existing tabs
+FOUND_COLOR = wx.WHITE
+NOTFOUND_COLOR = wx.Colour(255,102,102)
+
 class QuickFindBar(wx.Panel):
     
-    def __init__(self, *args, **kwargs):
-        super(QuickFindBar, self).__init__(*args, **kwargs)
+    def __init__(self, parent, editor):
+        super(QuickFindBar, self).__init__(parent, -1)
+        self.editor = editor
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         btn = wx.BitmapButton(self, -1, util.get_icon('ex.png'))
         lbl = wx.StaticText(self, -1, "Find:")
-        txt = wx.TextCtrl(self, -1)
+        txt = wx.TextCtrl(self, -1, style=wx.TE_PROCESS_ENTER)
         sizer.Add(util.padded(btn, 3),0,wx.CENTER)
         sizer.Add(lbl,0, wx.CENTER)
         sizer.Add(txt,0, wx.CENTER)
         self.SetSizer(sizer)
         btn.Bind(wx.EVT_BUTTON, self.on_close)
+        txt.Bind(wx.EVT_TEXT_ENTER, self.on_enter)
+        txt.Bind(wx.EVT_TEXT, self.on_text)
+        txt.Bind(wx.EVT_KEY_DOWN, self.on_key)
+        self.Bind(wx.EVT_KEY_DOWN, self.on_key)
+        self.textctrl = txt
+
+    def show_and_focus(self):
+        self.GetParent().Freeze()
+        self.Show()
+        self.GetParent().Layout()
+        self.textctrl.SetFocus()
+        self.GetParent().Thaw()
+        
+    def hide(self):
+        self.GetParent().Freeze()
+        self.Hide()
+        self.GetParent().Layout()
+        self.GetParent().Thaw()
+        
+    def find_next(self, text):
+        if not text:
+            self.set_color(FOUND_COLOR)
+            return
+        next_anchor = self.editor.GetSelectionEnd()
+        for loc in (next_anchor, 0):
+            self.editor.SetAnchor(loc)
+            self.editor.SetCurrentPos(loc)
+            self.editor.SearchAnchor()
+            idx = self.editor.SearchNext(0, text)
+            if idx == -1:
+                continue
+            else:
+                self.editor.SetSelection(*self.editor.GetSelection())
+                #self.editor.GotoPos(idx)
+                self.set_color(FOUND_COLOR)
+                return
+        self.set_color(NOTFOUND_COLOR)
+        
+    def set_color(self, color):
+        style = self.textctrl.GetDefaultStyle()
+        style.SetBackgroundColour(color)
+        self.textctrl.SetStyle(0, len(self.textctrl.GetValue()), style)
+        self.textctrl.SetBackgroundColour(color)
+        
+    def on_enter(self, evt):
+        self.find_next(self.textctrl.GetValue())
+        
+    def on_key(self, evt):
+        if evt.GetKeyCode() == wx.WXK_ESCAPE and evt.GetModifiers() == 0:
+            self.hide()
+        evt.Skip()
+            
+    def on_text(self, evt):
+        self.find_next(self.textctrl.GetValue())
         
     def hide(self):
         parent = self.GetParent()
@@ -62,6 +122,8 @@ class EditorView(view.View):
         self.set_exec_location(file, line, goto=goto)
         self.update_breakpoints()
         
+    def find(self):
+        self.notebook.find()
     def goto(self, file, line):
         widget = self.notebook.create_file_tab(file)
         if not widget:
@@ -150,9 +212,9 @@ class EditorControl(stc.StyledTextCtrl):
     SYMBOL_MARGIN = 1
     FOLDING_MARGIN = 2
 
-    EXECUTION_MARKER = 1
+    EXECUTION_MARKER = 3
     BREAKPOINT_MARKER = 2
-    DISABLED_BREAKPOINT_MARKER = 3
+    DISABLED_BREAKPOINT_MARKER = 1
     
     def __init__(self, *args, **kwargs):
         if 'controller' in kwargs:
@@ -174,6 +236,12 @@ class EditorControl(stc.StyledTextCtrl):
         self.Bind(wx.EVT_RIGHT_DOWN, self.on_context_menu)
         self.Bind(stc.EVT_STC_UPDATEUI, self.on_update_ui)
         self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
+        self.Bind(wx.EVT_KEY_DOWN, self.on_key)
+        
+    def on_key(self, evt):
+        if evt.GetKeyCode() == wx.WXK_ESCAPE and evt.GetModifiers() == 0:
+            self.GetParent().find_bar.hide()
+        evt.Skip()
         
     def on_mouse_motion(self, evt):
         evt.Skip()
@@ -196,7 +264,9 @@ class EditorControl(stc.StyledTextCtrl):
         
     def on_update_ui(self, evt):
         self.controller.frame.statusbar.line = self.current_line()+1
-    
+        self.update_line_numbers()
+        evt.Skip()
+        
     def on_modified(self, evt):
         evt.Skip()
     
@@ -394,19 +464,21 @@ class EditorControl(stc.StyledTextCtrl):
             path = self.file_path
             manager = self.controller.style_manager
             if path:
-                pre, ext = os.path.splitext(path)
-                language = manager.get_language(ext)
+                dir, filename = os.path.split(path)
+                pre, ext = os.path.splitext(filename)
+                language = manager.get_language(ext or pre)
             else:
                 language = None
             self.apply_language(manager, language)
 
     def set_lexer_language(self, language=None):
-        languages = {'.c':'cpp', '.C':'cpp', '.h':'cpp', '.H':'cpp'}
+        languages = {'.c':'cpp', '.C':'cpp', '.h':'cpp', '.H':'cpp', 'makefile':'makefile', 'Makefile':'makefile'}
         if not language:
             try:
                 path, filename = os.path.split(self.file_path)
                 shortname, ext = os.path.splitext(filename)
-                self.SetLexerLanguage(languages[ext])
+                print languages[ext or shortname]
+                self.SetLexerLanguage(languages[ext or shortname])
             except Exception, e:
                 print e
 
@@ -445,8 +517,6 @@ class EditorControl(stc.StyledTextCtrl):
     def style_line(self, line, style):
         start = self.PositionFromLine(line)
         end = self.GetLineEndPosition(line)
-        print start
-        print end
         self.StartStyling(start, 0x1f)
         self.SetStyling(wx.stc.STC_STYLE_BRACEBAD, end-start)
 
@@ -469,8 +539,13 @@ class EditorControl(stc.StyledTextCtrl):
         file = None
         try:
             file = open(path, 'r')
-            text = file.read()
-            self.SetText(text)
+            text = unicode(file.read(), 'utf-8', errors='replace')
+            try:
+                self.SetText(text)
+            except:
+                raise
+                print "FIX THIS, HANDLE BINARY FILES GRACEFULLY!"
+                
             self.EmptyUndoBuffer()
             self.SetSavePoint()
             self.file_path = path
@@ -536,11 +611,13 @@ class Notebook(aui.AuiNotebook):
 #        self.Thaw()
 
     def on_modified(self, evt):
-        widget = evt.GetEventObject()
-        if widget:
-            idx = self.GetPageIndex(widget)
-            self.SetPageText(idx, widget.name)
-            
+        editor = evt.GetEventObject()
+        page = editor.GetParent()
+        if page:
+            idx = self.GetPageIndex(page)
+            self.SetPageText(idx, editor.name)
+        evt.Skip()
+        
     def get_window(self, index=None):
         if index is None: index = self.GetSelection()
         return self.GetPage(index).editor if index >= 0 else None
@@ -549,13 +626,19 @@ class Notebook(aui.AuiNotebook):
         n = self.GetPageCount()
         return [self.get_window(i) for i in range(n)]
 
+    def find(self):
+        pane = self.get_window()
+        if pane:
+            pane.GetParent().find_bar.show_and_focus()
+            
     def save(self):
         window = self.get_window()
+        print window
         if window:
             if not window.file_path:
                 self.save_as()
             window.save()
-            idx = self.GetPageIndex(window)
+            idx = self.GetPageIndex(window.GetParent())
             self.SetPageText(idx, window.name)
             
     def save_as(self):
@@ -577,7 +660,7 @@ class Notebook(aui.AuiNotebook):
                 
     def close_file(self, filename):
         widget = self.get_file_tab(filename)
-        idx = self.GetPageIndex(widget)
+        idx = self.GetPageIndex(widget.GetParent())
         self.close_tab(index=idx)
         
     def close_tab(self, index=None):
@@ -623,15 +706,14 @@ class Notebook(aui.AuiNotebook):
                 return None
         
         self.Freeze()
-        #if path:
-        #    self.close_untitled_tab()
-        
         panel = wx.Panel(self)
         edit_widget = EditorControl(panel, -1, style=wx.BORDER_NONE, controller=self.controller)
-        quick_find_bar = QuickFindBar(panel)
+        panel.editor = edit_widget
+        quick_find_bar = QuickFindBar(panel, edit_widget)
+        quick_find_bar.hide()
         panel.editor = edit_widget
         panel.find_bar = quick_find_bar
-        #quick_find_bar.Hide()
+        
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(edit_widget, 1, wx.EXPAND)
         sizer.Add(quick_find_bar, 0)

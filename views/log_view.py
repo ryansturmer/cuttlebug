@@ -39,7 +39,7 @@ class LogPane(wx.Panel):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.txt, 1, wx.EXPAND)
         if on_input:
-            self.input_txt = wx.TextCtrl(self)
+            self.input_txt = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
             font = self.input_txt.GetFont()
             font.SetFaceName("Courier New")
             self.input_txt.SetFont(font)

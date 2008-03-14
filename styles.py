@@ -462,5 +462,29 @@ def create_languages(base_style):
     )
     #result.append(html)
     
+    style = Style(base_style, name='Makefile')
+    makefile = Language(
+        name='Makefile',
+        extensions=['mk', 'makefile', 'Makefile'],
+        lexer=stc.STC_LEX_MAKEFILE,
+        base_style=style,
+        styles=[
+            Style(style, stc.STC_MAKE_COMMENT, 'Comment'),
+            Style(style, stc.STC_MAKE_DEFAULT, 'Whitespace'),
+            Style(style, stc.STC_MAKE_IDENTIFIER, 'Identifier'),
+            Style(style, stc.STC_MAKE_IDEOL, '???'),
+            Style(style, stc.STC_MAKE_OPERATOR, 'Operator'),
+            Style(style, stc.STC_MAKE_PREPROCESSOR, 'Preprocessor Directive'),
+            Style(style, stc.STC_MAKE_TARGET, 'Target'),
+        ],
+        keywords='''
+            and del from not while as elif global or with assert else if pass yield
+            break except import print class exec in raise continue finally is return
+            def for lambda try
+        ''',
+        line_comment='#'
+    )
+    result.append(makefile)
+
     return result
     

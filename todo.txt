@@ -6,6 +6,12 @@ GENERAL
  * Move to blocking GDB model with spinoff thread for commands (Rather than call-callback method)
  * Syntax colorization for Makefiles
  * Printing support
+ * More obvious "halted in the weeds" notification
+ * Proper killing of GDB process (no dangling connections)
+ * Break on main
+ * Jump to entry point after download
+ * Handle col numbers in build errors
+ * Fix background colors
  
 LOGGER
  * right click menu for log tabs:
@@ -58,6 +64,7 @@ EDITOR VIEW
  * Tooltips for file tabs
  * Apply styles to open files
  * Clearing breakpoints is broken
+ * Keyboard shortcuts trapped in editor (ie: CTRL+S and stuff doesn't work)
  
 PROJECT VIEW
  * right click menus
@@ -86,3 +93,4 @@ BREAKPOINT VIEW
 MISC
  * Splash Screen
  * About Box
+ * Progress bar "zombies" after build/load

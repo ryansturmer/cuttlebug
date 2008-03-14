@@ -178,16 +178,16 @@ class MenuManager(object):
         return retval
     
     def subscribe(self, item, enable=None, disable=None, show=None, hide=None):
-        for subscription, func in [(enable, item.enable), (disable, item.disable), (show, item.show), (hide, item.hide)]:
-            if subscription:
-                if not isinstance(subscription, list) or isinstance(subscription, tuple):
-                    subscription = [subscription]
+        for topics, func in [(enable, item.enable), (disable, item.disable), (show, item.show), (hide, item.hide)]:
+            if topics != None:
+                if not (isinstance(topics, list) or isinstance(topics, tuple)):
+                    topics = [topics]
             
-                for token in subscription:
-                    if token not in self._subscriptions:
-                        self._subscriptions[token] = {}
+                for topic in topics:
+                    if topic not in self._subscriptions:
+                        self._subscriptions[topic] = {}
 
-                    self._subscriptions[token][item] = func
+                    self._subscriptions[topic][item] = func
 
     def update(self, token):
         if token not in self._subscriptions:
@@ -215,7 +215,7 @@ if __name__ == "__main__":
     pmenu.item("Popup item 3")
 
     def on_context_menu(evt):
-        panel.PopupMenu(pmenu.build_wx_menu(panel))
+        panel.PopupMenu(pmenu.build(panel))
     
     # Stuff for popup menus
     panel = wx.Panel(frame)

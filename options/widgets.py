@@ -47,7 +47,7 @@ class CheckboxWidget(OptionsWidget, wx.CheckBox):
 
 class SpinWidget(OptionsWidget, wx.SpinCtrl):
 
-    def __init__(self, parent, id=-1, range=(1,100)):
+    def __init__(self, parent, id=-1, range=(1,10000)):
         OptionsWidget.__init__(self)
         wx.SpinCtrl.__init__(self, parent, -1, "")
         self.SetRange(1,100)

@@ -7,8 +7,8 @@ from os.path import join as path_join, commonprefix
 
 jinja_env = Environment(loader=PackageLoader('dummy', 'templates'))
 settings_template = jinja_env.get_template('settings.xml')
-project_template = jinja_env.get_template('project.xml')
-
+project_template = jinja_env.get_template('project.xml')    
+    
 class PersistedFrame(wx.Frame):
     
     def __init__(self, *args, **kwargs):
@@ -43,7 +43,27 @@ class PersistedFrame(wx.Frame):
         else:
             print "Skipping save of data due to iconized window"
             evt.Skip()
-            
+
+def get_text(parent, question, title="", default=""):
+    dlg = wx.TextEntryDialog(parent,question, title)
+    dlg.SetValue(default)
+    if dlg.ShowModal() == wx.ID_OK:
+        return dlg.GetValue()
+    else:
+        return None
+    dlg.Destroy()
+  
+def launch(file):
+    if os.name == 'posix':
+        os.system('xdg-open %s' % file)
+    elif os.name == 'nt':
+        os.system('start %s' % file)
+    elif os.name == 'mac':
+        os.system('open %s' % file)
+    else:
+        return
+    
+       
 def rgb(r,g,b,a=255):
     return wx.Colour(r,g,b,a)
 

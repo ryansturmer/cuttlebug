@@ -28,11 +28,17 @@ class Project(util.Category):
         # Debug
         debug = self.add_category('debug')
         debug.add_item("gdb_executable","arm-elf-gdb")
-        debug.add_item("attach_cmd", "target async localhost:3333")
+        debug.add_item("attach_cmd", "target remote localhost:3333")
         debug.add_item("detach_cmd", "")
         debug.add_item("post_attach_cmd", "monitor_halt")
         debug.add_item("pre_detach_cmd", "")
-        debug.add_item("target", "build/main.elf")
+        debug.add_item("reset_cmd", "monitor reset")
+        
+        # Program
+        program = self.add_category('program')
+        program.add_item("target", "build/main.elf")
+        program.add_item('entry_point', '_start')
+        program.add_item('break_at_main', True)
                 
     @staticmethod
     def load(filename):
@@ -54,7 +60,7 @@ class Project(util.Category):
                 elif item.tag == "item":
                     name, value = item.get('name'), item.text.strip()
                     if name not in current_cat:
-                        current_cat[name] = eval(value)
+                        current_cat.add_item(name, eval(value))
                     else:
                         current_cat.add_item(name, eval(value))
                 else:
@@ -96,7 +102,8 @@ class ProjectOptionsDialog(OptionsDialog):
         self.create_general_panel()
         self.create_build_panel()
         self.create_debug_panel()
-
+        self.create_program_panel()
+        
     def create_general_panel(self):
         panel = OptionsPanel(self, "General")
         panel.add("Informations", "Project Name", TextWidget, key="general.project_name")
@@ -112,13 +119,19 @@ class ProjectOptionsDialog(OptionsDialog):
     def create_debug_panel(self):
         panel = OptionsPanel(self, "Debug")
         panel.add("General", "GDB Executable", TextWidget, key="debug.gdb_executable")
-        panel.add("General", "Target", TextWidget, key="debug.target")
         panel.add("Commands", "Attach", TextWidget, key="debug.attach_cmd")
         panel.add("Commands", "Detach", TextWidget, key="debug.detach_cmd")
         panel.add("Commands", "Post-Attach", TextWidget, key="debug.post_attach_cmd")
         panel.add("Commands", "Pre-Detach", TextWidget, key="debug.pre_detach_cmd")
         self.add_panel(panel, icon='bug.png')
 
+    def create_program_panel(self):
+        panel = OptionsPanel(self, "Program")
+        panel.add("Code", "Target Executable", TextWidget, key="program.target")
+        panel.add("Locations", "Entry Point", TextWidget, key="program.entry_point")
+        panel.add("Locations", "Break on Main", CheckboxWidget, key="program.break_at_main")
+        self.add_panel(panel, icon='bug.png')
+        
     @staticmethod
     def show(parent, project=None):
         dialog = ProjectOptionsDialog(parent, project=project)

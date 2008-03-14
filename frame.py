@@ -3,7 +3,10 @@ import wx.aui as aui
 import wx.stc as stc
 import util, build, app, notebook, controls, views, project, settings, menu
 import styles, style_dialog
-# TODO Application icon
+#TODO Application icon
+#TODO saving of perspectives
+#TODO double click of editor tab to go into "large edit mode"
+#TODO implement custom build targets
 class Frame(util.PersistedFrame):
 
         def __init__(self, parent=None, title="Cuttlebug"):
@@ -41,9 +44,9 @@ class Frame(util.PersistedFrame):
             file = menubar.menu("&File")
             file.item('&New...\tCtrl+N', self.on_new, icon="page_white_text.png")
             file.item('&Open...\tCtrl+O', self.on_open, icon="folder_page.png")
-            file.item('&Close\tCtrl+W', self.on_close_file)
+            file.item('&Close\tCtrl+W', self.on_close_file, icon="ex.png")
             file.item('&Save\tCtrl+S', self.on_save, icon="disk.png")
-            file.item('&Save As...\tCtrl+Shift+S', self.on_save_as, icon="save_as.png")
+            file.item('Save As...\tCtrl+Shift+S', self.on_save_as, icon="save_as.png")
             file.item('Save All\tCtrl+Alt+Shift+S', self.on_save_all, icon="disk_cascade.png")
             file.separator()
             file.item('&Exit\tAlt+F4', self.on_exit,icon="door_out.png")
@@ -56,7 +59,8 @@ class Frame(util.PersistedFrame):
             edit.separator()
             edit.item('Cu&t\tCtrl+X', self.on_cut, icon='cut.png')
             edit.item('&Copy\tCtrl+C', self.on_copy, icon='page_copy.png')
-            edit.item('&Paste\tCtrl+V', self.on_paste, icon='paste_plain.png')            
+            edit.item('&Paste\tCtrl+V', self.on_paste, icon='paste_plain.png')  
+            edit.item('&Find...\tCtrl+F', self.on_find, icon='find.png')          
             edit.separator()
             edit.item('&Styles...', self.on_styles, icon="style.png")
             edit.item('&Options...', self.on_settings, icon='cog_edit.png')
@@ -66,7 +70,7 @@ class Frame(util.PersistedFrame):
             project.item('&New Project...', self.on_new_project, icon="package.png")
             project.item('&Open Project...', self.on_open_project, icon="package_add.png")
             project.item('&Close Project', self.on_close_project, icon='package_delete.png', enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
-            project.item('&Save Project\tCtrl+S', self.on_save_project, icon="package_save.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
+            project.item('&Save Project', self.on_save_project, icon="package_save.png", enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
             project.separator()
             project.item('Project Options...', self.on_project_options, icon='cog_edit.png', enable=menu.PROJECT_OPEN, disable=menu.PROJECT_CLOSE)
             
@@ -75,7 +79,8 @@ class Frame(util.PersistedFrame):
             build.item('&Build\tF7', self.on_build, icon="brick.png",enable=[menu.PROJECT_OPEN, menu.BUILD_FINISHED], disable=[menu.PROJECT_CLOSE, menu.BUILD_STARTED])
             build.item('&Rebuild\tF10', self.on_rebuild, icon="rebuild.png", enable=[menu.PROJECT_OPEN, menu.BUILD_FINISHED], disable=[menu.PROJECT_CLOSE, menu.BUILD_STARTED])
             build.item('&Clean\tF8', self.on_clean, icon="edit-clear.png", enable=[menu.PROJECT_OPEN, menu.BUILD_FINISHED], disable=[menu.PROJECT_CLOSE, menu.BUILD_STARTED])
-           
+            build.separator()
+            build.item('New Custom Build &Target...', self.on_new_build_target, icon="brick.png",enable=[menu.PROJECT_OPEN, menu.BUILD_FINISHED], disable=[menu.PROJECT_CLOSE, menu.BUILD_STARTED])
             # DEBUG (Disabled till a project is opened)
             debug = menubar.menu("&Debug")
             debug.item('&Run\tF5', self.on_run, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
@@ -90,14 +95,16 @@ class Frame(util.PersistedFrame):
 
             # VIEW
             view = menubar.menu("&View")
-            view.item('&Build Log\tAlt+B', self.on_toggle_build_view, icon="application_view_list.png")
+            view.item('&Build\tAlt+B', self.on_toggle_build_view, icon="application_view_list.png")
+            view.item('&Logs\tAlt+L', self.on_toggle_log_view, icon="brick.png")
 
             # DEVELOPMENT (Remove for production)
             devel = menubar.menu("&Devel")
             devel.item( 'Development Stuff Goes Here', lambda x : None)
             devel.item( 'Read Memory', self.on_read_memory)
             devel.item('&GDB Command...', self.on_gdb_command)
-
+            devel.item('&MI Command...', self.on_mi_command)
+        
             menu.manager.publish(menu.PROJECT_CLOSE)
             menu.manager.publish(menu.TARGET_DETACHED)
         
@@ -124,6 +131,8 @@ class Frame(util.PersistedFrame):
         def on_redo(self,evt):
             self.editor_view.redo()
         
+        def on_find(self, evt):
+            self.editor_view.find()
         def error_msg(self, message, caption="Error"):
             wx.CallAfter(self._error_msg, message, caption)
             
@@ -168,6 +177,15 @@ class Frame(util.PersistedFrame):
             else:
                 print "GDB Session not attached"
 
+        def on_mi_command(self, evt):
+            if self.controller.state is app.ATTACHED or self.controller.state is app.RUNNING:
+                dlg = wx.TextEntryDialog(self, "Enter GDBMI Command:")
+                btn = dlg.ShowModal()
+                if btn == wx.ID_OK:
+                    self.controller.gdb.cmd(dlg.GetValue())
+            else:
+                print "GDB Session not attached"
+
         def add_view(self, view):
             self.manager.AddPane(view, view.info)
             
@@ -188,7 +206,7 @@ class Frame(util.PersistedFrame):
 
         def create_locals_view(self):
             self.locals_view = views.LocalsView(self, controller=self.controller)
-            self.locals_view.info = aui.AuiPaneInfo().Caption('Variables').Right() 
+            self.locals_view.info = aui.AuiPaneInfo().Caption('Variables').Right().Name('VarView')
             self.manager.AddPane(self.locals_view, self.locals_view.info)
         
         def create_register_view(self):
@@ -196,24 +214,24 @@ class Frame(util.PersistedFrame):
 
         def create_build_view(self):
             self.build_view = views.BuildView(self, controller=self.controller)
-            self.build_view.info = aui.AuiPaneInfo().Caption('Build').Bottom() 
+            self.build_view.info = aui.AuiPaneInfo().Caption('Build').Bottom().Name('BuildView') 
             self.manager.AddPane(self.build_view, self.build_view.info)
         
         def create_log_view(self):
             self.log_view = views.LogView(self, controller = self.controller)
-            self.log_view.info = aui.AuiPaneInfo().Caption('Logs').Bottom() 
+            self.log_view.info = aui.AuiPaneInfo().Caption('Logs').Bottom().Name('LogView') 
             self.manager.AddPane(self.log_view, self.log_view.info)
 
         def create_editor_view(self):
             self.editor_view = views.EditorView(self, controller=self.controller)
-            self.editor_view.info = aui.AuiPaneInfo().CentrePane().PaneBorder(False)
+            self.editor_view.info = aui.AuiPaneInfo().CentrePane().PaneBorder(False).Name('EditorView')
             self.manager.AddPane(self.editor_view, self.editor_view.info)
 
         def create_project_view(self):
             self.project_view = views.ProjectView(self, controller=self.controller)
             self.project_view.Bind(views.EVT_PROJECT_DCLICK_FILE, self.on_project_dclick_file)
 
-            self.project_view.info = aui.AuiPaneInfo().Caption('Project').Left() 
+            self.project_view.info = aui.AuiPaneInfo().Caption('Project').Left().Name('ProjectView') 
             self.manager.AddPane(self.project_view, self.project_view.info)
         
         def open_file(self, path):
@@ -245,12 +263,13 @@ class Frame(util.PersistedFrame):
                     save_confirm = self.confirm("Save project '%s' before closing?" % project.general.project_name)
                     if save_confirm:
                         project.save()
-                    elif save_confirm == None:
+                    else:
                         evt.Veto()
                         return
                 close_source_windows = self.confirm("Close open project source files?")
                 if close_source_windows:
                     for file in self.editor_view.open_files:
+                        print file
                         self.editor_view.close(file)
                 self.controller.unload_project()
         
@@ -259,7 +278,9 @@ class Frame(util.PersistedFrame):
                 pass
             path = self.browse_for_file(style=wx.FD_SAVE)
             self.controller.new_project(path)
-        
+        def on_new_build_target(self, evt):
+            print "TODO: Add functionality for this in the projects"
+            
         def on_save_project(self, evt):
             self.controller.save_project()
 
@@ -315,11 +336,13 @@ class Frame(util.PersistedFrame):
             self.controller.detach()
 
         def on_toggle_build_view(self, evt):
-            self.build_view.info.Show(True)
+            print self.build_view.info.IsShown()
+            self.build_view.info.Show(not self.build_view.info.IsShown())
             self.manager.Update()
 
         def on_toggle_log_view(self, evt):
-            self.log_view.info.Show(not self.log_view.info.IsShown())
+            #self.log_view.info.Show(not self.log_view.info.IsShown())
+            self.log_view.info.Show(False)
             self.manager.Update()
 
         def on_settings(self, evt):

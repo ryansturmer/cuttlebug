@@ -3,6 +3,8 @@ import os, threading, time, logging
 import antlr3, GDBMILexer, GDBMIParser
 import util, odict
 from gdbvars import Type, Variable, GDBVarModel
+STOPPED = 0
+RUNNING = 1
 
 def escape(s):
     return s.replace("\\", "\\\\")
@@ -38,6 +40,7 @@ class GDB(wx.EvtHandler):
     def __init__(self, cmd="arm-elf-gdb -n -q -i mi", mi_log=None, console_log=None, target_log=None, log_log=None):
         wx.EvtHandler.__init__(self)
         self.attached = False
+        self.state = STOPPED
         
         # Console streams
         self.mi_log = mi_log
@@ -46,12 +49,14 @@ class GDB(wx.EvtHandler):
         self.log_log = log_log
 
         # Parser for GDBMI commands
-        self.cmd = cmd
+        self.cmd_string = cmd
         self.vars = GDBVarModel(self)
+        
     def start(self):
         self.__clear()
-        self.subprocess = util.Process(self.cmd, start=self.on_start, stdout=self.on_stdout, end=self.on_end)
-
+        self.subprocess = util.Process(self.cmd_string, start=self.on_start, stdout=self.on_stdout, end=self.on_end)
+        #self.cmd('-gdb-set target-async on')
+        
     def __clear(self):
         self.buffer = ''
         self.pending = {} # Pending commands
@@ -109,7 +114,27 @@ class GDB(wx.EvtHandler):
             response = self.__parse(self.buffer)
             self.handle_response(response)
             self.buffer = ''
+    
+    def __on_running(self, record):
+        self.state = RUNNING
+        self.post_event(GDBEvent(EVT_GDB_RUNNING, self, data=record))
+    
+    def __on_stopped(self, record):
+        self.state = STOPPED
+        self.post_event(GDBEvent(EVT_GDB_STOPPED, self, data=record))
+        self.__update_breakpoints()
+        self.stack_list_locals()
+        self.var_update()
+    
+    def __on_error(self, command, record):
+        if "while target is running" in record.msg: 
+            self.__on_running(record)
+        elif "while target is stopped" in record.msg:
+            self.__on_stopped(record)
 
+        self.post_event(GDBEvent(EVT_GDB_ERROR, self, data=record.msg))
+   
+    
     def handle_response(self, response):
         # Deal with the console streams in the response
         for txt in response.console:
@@ -121,11 +146,12 @@ class GDB(wx.EvtHandler):
 
         results = (response.result, response.exc, response.status, response.notify)
         for result in results:
+            command = ''
             if result != None: 
                 if result.token:
                     # Call any function setup to be called as a result of this.... result.
                     if result.token in self.pending:
-                        callback, internal_callback = self.pending[result.token]
+                        command, callback, internal_callback = self.pending[result.token]
                         if callable(internal_callback):
                             internal_callback(result)
                         if callable(callback):
@@ -133,15 +159,11 @@ class GDB(wx.EvtHandler):
                         
                 # Post an event on error
                 if result.cls == 'error':
-                    self.post_event(GDBEvent(EVT_GDB_ERROR, self, data=result.msg))
+                    self.__on_error(command, result)
                 elif result.cls == 'stopped':
-                    self.post_event(GDBEvent(EVT_GDB_STOPPED, self, data=result))
-                    self.__update_breakpoints()
-                    self.stack_list_locals()
-                    self.var_update()
-                    
+                    self.__on_stopped(result)
                 elif result.cls == 'running':
-                    self.post_event(GDBEvent(EVT_GDB_RUNNING, self, data=result))
+                    self.__on_running(result)
                 else:
                     self.post_event(GDBEvent(EVT_GDB_UPDATE, self, data=result))
         
@@ -174,7 +196,7 @@ class GDB(wx.EvtHandler):
             cmd += '\n'
         if callback or internal_callback:
             self.__send(str(self.token) + cmd)
-            self.pending[self.token] = (callback, internal_callback)
+            self.pending[self.token] = (cmd.strip(), callback, internal_callback)
             self.token += 1
         else:
             self.__send(cmd)
@@ -204,12 +226,12 @@ class GDB(wx.EvtHandler):
             name = data.name
             expression = self.__varnames.pop(name)
             value = [] if numchild else data.value
+            # Update the model and notify
+            self.vars.add(name, Variable(name, expression, type, children=numchild, data=value))
+            self.post_event(GDBEvent(EVT_GDB_UPDATE_VARS, self, data=[name]))
         except Exception, e:
             print "Exception creating variable: %s" % e
             print data
-        # Update the model and notify
-        self.vars.add(name, Variable(name, expression, type, children=numchild, data=value))
-        self.post_event(GDBEvent(EVT_GDB_UPDATE_VARS, self, data=[name]))
         
     def var_delete(self, name, callback=None):
         self.__deleted.append(name)
@@ -224,6 +246,7 @@ class GDB(wx.EvtHandler):
         self.__cmd('-var-update --all-values %s' % (name or '*'), callback=callback, internal_callback = self.__on_var_updated)
     def __on_var_updated(self, data):
         print self.vars
+        
         if hasattr(data,'changelist'):
             names = [item['name'] for item in data.changelist if item['in_scope'] != 'false']
             for item in data.changelist:
@@ -283,11 +306,20 @@ class GDB(wx.EvtHandler):
     def file_list_globals(self, file='', callback=None):
         self.__cmd('-symbol-list-variables', callback)
 
+    def target_exec_status(self, callback=None):
+        self.__cmd('-target-exec-status', callback, internal_callback=self.__on_exec_status)
+        
+    def __on_exec_status(self, data):
+        print data
+        
     def exec_continue(self, callback=None):
         self.__cmd('-exec-continue\n', callback)
 
     def exec_step(self, callback=None):
         self.__cmd('-exec-step\n', callback)
+
+    def exec_jump(self, address, callback=None):
+        self.__cmd('-exec-jump %s\n' % address, callback)
    
     def exec_finish(self, callback=None):
         self.__cmd('-exec-finish\n', callback)
@@ -330,6 +362,8 @@ class GDB(wx.EvtHandler):
     def break_enable(self, num, callback=None):
         self.__cmd("-break-enable %d" % int(num), callback, internal_callback=self.__update_breakpoints)
         
+    def set(self, name, val, callback=None):
+        self.__cmd("-gdb-set %s=%s" % (name, val), callback)
     # Set Executable
     def set_exec(self, file):
         self.__cmd('-file-exec-and-symbols "%s"\n' % escape(file))
