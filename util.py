@@ -406,6 +406,19 @@ def unpickle_file(filename):
     fp.close()
     return object
 
+def human_size(size_in_bytes):
+    K = 1024
+    M = K*1024
+    G = M*1024
+    if size_in_bytes < K:
+        return "%d Bytes" % size_in_bytes
+    elif size_in_bytes < M:
+        return "%0.1f kB" % (size_in_bytes/float(K))
+    elif size_in_bytes < G:
+        return "%0.1f MB" % (size_in_bytes/float(M))
+    else:
+        return "%0.1f GB" % (size_in_bytes/float(G))
+    
 class ArtListMixin(object):
     def __init__(self, *args, **kwargs):
         self.__art = {}

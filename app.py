@@ -99,8 +99,17 @@ class Controller(wx.EvtHandler):
                 if open_files:
                     for file in open_files:
                         self.open_file(file)
+                self.frame.project_view.load_state(settings.session_get('project_view_state'))
             except Exception,  e:
-                print e
+                pass
+            
+            try:
+                perspective = settings.session_get('perspective')
+                if perspective:
+                    self.frame.manager.LoadPerspective(perspective)
+            except Exception, e:
+                print "problem loading perspective:", e
+
         
         except Exception, e:
             print e
@@ -108,10 +117,11 @@ class Controller(wx.EvtHandler):
             self.session = {}
     
     def save_session(self):
-        #self.session['perspective'] = self.frame.manager.SavePerspective()
         if self.project:
             settings.session_set('project_filename', self.project.filename)
             settings.session_set('open_files', self.frame.editor_view.open_files)
+            settings.session_set('project_view_state', self.frame.project_view.save_state())
+        settings.session_set('perspective', self.frame.manager.SavePerspective())
         settings.save_session()
         
     def new_project(self, path):
@@ -336,7 +346,8 @@ class Controller(wx.EvtHandler):
             wx.CallAfter(self.frame.error_msg, result.msg)
         else:
             #TODO: This is a hack, not cross-platform compatible.
-            self.gdb.set("$pc", self.project.program.entry_point, self.on_at_entry_point)
+            #self.gdb.set("$pc", self.project.program.entry_point, self.on_at_entry_point)
+            pass
         
     def on_at_entry_point(self, result):
         wx.CallAfter(self.frame.stop_busy)
@@ -418,6 +429,7 @@ class Controller(wx.EvtHandler):
         self.frame.statusbar.working = False
         self.frame.statusbar.text = ""
         menu.manager.publish(menu.BUILD_FINISHED)
+        self.frame.project_view.update()
 
     def on_build_update(self, evt):
         self.frame.build_view.update(str(evt.data))

@@ -18,7 +18,16 @@ bindings = {
         '.tif': 'file_picture.png',
         '.tiff': 'file_picture.png',
         '.sh': 'file_gear.png',
-        '.script': 'file_gear.png' }
+        '.script': 'file_gear.png', 
+        '.xml' : 'file_markup.png',
+        '.html' : 'file_world.png',
+        '.htm' : 'file_world.png',
+        '.xhtml' : 'file_world.png',
+        '.sgml' : 'file_markup.png',
+        '.pdf': 'file_acrobat.png',
+        '.java' : 'file_java.png',
+        '.doc': 'file_word.png' ,
+        '.rtf': 'file_word.png' }
 
 def get_file_icon(filename):
     ext = ""

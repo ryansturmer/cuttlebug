@@ -1,6 +1,6 @@
 import wx
 import view, project, util, icons , menu
-import os
+import os, shutil
 #TODO selectable hiding of certain file extensions (from project settings)
 #TODO renaming of files
 #TODO close all project files when closing a project
@@ -13,6 +13,9 @@ EVT_PROJECT_DCLICK_FILE = wx.PyEventBinder(wx.NewEventType())
 MNU_PROJECT = 0
 MNU_FILE = 1
 MNU_FILES = 2
+
+ITEM_ROOT = 0
+ITEM_FILES = 1
 
 class ProjectView(view.View):
 
@@ -53,7 +56,8 @@ class ProjectView(view.View):
         manager = menu.MenuManager()
         pmenu = manager.menu()
         pmenu.item("Open in shell", icon='application_osx_terminal.png', show=(MNU_FILE, MNU_FILES), hide=(MNU_PROJECT,), func=self.on_open_in_shell)
-        pmenu.item("Rename...", show=(MNU_FILE, MNU_PROJECT), hide=(MNU_FILES), func=self.on_rename)
+        pmenu.item("Rename...", show=(MNU_FILE, MNU_PROJECT), hide=(MNU_FILES), func=self.on_rename, icon='textfield_rename.png')
+        pmenu.item("Delete", show=(MNU_FILE), hide=(MNU_FILES, MNU_PROJECT), func=self.on_remove_file, icon='delete.png')
         pmenu.separator()
         pmenu.item("Create File...", show=MNU_FILES, hide=(MNU_FILE, MNU_PROJECT), func=self.on_new_file, icon='page_white_text.png')
         pmenu.item("Create Folder...", show=MNU_FILES, hide=(MNU_FILE, MNU_PROJECT), func=self.on_new_folder, icon='folder_add.png')
@@ -74,6 +78,15 @@ class ProjectView(view.View):
             import shutil
             os.mkdir(os.path.join(self.project.directory, foldername))
             self.tree.update_file_tree()
+            
+    def on_remove_file(self, evt):
+        if self.selected_file:
+            try:
+                shutil.rmtree(self.selected_file)
+            except OSError:
+                os.remove(self.selected_file)
+        self.update()
+    
     def set_project(self, project):
         self.project = project
         self.tree.set_project(project)
@@ -114,8 +127,17 @@ class ProjectView(view.View):
         self.tree.update()
     
     def on_refresh(self, evt):
-        self.tree.update_file_tree()
+        self.update()
             
+    def save_state(self):
+        return self.tree.save_state()
+    
+    def load_state(self, state):
+        self.tree.load_state(state)
+        
+    def update(self):
+        self.tree.update_file_tree()
+        
 class ProjectTree(wx.TreeCtrl):
 
     def __init__(self, parent, id):
@@ -135,6 +157,14 @@ class ProjectTree(wx.TreeCtrl):
         if item == self.root_item:
             if self.project:
                 evt.SetToolTip(self.project.directory)
+                return
+            
+        data = self.GetPyData(item)
+        try:
+            stat = os.stat(data)
+            evt.SetToolTip(data + "\n" + util.human_size(stat.st_size))
+        except:
+            pass
     def show_backups(self, show):
         self.backups_visible = bool(show)
 
@@ -150,6 +180,14 @@ class ProjectTree(wx.TreeCtrl):
         else:
             self.clear()
 
+    def walk(self, top_item, include_root=True):
+        retval = [top_item] if include_root else []
+        child, cookie = self.GetFirstChild(top_item)
+        while child.IsOk():
+             retval.extend(self.walk(child))
+             child, cookie = self.GetNextChild(top_item, cookie)
+        return retval
+    
     def get_file_icon(self, filename):
         fn, ext = os.path.splitext(filename)
         return self.icon_bindings.get(ext.lower(), 'file_white.png')
@@ -185,12 +223,25 @@ class ProjectTree(wx.TreeCtrl):
         self.SetPyData(item, file)
         self.files[file] = item
         self.SetItemImage(item, icon)
+        self.SortChildren(parent_item)
 
     def update_file_tree(self):
         #TODO sort files
         if not self.project:
             return
+        self.Freeze()
         self.files[self.project.directory] = self.files_item
+
+        # Remove any file/folder items that no longer exist
+        for item in self.walk(self.files_item, False):
+            path = self.GetPyData(item)
+            try:
+                os.stat(path)
+            except:
+                del self.files[path]
+                self.Delete(item)
+                
+        # Add any file/folder items that aren't currently in the tree
         for root, dirs, files in os.walk(self.project.directory):
             if root not in self.files:
                 parent, dir = os.path.split(root)
@@ -205,7 +256,28 @@ class ProjectTree(wx.TreeCtrl):
                     if not self.backups_visible and file.endswith("~"):
                         continue
                     self.add_file(os.path.join(root, file), icons.get_file_icon(file))
-                    
+        self.Thaw()
+
+    def save_state(self):
+        state = set()
+        if self.IsExpanded(self.root_item): state.add(ITEM_ROOT)
+        if self.IsExpanded(self.files_item): state.add(ITEM_FILES)
+        for item in self.walk(self.files_item, include_root=False):
+            if self.IsExpanded(item):
+                state.add(self.GetPyData(item))
+        return state
+        
+    def load_state(self, state):
+        self.Freeze()
+        if ITEM_ROOT in state:
+            self.Expand(self.root_item)
+        if ITEM_FILES in state:
+            self.Expand(self.files_item)
+        for item in self.walk(self.files_item, include_root=False):
+            if self.GetPyData(item) in state:
+                self.Expand(item)
+        self.Thaw() 
+        
     def update(self):
         self.SetItemText(self.root_item, self.project.general.project_name)
         self.update_file_tree()

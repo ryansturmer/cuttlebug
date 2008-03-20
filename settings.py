@@ -7,7 +7,11 @@ session = {}
 
 def load_session(filename='.session'):
     global session
-    session = util.unpickle_file(filename)
+    try:
+        session = util.unpickle_file(filename)
+    except:
+        session = {}
+        
     if not isinstance(session, dict):
         session = {}
         

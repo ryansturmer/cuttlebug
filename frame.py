@@ -95,8 +95,14 @@ class Frame(util.PersistedFrame):
 
             # VIEW
             view = menubar.menu("&View")
-            view.item('&Build\tAlt+B', self.on_toggle_build_view, icon="application_view_list.png")
-            view.item('&Logs\tAlt+L', self.on_toggle_log_view, icon="brick.png")
+            view.item('&Project\tAlt+P', self.on_toggle_project_view, icon="package.png")
+            view.item('&Build\tAlt+B', self.on_toggle_build_view, icon="brick.png")
+            view.item('&Logs\tAlt+L', self.on_toggle_log_view, icon="application_view_list.png")
+            view.item('&Memory\tAlt+M', self.on_toggle_memory_view, icon="drive.png")
+            view.item('&Breakpoints\tAlt+K', self.on_toggle_breakpoint_view, icon="breakpoint.png")
+            view.item('&Locals\tAlt+C', self.on_toggle_locals_view, icon="book.png")
+            view.separator()
+            view.item("Windows go here")
 
             # DEVELOPMENT (Remove for production)
             devel = menubar.menu("&Devel")
@@ -196,12 +202,12 @@ class Frame(util.PersistedFrame):
 
         def create_memory_view(self):
             self.memory_view = views.MemoryView(self, controller=self.controller)
-            self.memory_view.info = aui.AuiPaneInfo().Caption('Memory').Right() 
+            self.memory_view.info = aui.AuiPaneInfo().Caption('Memory').Right().Name('MemoryView')
             self.manager.AddPane(self.memory_view, self.memory_view.info)
         
         def create_breakpoint_view(self):
             self.breakpoint_view = views.BreakpointView(self, controller=self.controller)
-            self.breakpoint_view.info = aui.AuiPaneInfo().Caption('Breakpoints').Right() 
+            self.breakpoint_view.info = aui.AuiPaneInfo().Caption('Breakpoints').Right().Name('BreakpointView')
             self.manager.AddPane(self.breakpoint_view, self.breakpoint_view.info)
 
         def create_locals_view(self):
@@ -336,15 +342,23 @@ class Frame(util.PersistedFrame):
             self.controller.detach()
 
         def on_toggle_build_view(self, evt):
-            print self.build_view.info.IsShown()
-            self.build_view.info.Show(not self.build_view.info.IsShown())
-            self.manager.Update()
-
+            self.toggle_view(self.build_view)
         def on_toggle_log_view(self, evt):
-            #self.log_view.info.Show(not self.log_view.info.IsShown())
-            self.log_view.info.Show(False)
+            self.toggle_view(self.log_view)
+        def on_toggle_breakpoint_view(self, evt):
+            self.toggle_view(self.breakpoint_view)
+        def on_toggle_locals_view(self, evt):
+            self.toggle_view(self.locals_view)
+        def on_toggle_memory_view(self, evt):
+            self.toggle_view(self.memory_view)
+        def on_toggle_project_view(self, evt):
+            self.toggle_view(self.project_view)
+            
+        def toggle_view(self, view):
+            info = self.manager.GetPane(view)
+            info.Show(not info.IsShown())
             self.manager.Update()
-
+            
         def on_settings(self, evt):
             settings.SettingsDialog.show(self, self.controller.settings)
             self.controller.settings.save()

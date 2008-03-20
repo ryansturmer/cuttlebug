@@ -232,7 +232,8 @@ class EditorControl(stc.StyledTextCtrl):
         #self.SetMarginMask(1, 1<<31)
         self.define_markers()
         self.create_popup_menu()
-        self.SetModEventMask(stc.STC_MOD_INSERTTEXT | stc.STC_MOD_DELETETEXT | stc.STC_PERFORMED_UNDO | stc.STC_PERFORMED_REDO)
+        self.SetEOLMode(stc.STC_EOL_LF)
+        self.SetModEventMask(stc.STC_MOD_INSERTTEXT | stc.STC_MOD_DELETETEXT | stc.STC_PERFORMED_UNDO | stc.STC_PERFORMED_REDO | stc.STC_PERFORMED_USER)
         self.Bind(wx.EVT_RIGHT_DOWN, self.on_context_menu)
         self.Bind(stc.EVT_STC_UPDATEUI, self.on_update_ui)
         self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
@@ -555,7 +556,7 @@ class EditorControl(stc.StyledTextCtrl):
             if file:
                 file.close()
         self.detect_language()
-        self.style_line(5, 38)
+#        self.style_line(5, 38)
 
     def apply_folding_settings(self):
         if self.controller and self.controller.settings.editor.fold:
@@ -583,6 +584,7 @@ class Notebook(aui.AuiNotebook):
         style |= aui.AUI_NB_TAB_MOVE
         style |= aui.AUI_NB_TAB_SPLIT
         style |= aui.AUI_NB_CLOSE_BUTTON
+        style |= aui.AUI_NB_WINDOWLIST_BUTTON
         
         super(Notebook, self).__init__(parent, -1, style=style)
         self.Bind(aui.EVT_AUINOTEBOOK_PAGE_CLOSE, self.on_page_close)
@@ -633,7 +635,6 @@ class Notebook(aui.AuiNotebook):
             
     def save(self):
         window = self.get_window()
-        print window
         if window:
             if not window.file_path:
                 self.save_as()
