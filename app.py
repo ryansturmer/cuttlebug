@@ -346,7 +346,7 @@ class Controller(wx.EvtHandler):
             wx.CallAfter(self.frame.error_msg, result.msg)
         else:
             #TODO: This is a hack, not cross-platform compatible.
-            #self.gdb.set("$pc", self.project.program.entry_point, self.on_at_entry_point)
+            self.gdb.set("$pc", self.project.program.entry_point, self.on_at_entry_point)
             pass
         
     def on_at_entry_point(self, result):
