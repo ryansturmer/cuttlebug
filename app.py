@@ -61,6 +61,7 @@ class Controller(wx.EvtHandler):
         g.Bind(gdb.EVT_GDB_RUNNING, self.on_gdb_running)
         g.Bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, self.on_update_breakpoints)
         g.Bind(gdb.EVT_GDB_UPDATE_VARS, self.on_update_vars)
+        g.Bind(gdb.EVT_GDB_UPDATE_STACK, self.on_update_stack)
         self.gdb = g
   
     def setup_logs(self):
@@ -186,6 +187,7 @@ class Controller(wx.EvtHandler):
         if self.state == IDLE:
             self.gdb.set_exec(self.project.absolute_path(self.project.program.target))
             self.frame.locals_view.set_model(self.gdb.vars)
+            self.frame.data_view.set_model(self.gdb)
             self.halt()
         if self.state == IDLE or self.state == RUNNING:
             self.exit_current_state()
@@ -312,6 +314,9 @@ class Controller(wx.EvtHandler):
     def on_update_vars(self, evt):
         self.frame.locals_view.update(evt.data)
     
+    def on_update_stack(self, evt):
+        self.frame.data_view.update(evt.data)
+        
     def on_gdb_done(self, data):
         if data.cls == 'error':
             wx.CallAfter(self.frame.error_msg, data.msg)

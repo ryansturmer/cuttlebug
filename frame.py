@@ -30,6 +30,7 @@ class Frame(util.PersistedFrame):
             self.create_register_view()
             self.create_project_view()
             self.create_editor_view()
+            self.create_data_view()
             
             self.controller.setup_logs()
             self.controller.load_session()
@@ -101,6 +102,7 @@ class Frame(util.PersistedFrame):
             view.item('&Memory\tAlt+M', self.on_toggle_memory_view, icon="drive.png")
             view.item('&Breakpoints\tAlt+K', self.on_toggle_breakpoint_view, icon="breakpoint.png")
             view.item('&Locals\tAlt+C', self.on_toggle_locals_view, icon="book.png")
+            view.item('&Data\tAlt+D', self.on_toggle_data_view, icon="application_view_list.png")
             view.separator()
             view.item("Windows go here")
 
@@ -139,6 +141,7 @@ class Frame(util.PersistedFrame):
         
         def on_find(self, evt):
             self.editor_view.find()
+            
         def error_msg(self, message, caption="Error"):
             wx.CallAfter(self._error_msg, message, caption)
             
@@ -214,6 +217,11 @@ class Frame(util.PersistedFrame):
             self.locals_view = views.LocalsView(self, controller=self.controller)
             self.locals_view.info = aui.AuiPaneInfo().Caption('Variables').Right().Name('VarView')
             self.manager.AddPane(self.locals_view, self.locals_view.info)
+
+        def create_data_view(self):
+            self.data_view = views.DataView(self, controller=self.controller)
+            self.data_view.info = aui.AuiPaneInfo().Caption('Runtime').Right().Name('RuntimeView')
+            self.manager.AddPane(self.data_view, self.data_view.info)
         
         def create_register_view(self):
             pass
@@ -353,6 +361,8 @@ class Frame(util.PersistedFrame):
             self.toggle_view(self.memory_view)
         def on_toggle_project_view(self, evt):
             self.toggle_view(self.project_view)
+        def on_toggle_data_view(self, evt):
+            self.toggle_view(self.data_view)
             
         def toggle_view(self, view):
             info = self.manager.GetPane(view)

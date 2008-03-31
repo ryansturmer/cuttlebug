@@ -2,7 +2,9 @@ import wx
 import os, threading, time, logging
 import antlr3, GDBMILexer, GDBMIParser
 import util, odict
-from gdbvars import Type, Variable, GDBVarModel
+import functools
+
+from models import Type, Variable, GDBVarModel, GDBStackModel
 STOPPED = 0
 RUNNING = 1
 
@@ -26,6 +28,7 @@ EVT_GDB_UPDATE = wx.PyEventBinder(wx.NewEventType())
 EVT_GDB_UPDATE_BREAKPOINTS = wx.PyEventBinder(wx.NewEventType())
 
 EVT_GDB_UPDATE_VARS = wx.PyEventBinder(wx.NewEventType())
+EVT_GDB_UPDATE_STACK = wx.PyEventBinder(wx.NewEventType())
 
 
 #EVT_GDB_EXECUTE_UPDATE
@@ -51,6 +54,7 @@ class GDB(wx.EvtHandler):
         # Parser for GDBMI commands
         self.cmd_string = cmd
         self.vars = GDBVarModel(self)
+        self.stack = GDBStackModel(self)
         
     def start(self):
         self.__clear()
@@ -68,6 +72,7 @@ class GDB(wx.EvtHandler):
         self.breakpoints = BreakpointTable(self)
         self.locals = []
         self.vars = GDBVarModel(self)
+        self.stack = GDBStackModel(self)
         self.__lexer = GDBMILexer.GDBMILexer(None)
         self.__parser = GDBMIParser.GDBMIParser(None)
         self.__deleted = []
@@ -123,6 +128,7 @@ class GDB(wx.EvtHandler):
         self.state = STOPPED
         self.post_event(GDBEvent(EVT_GDB_STOPPED, self, data=record))
         self.__update_breakpoints()
+        self.stack_list_frames()
         self.stack_list_locals()
         self.var_update()
     
@@ -195,9 +201,10 @@ class GDB(wx.EvtHandler):
         if cmd[-1] != '\n':
             cmd += '\n'
         if callback or internal_callback:
-            self.__send(str(self.token) + cmd)
             self.pending[self.token] = (cmd.strip(), callback, internal_callback)
+            tok = self.token
             self.token += 1
+            self.__send(str(tok) + cmd)
         else:
             self.__send(cmd)
 
@@ -208,23 +215,35 @@ class GDB(wx.EvtHandler):
     def cmd(self, cmd, callback=None):
         self.__cmd(cmd, callback)
         
-    def var_create(self, expression, floating=False, frame=None, callback=None):
+    def stack_list_frames(self, callback=None):
+        self.__cmd('-stack-list-frames', internal_callback=self.__on_stack_list_frames, callback=callback)
+    def __on_stack_list_frames(self, data):
+        if hasattr(data, 'stack'):
+            self.stack.clear()
+            frames = sorted([item['frame'] for item in data.stack], cmp=lambda x,y : cmp(int(x['level']), int(y['level'])))
+            for frame in frames:
+                level = int(frame['level'])
+                addr = int(frame['addr'], 16)
+                func = frame.get('func', '')
+                fullname = frame.get('fullname', '')
+                line = int(frame.get('line', -1))
+                self.stack.add_frame(level, addr, func,  fullname, line)
+            self.post_event(GDBEvent(EVT_GDB_UPDATE_STACK, self, data=self.stack))
+
+    def var_create(self, expression, floating=True, frame=0, callback=None):
         if floating:
             frame = "@"
-        else:
-            frame = "*" if frame == None else frame
         name = "cvar%d" % self.__varname_idx # We keep our own names so we can track expressions
         self.__varname_idx += 1
-        self.__varnames[name] = expression
-        self.__cmd('-var-create %s %s %s' % (name, frame, expression), callback=callback, internal_callback = self.__on_var_created)
-
-    def __on_var_created(self, data):
+        self.__cmd('-var-create %s %s %s' % (name, frame, expression), callback=callback, internal_callback = functools.partial(self.__on_var_created, expression, frame))
+        return name
+    
+    def __on_var_created(self, expression, frame, data):
         # Created variable info
         try:
             type = Type.parse(data.type)
             numchild = int(data.numchild)
             name = data.name
-            expression = self.__varnames.pop(name)
             value = [] if numchild else data.value
             # Update the model and notify
             self.vars.add(name, Variable(name, expression, type, children=numchild, data=value))
@@ -234,30 +253,22 @@ class GDB(wx.EvtHandler):
             print data
         
     def var_delete(self, name, callback=None):
-        self.__deleted.append(name)
+        self.__cmd('-var-delete %s' % name, callback, internal_callback=functools.partial(self.__on_var_deleted, name))
+    def __on_var_deleted(self, name, data):
         self.vars.remove(name)
-        self.__cmd('-var-delete %s' % name, callback, self.__on_var_deleted)
-    def __on_var_deleted(self, data):
-        var = self.__deleted.pop()
-        self.post_event(GDBEvent(EVT_GDB_UPDATE_VARS, self, data=[var]))
+        self.post_event(GDBEvent(EVT_GDB_UPDATE_VARS, self, data=[name]))
                 
     
     def var_update(self, name=None, callback=None):
         self.__cmd('-var-update --all-values %s' % (name or '*'), callback=callback, internal_callback = self.__on_var_updated)
     def __on_var_updated(self, data):
-        print self.vars
-        
         if hasattr(data,'changelist'):
-            names = [item['name'] for item in data.changelist if item['in_scope'] != 'false']
+            names = [item['name'] for item in data.changelist]
             for item in data.changelist:
                 if 'value' in item:
                     self.vars.vars[item['name']].data = item['value']
-                if 'in_scope' in item:
-                    if item['in_scope'] == 'false':
-                        pass
-                        #self.var_delete(item['name'])
-        if names:
-            self.post_event(GDBEvent(EVT_GDB_UPDATE_VARS, self, data=names))
+            if names:
+                self.post_event(GDBEvent(EVT_GDB_UPDATE_VARS, self, data=names))
     
     def var_list_children(self, name, callback=None):
         self.__cmd('-var-list-children --all-values %s' % name, internal_callback=self.__on_var_list_children, callback=callback)
@@ -285,23 +296,12 @@ class GDB(wx.EvtHandler):
     def var_assign(self, name, value, callback=None):
         self.__cmd('-var-assign %s %s' % (name, value), internal_callback=self.__on_var_assign, callback=callback)
     def __on_var_assign(self, data):
-        print data
         self.var_update()
         
-    def stack_list_locals(self, callback=None):
-        self.__cmd('-stack-list-locals 0', callback, internal_callback = self.__on_list_locals)
-
-    def __on_list_locals(self, data):
-        if hasattr(data, 'locals'):
-            self.locals = []
-            for entry in data.locals:                    
-                self.locals.append(entry['name'])
-        for expr in self.locals:
-            try: 
-                self.vars.name_from_expr(expr)
-            except Exception, e: 
-                print e
-                self.var_create(expr)
+    def stack_list_locals(self, frame=0, callback=None):
+        self.__cmd('-stack-select-frame %d' % frame, callback, internal_callback = functools.partial(self.__on_list_locals_fs, callback=callback))
+    def __on_list_locals_fs(self, data, callback=None):
+        self.__cmd('-stack-list-locals 0', callback=callback)
         
     def file_list_globals(self, file='', callback=None):
         self.__cmd('-symbol-list-variables', callback)
