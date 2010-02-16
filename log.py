@@ -2,7 +2,6 @@ import logging
 import traceback
 import sys
 
-# Borrowed the LogStream from fogle  -- Thanks man!
 class LogStream(object):
     def __init__(self, logger=None, level=logging.INFO):
         self.level = level

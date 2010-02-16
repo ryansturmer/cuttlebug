@@ -373,7 +373,8 @@ class EditorControl(stc.StyledTextCtrl):
             self.mnu_set_bp.hide()
             
         self.PopupMenu(self.popup_menu.build(self)) 
-
+        evt.Skip()
+        
     def get_name(self):
         if self.file_path:
             root, name = os.path.split(self.file_path)

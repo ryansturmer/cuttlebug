@@ -33,7 +33,6 @@ class View(wx.Panel):
 
     def _bind(self, event, function_name):
         if hasattr(self, function_name) and self.controller:
-            print "Binding %s to %s" % (self, function_name)
             handler = getattr(self, "_%s" % function_name)
             self.controller.Bind(event, handler)
 

@@ -76,7 +76,13 @@ class GDB(wx.EvtHandler):
         self.__lexer = GDBMILexer.GDBMILexer(None)
         self.__parser = GDBMIParser.GDBMIParser(None)
         self.__deleted = []
-        
+       
+    def update(self):
+        self.__update_breakpoints()
+        self.stack_list_frames()
+        self.stack_list_locals()
+        self.var_update()
+
     def __parse(self, string):
         '''
         Parse a SINGLE gdb-mi response, returning a GDBMIResponse object
@@ -127,11 +133,8 @@ class GDB(wx.EvtHandler):
     def __on_stopped(self, record):
         self.state = STOPPED
         self.post_event(GDBEvent(EVT_GDB_STOPPED, self, data=record))
-        self.__update_breakpoints()
-        self.stack_list_frames()
-        self.stack_list_locals()
-        self.var_update()
-    
+        self.update()
+        
     def __on_error(self, command, record):
         if "while target is running" in record.msg: 
             self.__on_running(record)

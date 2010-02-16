@@ -1,5 +1,6 @@
 import gdb
 import odict
+from util import bidict
 
 class ParseError(Exception): pass
 
@@ -13,22 +14,34 @@ DOUBLE = 5
 STRUCT = 6
 UNION = 7
 TYPEDEF = 8 # Weird case
+SHORT = 9
+LONG = 10
 
 SIGNED,UNSIGNED = 1,0
 
-SHORT,LONG = 0,1
+SIZE_SHORT,SIZE_LONG = 0, 1
 
-TYPES = {"void": VOID, "char":CHAR,"short": SHORT, "float":FLOAT, "int":INT, "long":LONG, "struct":STRUCT, "union":UNION}
-SIZES = {"short":SHORT, "long":LONG}
+TYPES = bidict({"void": VOID, "char":CHAR,"short": SHORT, "float":FLOAT, "double": DOUBLE, "int":INT, "long":LONG, "struct":STRUCT, "union":UNION})
+SIZES = bidict({"short":SHORT, "long":LONG})
 
 class Type(object):
     @staticmethod
     def parse(type_string):
         try:
-            Type.parse_proper(type_string)
+            return Type.parse_proper(type_string)
         except ParseError:
             return Type(UNSPECIFIED, UNSPECIFIED, UNSPECIFIED, UNSPECIFIED, UNSPECIFIED, TYPEDEF)
-        
+    
+    @property
+    def icon_name(self):
+        retval = ''
+        if self.signed in (SIGNED,UNSIGNED):
+            retval = "signed_" if self.signed else "unsigned_"
+        if self.size in SIZES: retval += SIZES[self.size] + "_"
+        if self.type in TYPES: retval += TYPES[self.type]
+        retval += "_star.png" if self.pointer else ".png"
+        return retval
+    
     @staticmethod
     def parse_proper(type_string):
         parts = type_string.split()
@@ -37,8 +50,8 @@ class Type(object):
         static = "static" in parts
 
         size = UNSPECIFIED
-        if "short" in parts: size = SHORT
-        if "long" in parts: size = LONG
+        if "short" in parts: size = SIZE_SHORT
+        if "long" in parts: size = SIZE_LONG
 
         pointer = False
         if parts[-1] == '*':
@@ -73,7 +86,7 @@ class Type(object):
         volatile = "volatile " if self.volatile else ""
         signed = {SIGNED:"signed ", UNSIGNED:"unsigned ", UNSPECIFIED:""}[self.signed]
         type = {INT:"int ", CHAR:"char ", FLOAT:"float ", DOUBLE:"double ", VOID:"void ", UNSPECIFIED:""}[self.type]
-        size = {SHORT:"short ", LONG:"long ", UNSPECIFIED:""}[self.size]
+        size = {SIZE_SHORT:"short ", SIZE_LONG:"long ", UNSPECIFIED:""}[self.size]
         pointer = "*" if self.pointer else ""
         return "%s%s%s%s%s%s%s" % (static, volatile, signed, size, type, pointer, self.value)
 

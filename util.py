@@ -9,6 +9,49 @@ jinja_env = Environment(loader=PackageLoader('dummy', 'templates'))
 settings_template = jinja_env.get_template('settings.xml')
 project_template = jinja_env.get_template('project.xml')    
     
+class bidict(object):
+    
+    def __init__(self, d):
+        self.d1 = {}
+        self.d2 = {}
+        for key, value in d.iteritems():
+            self[key] = value
+    def __getitem__(self, key):
+        try: return self.d1[key]
+        except KeyError: return self.d2[key]        
+    def __setitem__(self, key, value):
+        self.d1[key] = value
+        self.d2[value] = key
+    
+    def __contains__(self, key):
+        return key in self.d1 or key in self.d2
+    def keys(self, direction=False):
+        return d1.keys() if not direction else d2.keys()
+    
+    def values(self, direction=False):
+        return self.keys(not direction)
+    
+    def reverse(self):
+        self.d1, self.d2 = self.d2, self.d1
+        
+    def get(self, key, default):
+        try:
+            return self[key]
+        except KeyError:
+            return default    
+    def iteritems(self, direction=False):
+        return self.d1.iteritems() if not direction else self.d2.iteritems()
+    
+    def pop(self, key):
+        try:
+            val = self.d1.pop(key)
+            self.d2.pop(val)
+            return val
+        except KeyError:
+            val = self.d2.pop(key)
+            self.d1.pop(val)
+            return val
+        
 class PersistedFrame(wx.Frame):
     
     def __init__(self, *args, **kwargs):
@@ -143,6 +186,10 @@ def padded(window, padding, sides=wx.ALL):
 def get_icon(file):
     file = 'icons/%s' % file
     return wx.Bitmap(file)
+
+def has_icon(file):
+    print 'icons/%s' % file
+    return os.path.exists('icons/%s' % file)
 
 # Taken from http://code.activestate.com/recipes/302594/
 
@@ -425,7 +472,11 @@ class ArtListMixin(object):
         self.__image_list = wx.ImageList(16,16)
         self.__args = args
         self.__kwargs = kwargs
-        
+    
+    def get_art(self):
+        return self.__art
+    art = property(get_art)
+    
     def clear_art(self):
         self.__art = {}
         self.__image_list = wx.ImageList(16,16)

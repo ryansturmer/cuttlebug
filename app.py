@@ -50,10 +50,10 @@ class Controller(wx.EvtHandler):
 
     def setup_gdb(self):
         g = gdb.session
-        g.mi_log = self.mi_logger
-        g.console_log = self.gdb_logger
-        g.target_log = self.gdb_logger
-        g.log_log = self.gdb_logger        
+        g.mi_log = logging.getLogger('gdb.mi')
+        g.console_log = logging.getLogger('gdb.stream')
+        g.target_log = logging.getLogger('gdb.stream')
+        g.log_log = logging.getLogger('gdb.stream')
         g.Bind(gdb.EVT_GDB_STARTED, self.on_gdb_started)
         g.Bind(gdb.EVT_GDB_FINISHED, self.on_gdb_finished)
         g.Bind(gdb.EVT_GDB_ERROR, self.on_gdb_error)
@@ -65,23 +65,7 @@ class Controller(wx.EvtHandler):
         self.gdb = g
   
     def setup_logs(self):
-        log_view = self.frame.log_view
-        log_view.add_logger(logging.getLogger('stdout'), icon="application_osx_terminal.png", format="%(message)s")
-        
-        self.mi_logger = logging.getLogger('gdb.mi')
-        log_view.add_logger(self.mi_logger, icon="gnu.png")
-
-        self.gdb_logger = logging.getLogger('gdb.stream')
-        log_view.add_logger(self.gdb_logger, format="%(message)s", icon="gnu.png", on_input=self.gdb_input_handler)
-       
-        self.error_logger = logging.getLogger('errors')
-        log_view.add_logger(self.error_logger, icon="stop.png")
-
-        self.build_logger = logging.getLogger("Build")
-        log_view.add_logger(self.build_logger, format="%(message)s", icon="brick.png")
-        
-        log.redirect_stdout('stdout')
-        
+        pass
 
     def gdb_input_handler(self, txt):
         if self.state == ATTACHED:
@@ -113,8 +97,6 @@ class Controller(wx.EvtHandler):
 
         
         except Exception, e:
-            print e
-            print "Couldn't load session.  Creating empty session"
             self.session = {}
     
     def save_session(self):
@@ -189,6 +171,7 @@ class Controller(wx.EvtHandler):
             self.frame.locals_view.set_model(self.gdb.vars)
             self.frame.data_view.set_model(self.gdb)
             self.halt()
+            self.gdb.update()
         if self.state == IDLE or self.state == RUNNING:
             self.exit_current_state()
             self.frame.statusbar.icon = "connect.png"
@@ -359,6 +342,7 @@ class Controller(wx.EvtHandler):
         if result.cls == 'error':
             wx.CallAfter(self.frame.error_msg, result.msg)
         else:
+            self.gdb.update()
             self.frame.statusbar.text = "Ready!"
     # ATTACH TO GDB
     def attach(self):
@@ -422,13 +406,14 @@ class Controller(wx.EvtHandler):
 
     # BUILD EVENTS
     def on_build_started(self, evt):
-        build_view = self.frame.build_view
+        #build_view = self.frame.build_view
         #self.state = BUILDING
         menu.manager.publish(menu.BUILD_STARTED)
         self.frame.statusbar.working = True
         self.frame.statusbar.text = "Performing build step..."
-        build_view.clear()
-
+        self.frame.log_view.clear_build()
+        self.frame.log_view.show_pane('Build')
+        
     def on_build_finished(self, evt):
         #self.state = IDLE
         self.frame.statusbar.working = False
@@ -437,7 +422,7 @@ class Controller(wx.EvtHandler):
         self.frame.project_view.update()
 
     def on_build_update(self, evt):
-        self.frame.build_view.update(str(evt.data))
+        self.frame.log_view.update_build(str(evt.data))
         evt.Skip()
         
     # VIEW EVENTS

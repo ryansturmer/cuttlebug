@@ -22,7 +22,7 @@ class Frame(util.PersistedFrame):
             
             # Create views
             self.manager = aui.AuiManager(self)
-            self.create_build_view()
+           # self.create_build_view()
             self.create_log_view()
             self.create_memory_view()
             self.create_locals_view()
@@ -30,13 +30,17 @@ class Frame(util.PersistedFrame):
             self.create_register_view()
             self.create_project_view()
             self.create_editor_view()
-            self.create_data_view()
+            self.create_runtime_view()
             
             self.controller.setup_logs()
             self.controller.load_session()
             self.controller.setup_gdb()
             
             self.manager.Update()
+
+           
+            print "Welcome to Cuttlebug!"
+
             
         def create_menu_bar(self):
             menubar = menu.manager.menu_bar(self)
@@ -81,7 +85,7 @@ class Frame(util.PersistedFrame):
             build.item('&Rebuild\tF10', self.on_rebuild, icon="rebuild.png", enable=[menu.PROJECT_OPEN, menu.BUILD_FINISHED], disable=[menu.PROJECT_CLOSE, menu.BUILD_STARTED])
             build.item('&Clean\tF8', self.on_clean, icon="edit-clear.png", enable=[menu.PROJECT_OPEN, menu.BUILD_FINISHED], disable=[menu.PROJECT_CLOSE, menu.BUILD_STARTED])
             build.separator()
-            build.item('New Custom Build &Target...', self.on_new_build_target, icon="brick.png",enable=[menu.PROJECT_OPEN, menu.BUILD_FINISHED], disable=[menu.PROJECT_CLOSE, menu.BUILD_STARTED])
+            #build.item('New Custom Build &Target...', self.on_new_build_target, icon="brick.png",enable=[menu.PROJECT_OPEN, menu.BUILD_FINISHED], disable=[menu.PROJECT_CLOSE, menu.BUILD_STARTED])
             # DEBUG (Disabled till a project is opened)
             debug = menubar.menu("&Debug")
             debug.item('&Run\tF5', self.on_run, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
@@ -97,21 +101,19 @@ class Frame(util.PersistedFrame):
             # VIEW
             view = menubar.menu("&View")
             view.item('&Project\tAlt+P', self.on_toggle_project_view, icon="package.png")
-            view.item('&Build\tAlt+B', self.on_toggle_build_view, icon="brick.png")
-            view.item('&Logs\tAlt+L', self.on_toggle_log_view, icon="application_view_list.png")
+            view.item('&Runtime\tAlt+D', self.on_toggle_runtime_view, icon="computer.png")
             view.item('&Memory\tAlt+M', self.on_toggle_memory_view, icon="drive.png")
             view.item('&Breakpoints\tAlt+K', self.on_toggle_breakpoint_view, icon="breakpoint.png")
-            view.item('&Locals\tAlt+C', self.on_toggle_locals_view, icon="book.png")
-            view.item('&Data\tAlt+D', self.on_toggle_data_view, icon="application_view_list.png")
-            view.separator()
-            view.item("Windows go here")
+            view.item('&Logs\tAlt+L', self.on_toggle_log_view, icon="application_view_list.png")
+            #view.separator()
+            #view.item("Windows go here")
 
             # DEVELOPMENT (Remove for production)
-            devel = menubar.menu("&Devel")
-            devel.item( 'Development Stuff Goes Here', lambda x : None)
-            devel.item( 'Read Memory', self.on_read_memory)
-            devel.item('&GDB Command...', self.on_gdb_command)
-            devel.item('&MI Command...', self.on_mi_command)
+           # devel = menubar.menu("&Devel", visible=False)
+           # devel.item( 'Development Stuff Goes Here', lambda x : None)
+           # devel.item( 'Read Memory', self.on_read_memory)
+           # devel.item('&GDB Command...', self.on_gdb_command)
+           # devel.item('&MI Command...', self.on_mi_command)
         
             menu.manager.publish(menu.PROJECT_CLOSE)
             menu.manager.publish(menu.TARGET_DETACHED)
@@ -218,18 +220,18 @@ class Frame(util.PersistedFrame):
             self.locals_view.info = aui.AuiPaneInfo().Caption('Variables').Right().Name('VarView')
             self.manager.AddPane(self.locals_view, self.locals_view.info)
 
-        def create_data_view(self):
-            self.data_view = views.DataView(self, controller=self.controller)
-            self.data_view.info = aui.AuiPaneInfo().Caption('Runtime').Right().Name('RuntimeView')
-            self.manager.AddPane(self.data_view, self.data_view.info)
+        def create_runtime_view(self):
+            self.runtime_view = views.DataView(self, controller=self.controller)
+            self.runtime_view.info = aui.AuiPaneInfo().Caption('Runtime').Right().Name('RuntimeView')
+            self.manager.AddPane(self.runtime_view, self.runtime_view.info)
         
         def create_register_view(self):
             pass
 
-        def create_build_view(self):
-            self.build_view = views.BuildView(self, controller=self.controller)
-            self.build_view.info = aui.AuiPaneInfo().Caption('Build').Bottom().Name('BuildView') 
-            self.manager.AddPane(self.build_view, self.build_view.info)
+        #def create_build_view(self):
+        #    self.build_view = views.BuildView(self, controller=self.controller)
+        #    self.build_view.info = aui.AuiPaneInfo().Caption('Build').Bottom().Name('BuildView') 
+        #    self.manager.AddPane(self.build_view, self.build_view.info)
         
         def create_log_view(self):
             self.log_view = views.LogView(self, controller = self.controller)
@@ -283,7 +285,6 @@ class Frame(util.PersistedFrame):
                 close_source_windows = self.confirm("Close open project source files?")
                 if close_source_windows:
                     for file in self.editor_view.open_files:
-                        print file
                         self.editor_view.close(file)
                 self.controller.unload_project()
         
@@ -349,20 +350,18 @@ class Frame(util.PersistedFrame):
         def on_detach(self, evt):
             self.controller.detach()
 
-        def on_toggle_build_view(self, evt):
-            self.toggle_view(self.build_view)
+        #def on_toggle_build_view(self, evt):
+        #    self.toggle_view(self.build_view)
         def on_toggle_log_view(self, evt):
             self.toggle_view(self.log_view)
         def on_toggle_breakpoint_view(self, evt):
             self.toggle_view(self.breakpoint_view)
-        def on_toggle_locals_view(self, evt):
-            self.toggle_view(self.locals_view)
         def on_toggle_memory_view(self, evt):
             self.toggle_view(self.memory_view)
         def on_toggle_project_view(self, evt):
             self.toggle_view(self.project_view)
-        def on_toggle_data_view(self, evt):
-            self.toggle_view(self.data_view)
+        def on_toggle_runtime_view(self, evt):
+            self.toggle_view(self.runtime_view)
             
         def toggle_view(self, view):
             info = self.manager.GetPane(view)
