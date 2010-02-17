@@ -157,14 +157,14 @@ class ProjectTree(wx.TreeCtrl):
         if item == self.root_item:
             if self.project:
                 evt.SetToolTip(self.project.directory)
-                return
-            
-        data = self.GetPyData(item)
-        try:
-            stat = os.stat(data)
-            evt.SetToolTip(data + "\n" + util.human_size(stat.st_size))
-        except:
-            pass
+        else:    
+            data = self.GetPyData(item)
+            try:
+                stat = os.stat(data)
+                evt.SetToolTip(data + "  " + util.human_size(stat.st_size))
+            except:
+                pass
+        evt.Skip() 
     def show_backups(self, show):
         self.backups_visible = bool(show)
 

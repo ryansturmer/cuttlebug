@@ -212,7 +212,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin):
         self.stack_item = self.AppendItem(root_item,'Call Stack')
         self.breakpoints_item = self.AppendItem(root_item, 'Breakpoints')
         self.registers_item = self.AppendItem(root_item, 'Registers')
-        self.set_item_art(self.registers_item, 'computer.png')
+        self.set_item_art(self.registers_item, 'chip.png')
         self.set_item_art(self.stack_item, 'stack.png')
         self.set_item_art(self.breakpoints_item, 'breakpoint.png')
         self.frames = bidict({})

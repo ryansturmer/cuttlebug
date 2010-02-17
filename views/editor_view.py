@@ -16,12 +16,24 @@ class QuickFindBar(wx.Panel):
         super(QuickFindBar, self).__init__(parent, -1)
         self.editor = editor
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        btn = wx.BitmapButton(self, -1, util.get_icon('ex.png'))
+        btn = util.plate_button(self, icon='ex.png')
         lbl = wx.StaticText(self, -1, "Find:")
+        match_case = util.checkbox(self, label="Match Case")
+        next = util.plate_button(self, icon='go-down.png', label=" Next")
+        prev = util.plate_button(self, icon='go-up.png', label=" Previous")
         txt = wx.TextCtrl(self, -1, style=wx.TE_PROCESS_ENTER)
+        
         sizer.Add(util.padded(btn, 3),0,wx.CENTER)
         sizer.Add(lbl,0, wx.CENTER)
+        sizer.AddSpacer(4)
         sizer.Add(txt,0, wx.CENTER)
+        sizer.AddSpacer(4)
+        sizer.Add(next, 0, wx.CENTER)
+        sizer.AddSpacer(4)
+        sizer.Add(prev, 0, wx.CENTER)
+        sizer.AddSpacer(4)
+        sizer.Add(match_case, 0, wx.CENTER)
+
         self.SetSizer(sizer)
         btn.Bind(wx.EVT_BUTTON, self.on_close)
         txt.Bind(wx.EVT_TEXT_ENTER, self.on_enter)
@@ -696,7 +708,8 @@ class Notebook(aui.AuiNotebook):
 
     def create_file_tab(self, path=None):
         if path:
-            path = self.controller.project.absolute_path(path)
+            if self.controller.project:
+                path = self.controller.project.absolute_path(path)
             window = self.get_file_tab(path)
 
             if window:

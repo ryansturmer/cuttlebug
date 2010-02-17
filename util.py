@@ -4,7 +4,10 @@ import odict
 from jinja2 import Environment, PackageLoader
 from os.path import abspath, dirname, normcase, normpath, splitdrive
 from os.path import join as path_join, commonprefix
+import wx.lib.platebtn as platebtn
 
+PLATEBTN_DEFAULT_STYLE = platebtn.PB_STYLE_GRADIENT | platebtn.PB_STYLE_SQUARE 
+PLATEBTN_DEFAULT_COLOUR = wx.WHITE
 jinja_env = Environment(loader=PackageLoader('dummy', 'templates'))
 settings_template = jinja_env.get_template('settings.xml')
 project_template = jinja_env.get_template('project.xml')    
@@ -97,12 +100,13 @@ def get_text(parent, question, title="", default=""):
     dlg.Destroy()
   
 def launch(file):
+    print file
     if os.name == 'posix':
         os.system('xdg-open %s' % file)
     elif os.name == 'nt':
-        os.system('start %s' % file)
+        os.system('start "%s"' % file)
     elif os.name == 'mac':
-        os.system('open %s' % file)
+        os.system('open "%s"' % file)
     else:
         return
     
@@ -170,13 +174,31 @@ def tool_item(window, toolbar, label, func, icon):
     return item
 
 def button(window, label='', func=None, icon=None, id=-1):
-    #if icon and isinstance(icon, str):
-    #    button = wx.BitmapButton(window, -1, bitmap=get_icon(icon), label=text, style=wx.BU_LEFT)
-    #else:
-    button = wx.Button(window, id, label)
+    if icon:
+        if isinstance(icon, str): icon = get_icon(icon)
+        button = wx.BitmapButton(window, id=id, bitmap=icon)
+    else:
+        button = wx.Button(window, id, label)
+    if func:
+        window.Bind(wx.EVT_BUTTON, func)
+    return button
+
+def plate_button(window, label='', func=None, icon=None, id=wx.ID_ANY, style=PLATEBTN_DEFAULT_STYLE):
+    if icon:
+        if isinstance(icon, str): icon=get_icon(icon)
+        button = platebtn.PlateButton(window, id, label=label, bmp=icon, style=style)
+    else:
+        button = platebtn.PlateButton(window, id, label=label, style=style)
+    button.SetPressColor(PLATEBTN_DEFAULT_COLOUR)
     if func:
         button.Bind(wx.EVT_BUTTON, func)
     return button
+
+def checkbox(window, label='', func=None, id=wx.ID_ANY):
+    item = wx.CheckBox(window, id=id, label=label)
+    if func:
+        window.Bind(wx.EVT_CHECKBOX, func)
+    return item
 
 def padded(window, padding, sides=wx.ALL):
     sizer = wx.BoxSizer(wx.VERTICAL)
