@@ -35,7 +35,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin):
         self.Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.on_get_tooltip)
         self.Bind(wx.EVT_TREE_BEGIN_LABEL_EDIT, self.on_begin_label_edit)
         self.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.on_end_label_edit)
-
+        self.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_select_item)
         self.model = None
         self.AddColumn('Context')
         self.AddColumn('Value')      
@@ -46,6 +46,10 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin):
     def on_begin_label_edit(self, evt):
         pass
     
+    def on_select_item(self, evt):
+        item = evt.GetItem()
+        if item in self.vars:
+            print self.vars[item]
     def on_end_label_edit(self, evt):
         item = evt.GetItem()
         data = self.GetPyData(item)
@@ -116,7 +120,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin):
         if name in self.vars:
             var_item = self.vars[name]
             self.SetItemText(var_item, var.expression, 0)
-            self.SetItemText(var_item, var.data, 1)
+            self.SetItemText(var_item, str(var.data), 1)
 
             if var.children:
                 self.SetItemHasChildren(var_item, True)

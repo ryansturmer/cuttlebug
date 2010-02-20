@@ -104,7 +104,7 @@ def launch(file):
     if os.name == 'posix':
         os.system('xdg-open %s' % file)
     elif os.name == 'nt':
-        os.system('start "%s"' % file)
+        os.startfile(str(file))
     elif os.name == 'mac':
         os.system('open "%s"' % file)
     else:
