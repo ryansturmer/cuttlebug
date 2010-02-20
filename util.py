@@ -27,7 +27,8 @@ class bidict(object):
         self.d2[value] = key
     
     def __contains__(self, key):
-        return key in self.d1 or key in self.d2
+        return (key in self.d1) or (key in self.d2)
+    
     def keys(self, direction=False):
         return d1.keys() if not direction else d2.keys()
     
@@ -180,19 +181,25 @@ def button(window, label='', func=None, icon=None, id=-1):
     else:
         button = wx.Button(window, id, label)
     if func:
-        window.Bind(wx.EVT_BUTTON, func)
+        button.Bind(wx.EVT_BUTTON, func)
     return button
 
 def plate_button(window, label='', func=None, icon=None, id=wx.ID_ANY, style=PLATEBTN_DEFAULT_STYLE):
-    if icon:
-        if isinstance(icon, str): icon=get_icon(icon)
-        button = platebtn.PlateButton(window, id, label=label, bmp=icon, style=style)
+    if os.name == "posix":
+        if icon and not label:
+            return button(window, '', func, icon, id=wx.ID_ANY)
+        else:
+            return button(window, label, func, None, id)
     else:
-        button = platebtn.PlateButton(window, id, label=label, style=style)
-    button.SetPressColor(PLATEBTN_DEFAULT_COLOUR)
-    if func:
-        button.Bind(wx.EVT_BUTTON, func)
-    return button
+        if icon:
+            if isinstance(icon, str): icon=get_icon(icon)
+            btn = platebtn.PlateButton(window, id, label=label, bmp=icon, style=style)
+        else:
+            btn = platebtn.PlateButton(window, id, label=label, style=style)
+            btn.SetPressColor(PLATEBTN_DEFAULT_COLOUR)
+        if func:
+            btn.Bind(wx.EVT_BUTTON, func)
+        return btn
 
 def checkbox(window, label='', func=None, id=wx.ID_ANY):
     item = wx.CheckBox(window, id=id, label=label)

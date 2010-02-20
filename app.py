@@ -146,8 +146,12 @@ class Controller(wx.EvtHandler):
         self.frame.open_file(path)
 
     def update_settings(self):
+        self.settings.save()
         self.frame.editor_view.update_settings()
 
+    def update_styles(self):
+        self.frame.editor_view.update_settings()
+        
     # IDE Functions, Building, Cleaning, Etc..
     def build(self):
         build_process = build.BuildProcess(self.project.build.build_cmd, notify=self, cwd=self.project.directory)
@@ -168,11 +172,9 @@ class Controller(wx.EvtHandler):
         menu.manager.publish(menu.TARGET_ATTACHED)
         #print "Entering the ATTACHED state."
         if self.state == IDLE:
-            self.gdb.set_exec(self.project.absolute_path(self.project.program.target))
             self.frame.locals_view.set_model(self.gdb.vars)
             self.frame.runtime_view.set_model(self.gdb)
             self.halt()
-            self.gdb.update()
         if self.state == IDLE or self.state == RUNNING:
             self.exit_current_state()
             self.frame.statusbar.icon = "connect.png"
@@ -315,7 +317,7 @@ class Controller(wx.EvtHandler):
         self.frame.editor_view.set_exec_location(file, line, goto)
         
     def on_halted(self, result):
-        pass
+        self.gdb.update()
         '''
         if result.cls == "stopped":
             self.change_state(ATTACHED)
@@ -379,6 +381,7 @@ class Controller(wx.EvtHandler):
     def on_gdb_started(self, evt):
         try:
             self.gdb.command('set target-async on')
+            self.gdb.set_exec(self.project.absolute_path(self.project.program.target))
             self.gdb.command(self.project.debug.attach_cmd, callback=self.on_attach_cmd)
         except Exception, e:
             self.frame.error(e)

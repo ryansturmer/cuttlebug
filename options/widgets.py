@@ -52,7 +52,7 @@ class SpinWidget(OptionsWidget, wx.SpinCtrl):
         wx.SpinCtrl.__init__(self, parent, -1, "")
         self.SetRange(1,100)
         self.SetValue(1)
-        self.Bind(wx.EVT_SPIN, self.on_change)
+        self.Bind(wx.EVT_SPINCTRL, self.on_change)
 
     def get_value(self):
         return self.GetValue()

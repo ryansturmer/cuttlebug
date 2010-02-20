@@ -219,7 +219,7 @@ class OptionsPanel(wx.Panel):
             self.parent.bind(widget, key)
                 
 class OptionsDialog(wx.Dialog):
-    def __init__(self, parent, title="Options", size=(600,400), icons=[], data=None):
+    def __init__(self, parent, title="Options", size=(600,400), icons=[], data=None, on_apply=None):
         super(OptionsDialog, self).__init__(parent, -1, title=title, size=size)
         self.bindings = {}
         self.data = data
@@ -233,22 +233,26 @@ class OptionsDialog(wx.Dialog):
         panel = wx.Panel(self, -1)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.AddStretchSpacer(1)
-        
-        self.btn_cancel = util.button(panel, id=wx.ID_CANCEL, func=self.on_cancel)
-        sizer.Add(util.padded(self.btn_cancel, 8), 0, wx.ALIGN_RIGHT)
-        
-        self.btn_apply = util.button(panel, id=wx.ID_APPLY, func=self.on_apply)
-        self.btn_apply.Disable()
-        sizer.Add(util.padded(self.btn_apply, 8), 0, wx.ALIGN_RIGHT)
-        
+
         self.btn_ok = util.button(panel, id=wx.ID_OK, func=self.on_ok)
         sizer.Add(util.padded(self.btn_ok, 8), 0, wx.ALIGN_RIGHT)
+
+        self.btn_cancel = util.button(panel, id=wx.ID_CANCEL, func=self.on_cancel)
+        sizer.Add(util.padded(self.btn_cancel, 8), 0, wx.ALIGN_RIGHT)                
         
+        sizer.AddSpacer(16)        
+        
+        self.btn_apply = util.button(panel, id=wx.ID_APPLY, func=self.on_apply)
+        sizer.Add(util.padded(self.btn_apply, 8), 0, wx.ALIGN_RIGHT)
+        self.btn_apply.Disable()
+
         panel.SetSizer(sizer)
         
         dlg_sizer.Add(panel, 0, wx.EXPAND)
         self.SetSizer(dlg_sizer)
-
+        
+        self.__apply_func = on_apply
+        
     def change(self):
         self.changed = True
         self.btn_apply.Enable()
@@ -257,29 +261,35 @@ class OptionsDialog(wx.Dialog):
         self.book.add_panel(page, page.name, parent=parent, icon=icon)
 
     def on_apply(self, evt):
+       print "apply"
        self.apply_changes()
 
     def on_ok(self, evt):
+        print "ok"
         self.apply_changes()
         self.EndModal(self.changed)
     
     def on_cancel(self, evt):
+        print "cancel"
         self.EndModal(0)
 
     def apply_changes(self):
+        print "Applying changes in %s" % self
         if self.data:
             for key in self.bindings:
                 widget = self.bindings[key]
                 self.data[key] = widget.get_value()
+        if callable(self.__apply_func):
+            self.__apply_func()
         self.btn_apply.Disable()
-
+            
     def bind(self, widget, key):
         if self.data:        
             self.bindings[key] = widget
             widget.set_value(self.data[key])
     
     @classmethod
-    def show(cls, parent, data=None):
-        dialog = cls(parent, data=data)
+    def show(cls, parent, data=None, on_apply=None):
+        dialog = cls(parent, data=data, on_apply=on_apply)
         dialog.Centre()
         dialog.ShowModal()

@@ -282,7 +282,7 @@ class LanguageStyles(wx.Panel):
         self.panel.set_styles(styles)
         
 class StyleDialog(wx.Dialog):
-    def __init__(self, parent, style_manager):
+    def __init__(self, parent, style_manager, on_apply=None):
         super(StyleDialog, self).__init__(parent, -1, 'Style Configuration')
         self.style_manager = style_manager
         self.load()
@@ -317,6 +317,7 @@ class StyleDialog(wx.Dialog):
         sizer.Add(buttons, 0, wx.EXPAND|wx.ALL&~wx.TOP, 8)
         self.SetSizerAndFit(sizer)
         self.apply = apply
+        self.apply_func = on_apply
     def load(self):
         style_manager = copy.deepcopy(self.style_manager)
         self.base_style = style_manager.base_style
@@ -351,6 +352,8 @@ class StyleDialog(wx.Dialog):
         event.Skip()
         self.apply.Disable()
         self.save()
+        if callable(self.apply_func):
+            self.apply_func()
         wx.PostEvent(self, StyleEvent(self, EVT_STYLE_CHANGED))
     def create_global_page(self, parent):
         page = wx.Panel(parent, -1)

@@ -111,8 +111,8 @@ class Settings(util.Category):
 
 class SettingsDialog(OptionsDialog):
 
-    def __init__(self, parent, title="Settings", size=(600,400), settings=None):
-        OptionsDialog.__init__(self, parent, title=title, size=size, data=settings, icons=["style.png"])
+    def __init__(self, parent, title="Settings", size=(600,400), settings=None, on_apply=None):
+        OptionsDialog.__init__(self, parent, title=title, size=size, data=settings, icons=["style.png"], on_apply=on_apply)
         self.create_style_panels()
 
     def create_style_panels(self):
@@ -146,8 +146,8 @@ class SettingsDialog(OptionsDialog):
         self.add_panel(debug_panel, icon='bug.png')
      
     @staticmethod
-    def show(parent, settings=None):
-        dialog = SettingsDialog(parent, settings=settings)
+    def show(parent, settings=None, on_apply=None):
+        dialog = SettingsDialog(parent, settings=settings, on_apply=on_apply)
         dialog.Centre()
         dialog.ShowModal() 
 

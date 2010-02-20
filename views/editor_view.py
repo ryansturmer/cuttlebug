@@ -19,8 +19,8 @@ class QuickFindBar(wx.Panel):
         btn = util.plate_button(self, icon='ex.png')
         lbl = wx.StaticText(self, -1, "Find:")
         match_case = util.checkbox(self, label="Match Case")
-        next = util.plate_button(self, icon='go-down.png', label=" Next")
-        prev = util.plate_button(self, icon='go-up.png', label=" Previous")
+        prev = util.plate_button(self, icon='go-up.png', label="Previous", id=wx.ID_UP)
+        next = util.plate_button(self, icon='go-down.png', label="Next", id=wx.ID_DOWN)
         txt = wx.TextCtrl(self, -1, style=wx.TE_PROCESS_ENTER)
         
         sizer.Add(util.padded(btn, 3),0,wx.CENTER)
@@ -28,9 +28,9 @@ class QuickFindBar(wx.Panel):
         sizer.AddSpacer(4)
         sizer.Add(txt,0, wx.CENTER)
         sizer.AddSpacer(4)
-        sizer.Add(next, 0, wx.CENTER)
-        sizer.AddSpacer(4)
         sizer.Add(prev, 0, wx.CENTER)
+        sizer.AddSpacer(4)
+        sizer.Add(next, 0, wx.CENTER)
         sizer.AddSpacer(4)
         sizer.Add(match_case, 0, wx.CENTER)
 
@@ -431,7 +431,6 @@ class EditorControl(stc.StyledTextCtrl):
 
     def show_line_numbers(self):
         self.SetMarginType(self.LINE_MARGIN, stc.STC_MARGIN_NUMBER)
-        self.SetMarginWidth(self.LINE_MARGIN, 0)
         self.update_line_numbers()
 
     def remove_exec_marker(self):
@@ -472,7 +471,9 @@ class EditorControl(stc.StyledTextCtrl):
                 if n < 4: text += ' ' * (4-n)
                 width = self.TextWidth(stc.STC_STYLE_LINENUMBER, text)
                 self.SetMarginWidth(self.LINE_MARGIN, width)
-                
+        else:
+            self.SetMarginWidth(self.LINE_MARGIN, 0)
+
     def detect_language(self):
         if self.controller:
             path = self.file_path
@@ -586,6 +587,7 @@ class EditorControl(stc.StyledTextCtrl):
             self.MarkerDefine(stc.STC_MARKNUM_FOLDER, stc.STC_MARK_BOXPLUS, "white", "#666666")
             self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_BOXMINUS, "white", "#666666")
         else:
+            print "Setting folding to OFF"
             self.SetProperty("fold", "0")
             self.SetMarginSensitive(self.FOLDING_MARGIN, False)
             self.SetMarginWidth(self.FOLDING_MARGIN, 0)

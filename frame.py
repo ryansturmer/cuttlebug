@@ -312,7 +312,7 @@ class Frame(util.PersistedFrame):
             self.editor_view.close()
 
         def on_styles(self, evt):
-            dialog = style_dialog.StyleDialog(None, self.controller.style_manager)
+            dialog = style_dialog.StyleDialog(None, self.controller.style_manager, on_apply=self.controller.update_styles)
             dialog.Centre()
             dialog.ShowModal() 
         
@@ -369,9 +369,7 @@ class Frame(util.PersistedFrame):
             self.manager.Update()
             
         def on_settings(self, evt):
-            settings.SettingsDialog.show(self, self.controller.settings)
-            self.controller.settings.save()
-            self.controller.update_settings()
+            settings.SettingsDialog.show(self, self.controller.settings, on_apply=self.controller.update_settings)
 
         # Events that manage the build process
         def on_clean(self, evt):
