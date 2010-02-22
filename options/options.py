@@ -1,6 +1,8 @@
 import wx
 import util
 import os
+
+
 class OptionsEvent(wx.PyEvent):
     def __init__(self, type, object=None):
         super(OptionsEvent, self).__init__()

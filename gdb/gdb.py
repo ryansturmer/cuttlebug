@@ -136,9 +136,10 @@ class GDB(wx.EvtHandler):
         self.update()
         
     def __on_error(self, command, record):
+        # We make some corrections to the debugger state based on feedback from error messages
         if "while target is running" in record.msg: 
             self.__on_running(record)
-        elif "while target is stopped" in record.msg:
+        elif "while target is stopped" in record.msg or "not executing" in record.msg:
             self.__on_stopped(record)
 
         self.post_event(GDBEvent(EVT_GDB_ERROR, self, data=record.msg))
@@ -233,9 +234,11 @@ class GDB(wx.EvtHandler):
                 self.stack.add_frame(level, addr, func,  fullname, line)
             self.post_event(GDBEvent(EVT_GDB_UPDATE_STACK, self, data=self.stack))
 
-    def var_create(self, expression, floating=True, frame=0, callback=None):
+    def var_create(self, expression, floating=False, frame=0, callback=None):
         if floating:
             frame = "@"
+        if frame == 0:
+            frame = "*"
         name = "cvar%d" % self.__varname_idx # We keep our own names so we can track expressions
         self.__varname_idx += 1
         self.__cmd('-var-create %s %s %s' % (name, frame, expression), callback=callback, internal_callback = functools.partial(self.__on_var_created, expression, frame))
@@ -249,7 +252,7 @@ class GDB(wx.EvtHandler):
             name = data.name
             value = [] if numchild else data.value
             # Update the model and notify
-            self.vars.add(name, Variable(name, expression, type, children=numchild, data=value))
+            self.vars.add(name, Variable(name, expression, type, children=numchild, data=value, frame=frame))
             self.post_event(GDBEvent(EVT_GDB_UPDATE_VARS, self, data=[name]))
         except Exception, e:
             print "Exception creating variable: %s" % e

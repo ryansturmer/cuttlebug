@@ -19,8 +19,9 @@ class QuickFindBar(wx.Panel):
         btn = util.plate_button(self, icon='ex.png')
         lbl = wx.StaticText(self, -1, "Find:")
         match_case = util.checkbox(self, label="Match Case")
-        prev = util.plate_button(self, icon='go-up.png', label="Previous", id=wx.ID_UP)
-        next = util.plate_button(self, icon='go-down.png', label="Next", id=wx.ID_DOWN)
+        whole_word = util.checkbox(self, label="Whole Word")
+        prev = util.plate_button(self, icon='go-up.png', label="Previous", id=wx.ID_UP, func=self.on_prev)
+        next = util.plate_button(self, icon='go-down.png', label="Next", id=wx.ID_DOWN, func=self.on_next)
         txt = wx.TextCtrl(self, -1, style=wx.TE_PROCESS_ENTER)
         
         sizer.Add(util.padded(btn, 3),0,wx.CENTER)
@@ -33,6 +34,8 @@ class QuickFindBar(wx.Panel):
         sizer.Add(next, 0, wx.CENTER)
         sizer.AddSpacer(4)
         sizer.Add(match_case, 0, wx.CENTER)
+        sizer.AddSpacer(4)
+        sizer.Add(whole_word, 0, wx.CENTER)
 
         self.SetSizer(sizer)
         btn.Bind(wx.EVT_BUTTON, self.on_close)
@@ -41,6 +44,8 @@ class QuickFindBar(wx.Panel):
         txt.Bind(wx.EVT_KEY_DOWN, self.on_key)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key)
         self.textctrl = txt
+        self.match_case = match_case
+        self.whole_word = whole_word
 
     def show_and_focus(self):
         self.GetParent().Freeze()
@@ -55,7 +60,16 @@ class QuickFindBar(wx.Panel):
         self.GetParent().Layout()
         self.GetParent().Thaw()
         
+    def on_next(self, evt):
+        self.find_next(self.textctrl.GetValue())
+
+    def on_prev(self, evt):
+        print "Previous?"
+        
     def find_next(self, text):
+        flags = 0
+        if self.match_case.GetValue(): flags |= stc.STC_FIND_MATCHCASE
+        if self.whole_word.GetValue(): flags |= stc.STC_FIND_WHOLEWORD        
         if not text:
             self.set_color(FOUND_COLOR)
             return
@@ -64,7 +78,7 @@ class QuickFindBar(wx.Panel):
             self.editor.SetAnchor(loc)
             self.editor.SetCurrentPos(loc)
             self.editor.SearchAnchor()
-            idx = self.editor.SearchNext(0, text)
+            idx = self.editor.SearchNext(flags, text)
             if idx == -1:
                 continue
             else:

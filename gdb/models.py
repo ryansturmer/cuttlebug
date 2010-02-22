@@ -103,10 +103,11 @@ class Type(object):
                 
 class Variable(object):
     
-    def __init__(self, name, expression, type, children=0, data=None):
+    def __init__(self, name, expression, type, children=0, data=None, frame=None):
         self.type = type
         self.data = data
         self.name = name
+        self.frame = frame
         self.expression = expression
         self.children = int(children)
     
@@ -126,7 +127,7 @@ class GDBStackFrame(object):
         self.fullname = fullname or ''
     @property
     def key(self):
-        return "%d:%s:%s:%s" % (self.level, self.func, self.file, self.fullname)
+        return "%s:%s:%s" % (self.func, self.file, self.fullname)
     
 #    def __cmp__(self, x):
 #        return cmp(self.level,x.level) and cmp(self.addr,x.addr) and cmp(self.file,x.file) and cmp(self.line,x.line)
@@ -153,26 +154,19 @@ class GDBStackModel(object):
     @property
     def keys(self):
         return [frame.key for frame in self]
-    
-    def get_frame_by_key(self, key):
-        for frame in self:
-            if frame.key == key: 
-                return frame
-        raise KeyError("No such key in stack")
-    
-    def has_key(self, key):
-        try:
-            self.get_frame_by_key(key)
-            return True
-        except KeyError:
-            return False
-            
+                
     def clear(self):
         self.frames = []
             
     def __iter__(self):
         return iter(self.frames)
     
+    def __len__(self):
+        return len(self.frames)
+    
+    def __getitem__(self, item):
+        return self.frames[int(item)]
+            
     @property
     def depth(self):
         return len(self.frames)
@@ -180,7 +174,7 @@ class GDBStackModel(object):
     def pretty(self):
         retval =''
         for frame in reversed(self):
-            retval += '  '*frame.depth + str(frame) + "\n"
+            retval += ('  '*(len(self)-frame.level)) + str(frame) + "\n"
         return retval
     
 class GDBVarModel(object):

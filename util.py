@@ -14,7 +14,8 @@ project_template = jinja_env.get_template('project.xml')
     
 class bidict(object):
     
-    def __init__(self, d):
+    def __init__(self, d=None):
+        d=d or {}
         self.d1 = {}
         self.d2 = {}
         for key, value in d.iteritems():
@@ -56,6 +57,8 @@ class bidict(object):
             self.d1.pop(val)
             return val
         
+    def __str__(self):
+        return 'b' + str(self.d1)
 class PersistedFrame(wx.Frame):
     
     def __init__(self, *args, **kwargs):
