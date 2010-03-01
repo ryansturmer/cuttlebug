@@ -4,9 +4,16 @@ import antlr3, GDBMILexer, GDBMIParser
 import util, odict
 import functools
 
-from models import Type, Variable, GDBVarModel, GDBStackModel
+from models import Type, Variable, GDBVarModel, GDBStackModel, GDBRegisterModel
 STOPPED = 0
 RUNNING = 1
+
+HEXADECIMAL = 'x'
+OCTAL = 'o'
+BINARY = 't'
+DECIMAL = 'd'
+RAW = 'r'
+NATURAL = 'n'
 
 def escape(s):
     return s.replace("\\", "\\\\")
@@ -29,11 +36,8 @@ EVT_GDB_UPDATE_BREAKPOINTS = wx.PyEventBinder(wx.NewEventType())
 
 EVT_GDB_UPDATE_VARS = wx.PyEventBinder(wx.NewEventType())
 EVT_GDB_UPDATE_STACK = wx.PyEventBinder(wx.NewEventType())
+EVT_GDB_UPDATE_REGISTERS = wx.PyEventBinder(wx.NewEventType())
 
-
-#EVT_GDB_EXECUTE_UPDATE
-#EVT_GDB_LOCALS_UPDATE
-#EVT_GDB_MEMORY_UPDATE
 
 EVT_GDB_RUNNING = wx.PyEventBinder(wx.NewEventType())
 EVT_GDB_STOPPED = wx.PyEventBinder(wx.NewEventType())
@@ -55,10 +59,12 @@ class GDB(wx.EvtHandler):
         self.cmd_string = cmd
         self.vars = GDBVarModel(self)
         self.stack = GDBStackModel(self)
+        self.registers = GDBRegisterModel(self)
         
     def start(self):
         self.__clear()
         self.subprocess = util.Process(self.cmd_string, start=self.on_start, stdout=self.on_stdout, end=self.on_end)
+        self.data_list_register_names()
         #self.cmd('-gdb-set target-async on')
         
     def __clear(self):
@@ -73,6 +79,7 @@ class GDB(wx.EvtHandler):
         self.locals = []
         self.vars = GDBVarModel(self)
         self.stack = GDBStackModel(self)
+        self.registers = GDBRegisterModel(self)
         self.__lexer = GDBMILexer.GDBMILexer(None)
         self.__parser = GDBMIParser.GDBMIParser(None)
         self.__deleted = []
@@ -82,6 +89,7 @@ class GDB(wx.EvtHandler):
         self.stack_list_frames()
         self.stack_list_locals()
         self.var_update()
+        self.data_list_register_values()
 
     def __parse(self, string):
         '''
@@ -218,6 +226,23 @@ class GDB(wx.EvtHandler):
    
     def cmd(self, cmd, callback=None):
         self.__cmd(cmd, callback)
+    
+    def __clear_condition(self, condition, data):
+        condition.acquire()
+        condition.notify()
+        condition.release()
+        
+    def __dummy(self, data): pass
+        
+    def __blocking_frameselect(self, frame):
+        self.thing = False
+        cv = threading.Condition(threading.RLock())
+        try: frame = int(frame)
+        except: frame = 0
+        self.__cmd('-stack-select-frame %d' % int(frame), internal_callback = functools.partial(self.__clear_condition, cv), callback=self.__dummy)
+        cv.acquire()
+#        cv.wait() # TODO FIX THIS!
+        cv.release()
         
     def stack_list_frames(self, callback=None):
         self.__cmd('-stack-list-frames', internal_callback=self.__on_stack_list_frames, callback=callback)
@@ -234,12 +259,16 @@ class GDB(wx.EvtHandler):
                 self.stack.add_frame(level, addr, func,  fullname, line)
             self.post_event(GDBEvent(EVT_GDB_UPDATE_STACK, self, data=self.stack))
 
-    def var_create(self, expression, floating=False, frame=0, callback=None):
+    def var_create(self, expression, floating=False, frame=0, callback=None, name=None):
         if floating:
             frame = "@"
+
+        if not floating:
+            self.__blocking_frameselect(frame)
         if frame == 0:
             frame = "*"
-        name = "cvar%d" % self.__varname_idx # We keep our own names so we can track expressions
+
+        name = name or "cvar%d" % self.__varname_idx # We keep our own names so we can track expressions
         self.__varname_idx += 1
         self.__cmd('-var-create %s %s %s' % (name, frame, expression), callback=callback, internal_callback = functools.partial(self.__on_var_created, expression, frame))
         return name
@@ -316,6 +345,7 @@ class GDB(wx.EvtHandler):
         self.__cmd('-target-exec-status', callback, internal_callback=self.__on_exec_status)
         
     def __on_exec_status(self, data):
+        return
         print data
         
     def exec_continue(self, callback=None):
@@ -328,6 +358,7 @@ class GDB(wx.EvtHandler):
         self.__cmd('-exec-jump %s\n' % address, callback)
    
     def exec_finish(self, callback=None):
+        self.__blocking_frameselect(0)
         self.__cmd('-exec-finish\n', callback)
    
     def exec_until(self, file, line, callback=None):
@@ -353,9 +384,27 @@ class GDB(wx.EvtHandler):
     def break_list(self, callback=None):
         self.__cmd('-break-list\n', callback)
 
-    def get_register_names(self):
-        self.command('-data-list-register-names')
-        
+    def data_list_register_names(self, callback=None):
+        self.__cmd('-data-list-register-names', internal_callback=self.__on_list_register_names, callback=callback)        
+    def __on_list_register_names(self, data):
+        if 'register-names' in data:
+            self.registers.set_names(data['register-names'])
+
+    def data_list_register_values(self, callback=None):
+        self.__cmd('-data-list-register-values r', internal_callback=self.__on_list_register_values, callback=callback)        
+    def __on_list_register_values(self, data):
+        if 'register-values' in data:
+            changed = []
+            for d in data['register-values']:
+                n = int(d['number'])
+                new_value = d['value']
+                old_value = self.registers.get_value_from_number(n)
+                self.registers.set_value_from_number(n,new_value)
+                if new_value != old_value:
+                    changed.append(self.registers.get_name_from_number(n))
+            
+            self.post_event(GDBEvent(EVT_GDB_UPDATE_REGISTERS, self, data=changed))
+
     def break_insert(self, file, line, hardware=False, temporary=False, callback=None):
         self.__cmd('-break-insert %s %s %s:%d' % ("-h" if hardware else "", "-t" if temporary else "", os.path.normpath(file), line), callback=callback, internal_callback=self.__update_breakpoints)
                 

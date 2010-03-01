@@ -123,7 +123,7 @@ class StatusBar(wx.StatusBar):
 
 class DictListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.TextEditMixin):
     
-    def __init__(self, parent):
+    def __init__(self, parent, color_changes=True):
         wx.ListCtrl.__init__(self, parent, -1, style=wx.LC_REPORT | wx.LC_VIRTUAL | wx.LC_HRULES)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         listmix.TextEditMixin.__init__(self)
@@ -139,7 +139,7 @@ class DictListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.TextEdit
 
         # Attributes (for changing list item colors)
         self.redattr = wx.ListItemAttr()
-        self.redattr.SetTextColour("red")
+        self.redattr.SetTextColour("red") if color_changes else self.redattr.SetTextColour("black")
         self.blackattr = wx.ListItemAttr()
         self.blackattr.SetTextColour("black")
 
@@ -182,6 +182,9 @@ class DictListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.TextEdit
     def __iter__(self):
         return iter(self.__items.keys()[:])
 
+    def __delitem__(self, key):
+        self.remove_item(key)
+        
     def remove_item(self, key):
         try:
             self.__items.pop(key)

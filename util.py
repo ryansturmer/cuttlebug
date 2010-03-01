@@ -22,7 +22,8 @@ class bidict(object):
             self[key] = value
     def __getitem__(self, key):
         try: return self.d1[key]
-        except KeyError: return self.d2[key]        
+        except KeyError: return self.d2[key]
+                
     def __setitem__(self, key, value):
         self.d1[key] = value
         self.d2[value] = key
@@ -31,7 +32,7 @@ class bidict(object):
         return (key in self.d1) or (key in self.d2)
     
     def keys(self, direction=False):
-        return d1.keys() if not direction else d2.keys()
+        return self.d1.keys() if not direction else self.d2.keys()
     
     def values(self, direction=False):
         return self.keys(not direction)
@@ -59,6 +60,7 @@ class bidict(object):
         
     def __str__(self):
         return 'b' + str(self.d1)
+    
 class PersistedFrame(wx.Frame):
     
     def __init__(self, *args, **kwargs):
@@ -75,7 +77,6 @@ class PersistedFrame(wx.Frame):
             print "Couldn't load persisted window data: %s" % e
         
     def on_persist(self, evt):
-        print "Close event fired"
         maximized = self.IsMaximized()
         x,y = self.GetPosition()
         width,height = self.GetSize()
@@ -83,7 +84,6 @@ class PersistedFrame(wx.Frame):
         import settings
         if not self.IsIconized():
             try:
-                print "saving persisted window data"
                 settings.session_set(str(self.__class__), (maximized, x, y, width, height))
                 settings.save_session()
             except Exception, e:
@@ -91,7 +91,6 @@ class PersistedFrame(wx.Frame):
             finally:
                 evt.Skip()
         else:
-            print "Skipping save of data due to iconized window"
             evt.Skip()
 
 def get_text(parent, question, title="", default=""):
@@ -220,7 +219,6 @@ def get_icon(file):
     return wx.Bitmap(file)
 
 def has_icon(file):
-    print 'icons/%s' % file
     return os.path.exists('icons/%s' % file)
 
 # Taken from http://code.activestate.com/recipes/302594/
@@ -527,3 +525,143 @@ class ArtListMixin(object):
                 self.__art[art] = self.__image_list.Add(get_icon(art))
         self.SetImageList(self.__image_list, *self.__args, **self.__kwargs)
 
+
+class TreeItemKey(object):
+    def __init__(self, parent):
+        self.parent = parent
+        
+    def is_ok(self):
+        return self in self.parent._items
+
+class KeyTree(object):
+    def __init__(self):
+        self._items = {}
+            
+    def append_item(self, parent_key, name):
+        parent = self._items[parent_key]
+        item = self.AppendItem(parent, name)
+        key = TreeItemKey(self)
+        self._items[key] = item
+        self.SetItemPyData(item, (key, None))
+        return key
+    '''
+    def walk(self, key):
+        first, cookie = self.get_first_child(key)
+        if first.is_ok(): 
+            yield first
+            next, cookie = self.get_next_child(key, cookie)
+            while next.is_ok(): 
+                for child in self.walk(next): yield child
+                yield next
+                next, cookie = self.get_next_child(key, cookie)
+    '''
+    
+    def walk(self, top_item, include_root=True):
+        retval = [top_item] if include_root else []
+        child, cookie = self.get_first_child(top_item)
+        while child.is_ok():
+             retval.extend(self.walk(child))
+             child, cookie = self.get_next_child(top_item, cookie)
+        return retval
+        
+    def get_parent(self, key):
+        item = self._items[key]
+        item = self.GetItemParent(item)
+        if item.IsOk():
+            return self.get_key(item)
+        else:
+            return TreeItemKey(self)
+    
+    def is_descendent(self, child_key, parent_key):
+        parent = self.get_parent(child_key)
+        while parent.is_ok():
+            if parent == parent_key:
+                return True
+            parent = self.get_parent(parent)
+        return False
+    
+    def get_first_child(self, key):
+        item = self._items[key]
+        i, cookie = self.GetFirstChild(item)
+        if i.IsOk():
+            return self.get_key(i), cookie
+        else:
+            return TreeItemKey(self), cookie # Return a key that's NOT ok
+        
+    def get_next_child(self, key, cookie):
+        item = self._items[key]
+        i, cookie = self.GetNextChild(item, cookie)
+        if i.IsOk():
+            return self.get_key(i), cookie
+        else:
+            return TreeItemKey(self), cookie
+        
+    def children(self, key):
+        child, cookie = self.get_first_child(key)
+        while child.is_ok():
+            yield child
+            child, cookie = self.get_next_child(key, cookie)
+            
+    def get_children_count(self, key, recursive=True):
+        item = self._items[key]
+        return self.GetChildrenCount(item, recursive)
+        
+    def get_key(self, item):
+        if item.IsOk():
+            return self.GetItemPyData(item)[0]
+        else:
+            raise KeyError
+        
+    def get_event_item(self, evt):
+        return self.get_key(evt.GetItem())
+    
+    def get_item_data(self, key):
+        item = self._items[key]
+        return self.GetItemPyData(item)[1]
+    
+    def set_item_data(self, key, data):
+        item = self._items[key]
+        key, old_data = self.GetItemPyData(item)
+        self.SetItemPyData(item, (key, data))
+        
+    def set_item_image(self, key, image, style=wx.TreeItemIcon_Normal):
+        item = self._items[key]
+        self.SetItemImage(item, image, style)
+        
+    def set_item_has_children(self, key, has_children):
+        item = self._items[key]
+        self.SetItemHasChildren(item, has_children)
+    
+    def set_item_text(self, key, text, column=0):
+        item = self._items[key]
+        self.SetItemText(item, text, column)
+        
+    def set_item_bold(self, key, bold):
+        item = self._items[key]
+        self.SetItemBold(item, bold)
+
+    def set_item_text_colour(self, key, colour):
+        item = self._items[key]
+        self.SetItemTextColour(item, colour)
+        
+    def add_root(self, name):
+        item = self.AddRoot(name)
+        key = TreeItemKey(self)
+        self._items[key] = item
+        self.SetItemPyData(item, (key, None))
+        return key
+    
+    def delete(self, key):
+        item = self._items.pop(key)
+        self.Delete(item)
+    
+    def delete_children(self, key):
+        item = self._items[key]
+        to_be_removed = list(self.children(key))
+        self.DeleteChildren(item)
+        for key in to_be_removed:
+            self._items.pop(key)
+    
+    def collapse(self, key):
+        item = self._items[key]
+        self.Collapse(item)

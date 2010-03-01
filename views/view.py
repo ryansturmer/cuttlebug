@@ -19,6 +19,7 @@ class View(wx.Panel):
     def __init__(self, *args, **kwargs):
         self.controller = kwargs.pop('controller', None)
         super(View, self).__init__(*args, **kwargs)
+        self.model = None
         if self.controller:
             self._bind(app.EVT_APP_PROJECT_CLOSED, "on_project_close")
             self._bind(app.EVT_APP_PROJECT_OPENED, "on_project_open")
@@ -30,7 +31,9 @@ class View(wx.Panel):
 #            self._bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, "on_breakpoint_update")
  #           self._bind(gdb.EVT_GDB_UPDATE_LOCALS, "on_locals_update")
 
-
+    def set_model(self, model):
+        self.model = model
+        
     def _bind(self, event, function_name):
         if hasattr(self, function_name) and self.controller:
             handler = getattr(self, "_%s" % function_name)

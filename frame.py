@@ -26,11 +26,12 @@ class Frame(util.PersistedFrame):
             self.create_log_view()
             self.create_memory_view()
             self.create_locals_view()
-            self.create_breakpoint_view()
+            #self.create_breakpoint_view()
             self.create_register_view()
             self.create_project_view()
             self.create_editor_view()
             self.create_runtime_view()
+            self.create_debug_view()
             
             self.controller.setup_logs()
             self.controller.load_session()
@@ -101,10 +102,11 @@ class Frame(util.PersistedFrame):
             # VIEW
             view = menubar.menu("&View")
             view.item('&Project\tAlt+P', self.on_toggle_project_view, icon="package.png")
-            view.item('&Runtime\tAlt+D', self.on_toggle_runtime_view, icon="computer.png")
+            view.item('&Runtime\tAlt+R', self.on_toggle_runtime_view, icon="computer.png")
             view.item('&Memory\tAlt+M', self.on_toggle_memory_view, icon="drive.png")
-            view.item('&Breakpoints\tAlt+K', self.on_toggle_breakpoint_view, icon="breakpoint.png")
+            #view.item('&Breakpoints\tAlt+K', self.on_toggle_breakpoint_view, icon="breakpoint.png")
             view.item('&Logs\tAlt+L', self.on_toggle_log_view, icon="application_view_list.png")
+            view.item('&Debug\tAlt+D', self.on_toggle_debug_view, icon="bug.png")
             #view.separator()
             #view.item("Windows go here")
 
@@ -221,9 +223,14 @@ class Frame(util.PersistedFrame):
             self.manager.AddPane(self.locals_view, self.locals_view.info)
 
         def create_runtime_view(self):
-            self.runtime_view = views.DataView(self, controller=self.controller)
+            self.runtime_view = views.RuntimeView(self, controller=self.controller)
             self.runtime_view.info = aui.AuiPaneInfo().Caption('Runtime').Right().Name('RuntimeView')
             self.manager.AddPane(self.runtime_view, self.runtime_view.info)
+
+        def create_debug_view(self):
+            self.debug_view = views.GDBDebugView(self, controller=self.controller)
+            self.debug_view.info = aui.AuiPaneInfo().Caption('Debug').Right().Name('DebugView')
+            self.manager.AddPane(self.debug_view, self.debug_view.info)
         
         def create_register_view(self):
             pass
@@ -362,6 +369,8 @@ class Frame(util.PersistedFrame):
             self.toggle_view(self.project_view)
         def on_toggle_runtime_view(self, evt):
             self.toggle_view(self.runtime_view)
+        def on_toggle_debug_view(self, evt):
+            self.toggle_view(self.debug_view)
             
         def toggle_view(self, view):
             info = self.manager.GetPane(view)

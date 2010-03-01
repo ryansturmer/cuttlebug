@@ -13,6 +13,7 @@ STYLE_BUILD_WARNING = 2
 STYLE_BUILD_ERROR = 3
 STYLE_BUILD_LINENO = 4
 STYLE_BUILD_LINK = 5
+STYLE_EXECUTION_POSITION = 6
 
 def create_color(red, green, blue):
     return wx.Colour(red, green, blue)
@@ -88,7 +89,7 @@ class StyleManager(object):
 class Style(object):
     def __init__(self, parent=None, number=None, name=None, preview=None, 
         font=None, size=None, bold=None, italic=None, underline=None, 
-        foreground=None, background=None):
+        foreground=None, background=None, eol_filled=None):
         self._parent = parent
         self._number = number
         self._name = name
@@ -100,6 +101,8 @@ class Style(object):
         self._underline = underline
         self._foreground = foreground
         self._background = background
+        self._eol_filled = eol_filled
+        
     def __int__(self):
         return self._number
     
@@ -112,7 +115,8 @@ class Style(object):
             setattr(self, '_%s' % name, value)
     def __getattr__(self, name):
         if name.startswith('_'):
-            return super(Style, self).__getattr__(name)
+           return object.__getattribute__(self, name)
+        
         value = getattr(self, '_%s' % name)
         if value is None and self._parent:
             return getattr(self._parent, name)
@@ -127,6 +131,7 @@ class Style(object):
         self.underline = None
         self.foreground = None
         self.background = None
+        self.eol_filled = None
     def create_font(self):
         return create_font(self.font, self.size, self.bold, self.italic, self.underline)
     def create_foreground(self):
@@ -162,7 +167,7 @@ class Language(object):
 def create_base_style():
     base_style = Style(None, stc.STC_STYLE_DEFAULT, 'Global Style', None, 
         util.get_font(), 10, False, False, False, 
-        (0,0,0), (255,255,255))
+        (0,0,0), (255,255,255), False)
     return base_style
         
 def create_app_styles(parent):
@@ -172,7 +177,7 @@ def create_app_styles(parent):
         Style(parent, stc.STC_STYLE_CONTROLCHAR, 'Control Character'),
         Style(parent, stc.STC_STYLE_INDENTGUIDE, 'Indentation Guides'),
         Style(parent, stc.STC_STYLE_LINENUMBER, 'Line Number Margin'),
-        Style(parent, 38, 'Execution Position')
+        Style(parent, STYLE_EXECUTION_POSITION, 'Execution Position', eol_filled=True)
     ]
     return app_styles
 

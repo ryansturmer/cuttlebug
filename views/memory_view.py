@@ -206,8 +206,10 @@ class MemoryView(view.View):
     stride = property(__get_stride, __set_stride)
 
     def on_target_connected(self):
+        return
         self._fetch_data()
     def on_target_halted(self, file, line):
+        return
         self._fetch_data()
         
     def _fetch_data(self):

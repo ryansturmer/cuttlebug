@@ -136,11 +136,48 @@ class GDBStackFrame(object):
 #        return hash('%d:%d:%s:%d' % (self.level, self.addr, self.file, self.line))
      
     def __str__(self):
-        return "<GDB Stack Frame %s()@0x%08x in file %s:%d>" % (self.func, self.addr, self.file, self.line)
+        return "<GDB Stack Frame %d %s()@0x%08x in file %s:%d>" % (self.level, self.func, self.addr, self.file, self.line)
     
     def __repr__(self):
         return str(self)
         
+class GDBRegisterModel(object):
+    def __init__(self, parent):
+        self.parent = parent
+        self.set_names([])
+        
+    def __getitem__(self, x):
+        return self.__values[x]
+    
+    def set_names(self, names): 
+        self.__names = list(names)
+        self.__values = odict.OrderedDict()
+        for name in self.__names:
+            if name:
+                self.__values[name] = None
+            
+    def get_name_from_number(self, number):
+        return self.__names[int(number)]
+
+    def set_value_from_number(self, number, value):
+        name = self.get_name_from_number(number)
+        if name:
+            self.__values[name] = value
+
+    def get_value_from_number(self, number):
+        name = self.__names[int(number)]
+        if name:
+            return self.__values[name]
+
+    def __len__(self):
+        return len(self.__values)
+    
+    def __iter__(self):
+        return iter(self.__values)
+    
+    def iteritems(self):
+        return self.__values.iteritems()
+    
 class GDBStackModel(object):
     def __init__(self, parent):
         self.parent = parent
@@ -221,11 +258,7 @@ class GDBVarModel(object):
         
     def remove(self, name):
         var = self.vars.pop(name)
-        self.exprs.pop(var.expression)
-                        
-    def name_from_expr(self, expr):
-        return self.exprs[expr]
-    
+                            
     def __contains__(self, name):
         return name in self.vars
     

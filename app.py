@@ -172,8 +172,10 @@ class Controller(wx.EvtHandler):
         menu.manager.publish(menu.TARGET_ATTACHED)
         #print "Entering the ATTACHED state."
         if self.state == IDLE:
-            self.frame.locals_view.set_model(self.gdb.vars)
+           # self.frame.locals_view.set_model(self.gdb.vars)
             self.frame.runtime_view.set_model(self.gdb)
+            self.frame.debug_view.set_model(self.gdb)
+            self.frame.editor_view.set_model(self.gdb)
             self.halt()
         if self.state == IDLE or self.state == RUNNING:
             self.exit_current_state()
@@ -276,6 +278,7 @@ class Controller(wx.EvtHandler):
     # BREAKPOINTS
     #
     def set_breakpoint(self, file, line):
+        print "Inserting breakpoint"
         self.gdb.break_insert(os.path.normpath(file), line, callback=self.on_gdb_done)
 
     def clear_breakpoint(self, number):
@@ -285,7 +288,7 @@ class Controller(wx.EvtHandler):
         for bkpt in self.gdb.breakpoints:
             f, l = os.path.normpath(bkpt.fullname), bkpt.line
             if f == file and l == line:
-                self.gdb.break_delete(self.gdb.breakpoints.get_number(file, line), self.on_gdb_done, key)
+                self.gdb.break_delete(self.gdb.breakpoints.get_number(file, line), self.on_gdb_done)
     
     def disable_breakpoint(self, number):
         self.gdb.break_disable(number, callback=self.on_gdb_done)
@@ -294,11 +297,12 @@ class Controller(wx.EvtHandler):
         self.gdb.break_enable(number, callback=self.on_gdb_done)                
 
     def on_update_breakpoints(self, evt):
-        self.frame.editor_view.update_breakpoints()
-        self.frame.breakpoint_view.update()
+        pass
+        #self.frame.editor_view.update_breakpoints()
 
     def on_update_vars(self, evt):
-        self.frame.locals_view.update(evt.data)
+        pass
+        #self.frame.locals_view.update(evt.data)
     
     def on_update_stack(self, evt):
         pass

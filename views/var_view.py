@@ -111,7 +111,7 @@ class VarTree(wx.TreeCtrl):
             self.Delete(item)
             
     def __add_or_update_var(self, var):
-        print "adding or updating %s" % var
+        #print "adding or updating %s" % var
         if var.name in self.items:
             self.__update_var(var)
         else:

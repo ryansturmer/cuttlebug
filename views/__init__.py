@@ -5,6 +5,6 @@ from var_view import LocalsView
 from editor_view import EditorView
 from project_view import ProjectView, ProjectViewEvent, EVT_PROJECT_DCLICK_FILE
 from breakpoint_view import BreakpointView
-from data_view import DataView
+from runtime_view import RuntimeView, GDBDebugView
 
 from view import ViewEvent, EVT_VIEW_REQUEST_UPDATE, EVT_VIEW_POST_UPDATE 

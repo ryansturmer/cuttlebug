@@ -3,7 +3,7 @@ import wx.aui as aui
 import wx.stc as stc
 import os
 import wx
-import util, view, menu, icons, util, app
+import util, view, menu, icons, util, app, gdb, styles
 
 #TODO fix code folding
 #TODO fix updating the colorization settings so you don't have to close and reopen existing tabs
@@ -132,6 +132,10 @@ class EditorView(view.View):
         self.SetSizer(sizer)
         self.files = {}
 
+    def set_model(self, model):
+        self.model = model
+        self.model.Bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, self.on_breakpoint_update)
+  
     def __get_current_editor(self):
         return self.notebook.get_window()
     current_editor = property(__get_current_editor)
@@ -146,7 +150,6 @@ class EditorView(view.View):
     def on_target_halted(self, file, line):
         goto = self.controller.settings.debug.jump_to_exec_location
         self.set_exec_location(file, line, goto=goto)
-        self.update_breakpoints()
         
     def find(self):
         self.notebook.find()
@@ -185,6 +188,8 @@ class EditorView(view.View):
         if not widget:
             return
         widget.set_exec_marker(line)
+        print "Styling the appropriate line"
+        widget.style_line(line-1, styles.STYLE_EXECUTION_POSITION)
         if goto:
             self.goto(file, line)
             
@@ -203,11 +208,12 @@ class EditorView(view.View):
         for editor in self.notebook:
             editor.remove_breakpoint_markers()
     
-    def update_breakpoints(self):
+    def on_breakpoint_update(self, evt):
         self.Freeze()
         self.remove_breakpoint_markers()
         self.set_breakpoint_markers(self.controller.gdb.breakpoints)
         self.Thaw()
+        evt.Skip()
         
     def update_settings(self):
         for editor in self.notebook:
@@ -268,6 +274,8 @@ class EditorControl(stc.StyledTextCtrl):
     def on_key(self, evt):
         if evt.GetKeyCode() == wx.WXK_ESCAPE and evt.GetModifiers() == 0:
             self.GetParent().find_bar.hide()
+        print self.GetCurrentPos()
+        
         evt.Skip()
         
     def on_mouse_motion(self, evt):
@@ -280,14 +288,17 @@ class EditorControl(stc.StyledTextCtrl):
         # Execution Marker (for showing current program location)
         self.MarkerDefine(self.EXECUTION_MARKER, stc.STC_MARK_ARROW)
         self.MarkerSetBackground(self.EXECUTION_MARKER, "yellow") 
+        #self.MarkerSetForeground(self.EXECUTION_MARKER, "darkgrey") 
         
         # Breakpoint Marker (for showing user-selected breakpoints)
         self.MarkerDefine(self.BREAKPOINT_MARKER, stc.STC_MARK_CIRCLE)
         self.MarkerSetBackground(self.BREAKPOINT_MARKER, "red") 
+        #self.MarkerSetForeground(self.BREAKPOINT_MARKER, "darkgrey") 
 
         # Disabled Breakpoint Marker (for breakpoints that aren't currently active)
         self.MarkerDefine(self.DISABLED_BREAKPOINT_MARKER, stc.STC_MARK_CIRCLE)
         self.MarkerSetBackground(self.DISABLED_BREAKPOINT_MARKER, "grey") 
+        #self.MarkerSetForeground(self.DISABLED_BREAKPOINT_MARKER, "darkgrey") 
         
     def on_update_ui(self, evt):
         self.controller.frame.statusbar.line = self.current_line()+1
@@ -335,17 +346,17 @@ class EditorControl(stc.StyledTextCtrl):
         self.mnu_copy = m.item("Copy\tCtrl+C", func=self.on_copy, icon='page_copy.png')
         self.mnu_paste = m.item("Paste\tCtrl+V", func=self.on_paste, icon='paste_plain.png')
         m.separator()
-        self.mnu_runtohere = m.item("Run to here...", func=self.on_run_to_here, icon="breakpoint.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
+        self.mnu_runtohere = m.item("Run to Here...", func=self.on_run_to_here, icon="breakpoint.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
                                                                                   show=[menu.TARGET_HALTED,menu.TARGET_ATTACHED])
         self.mnu_runtohere.hide()
         
-        self.mnu_jumptopc = m.item("Go to exec location...", func=self.on_go_to_pc, icon="pc_marker.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
+        self.mnu_jumptopc = m.item("Show Exec Location", func=self.on_go_to_pc, icon="pc_marker.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
                                                                                   show=[menu.TARGET_HALTED,menu.TARGET_ATTACHED])
         self.mnu_jumptopc.hide()
         
-        self.mnu_set_bp = m.item("Set breakpoint", func=self.on_breakpoint_here, icon="stop.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
+        self.mnu_set_bp = m.item("Set Breakpoint", func=self.on_breakpoint_here, icon="stop.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
                                                                                 show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
-        self.mnu_clear_bp = m.item("Clear breakpoint", func=self.on_clear_breakpoint, icon="stop_disabled.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
+        self.mnu_clear_bp = m.item("Clear Breakpoint", func=self.on_clear_breakpoint, icon="stop_disabled.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
                                                                                 show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
         self.popup_menu = m
 
@@ -507,7 +518,7 @@ class EditorControl(stc.StyledTextCtrl):
                 path, filename = os.path.split(self.file_path)
                 shortname, ext = os.path.splitext(filename)
                 print languages[ext or shortname]
-                self.SetLexerLanguage(languages[ext or shortname])
+                #self.SetLexerLanguage(languages[ext or shortname])
             except Exception, e:
                 print e
 
@@ -542,12 +553,17 @@ class EditorControl(stc.StyledTextCtrl):
         self.StyleSetFontAttr(id, s.size, s.font, s.bold, s.italic, s.underline)
         self.StyleSetBackground(id, s.create_background())
         self.StyleSetForeground(id, s.create_foreground())
-    
+        self.StyleSetEOLFilled(id, s.eol_filled)
+        
     def style_line(self, line, style):
         start = self.PositionFromLine(line)
         end = self.GetLineEndPosition(line)
+        print "Styling line %d" % line
+        print "start: %d  end: %d" % (start, end)
+        print "Style index: %s" % style
+        self.StyleSetBold(style, True)
         self.StartStyling(start, 0x1f)
-        self.SetStyling(wx.stc.STC_STYLE_BRACEBAD, end-start)
+        self.SetStyling(end-start, style)
 
     def save(self):
         if self.file_path:
