@@ -81,6 +81,7 @@ class Project(util.Category):
     directory = property(__get_directory)
 
     def relative_path(self, dir):
+        if not os.path.isabs(dir): return dir
         dir = os.path.abspath(dir)
         project_dir = self.directory
         return util.relpath(dir, project_dir)

@@ -278,18 +278,18 @@ class Controller(wx.EvtHandler):
     # BREAKPOINTS
     #
     def set_breakpoint(self, file, line):
-        print "Inserting breakpoint"
-        self.gdb.break_insert(os.path.normpath(file), line, callback=self.on_gdb_done)
+        self.gdb.break_insert(self.project.relative_path(file), line, callback=self.on_gdb_done)
 
     def clear_breakpoint(self, number):
         self.gdb.break_delete(number, callback=self.on_gdb_done)
 
     def clear_breakpoint_byfile(self, file, line):
         for bkpt in self.gdb.breakpoints:
-            f, l = os.path.normpath(bkpt.fullname), bkpt.line
-            if f == file and l == line:
+            file = self.project.relative_path(file)
+            f, l = self.project.relative_path(bkpt.fullname), bkpt.line
+            if l == line and f == file:
                 self.gdb.break_delete(self.gdb.breakpoints.get_number(file, line), self.on_gdb_done)
-    
+                    
     def disable_breakpoint(self, number):
         self.gdb.break_disable(number, callback=self.on_gdb_done)
 

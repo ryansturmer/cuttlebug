@@ -211,7 +211,7 @@ class EditorView(view.View):
     def on_breakpoint_update(self, evt):
         self.Freeze()
         self.remove_breakpoint_markers()
-        self.set_breakpoint_markers(self.controller.gdb.breakpoints)
+        self.set_breakpoint_markers(self.model.breakpoints)
         self.Thaw()
         evt.Skip()
         
@@ -369,11 +369,11 @@ class EditorControl(stc.StyledTextCtrl):
 
     def on_breakpoint_here(self, evt):
         line = self.line_from_point(self.click_pos)+1
-        self.controller.set_breakpoint(self.file_path, line)
+        self.controller.set_breakpoint(self.project_rel_file_path, line)
         
     def on_clear_breakpoint(self, evt):
         line = self.line_from_point(self.click_pos)+1        
-        self.controller.clear_breakpoint_byfile(self.file_path, line)
+        self.controller.clear_breakpoint_byfile(self.project_rel_file_path, line)
         
     def line_from_point(self, point):
         return self.LineFromPosition(self.PositionFromPoint(point))
@@ -561,9 +561,9 @@ class EditorControl(stc.StyledTextCtrl):
         print "Styling line %d" % line
         print "start: %d  end: %d" % (start, end)
         print "Style index: %s" % style
-        self.StyleSetBold(style, True)
-        self.StartStyling(start, 0x1f)
-        self.SetStyling(end-start, style)
+        #self.IndicatorSetStyle(stc.STC_INDIC0_MASK, )
+        self.StartStyling(start, stc.STC_INDIC1_MASK)
+        self.SetStyling(end-start, 1)
 
     def save(self):
         if self.file_path:
@@ -617,7 +617,6 @@ class EditorControl(stc.StyledTextCtrl):
             self.MarkerDefine(stc.STC_MARKNUM_FOLDER, stc.STC_MARK_BOXPLUS, "white", "#666666")
             self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_BOXMINUS, "white", "#666666")
         else:
-            print "Setting folding to OFF"
             self.SetProperty("fold", "0")
             self.SetMarginSensitive(self.FOLDING_MARGIN, False)
             self.SetMarginWidth(self.FOLDING_MARGIN, 0)

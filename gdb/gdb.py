@@ -102,6 +102,10 @@ class GDB(wx.EvtHandler):
         output = self.__parser.output().response
         return output
 
+    @property
+    def running(self):
+        return self.state == RUNNING
+    
     def __console_log(self, txt):
         if self.console_log:
             self.console_log.log(logging.INFO,txt )
@@ -196,9 +200,10 @@ class GDB(wx.EvtHandler):
                     number = int(item['number'])
                     address = int(item['addr'], 16)
                     fullname = item.get('fullname', '<Unknown File>')
+                    file = item.get('file', '<Unknown File>')
                     enabled = True if (item['enabled'].upper() == 'Y' or item['enabled'] == '1') else False
                     line = int(item.get('line', -1))
-                    bp = Breakpoint(number, fullname, line, enabled=enabled, address=address)
+                    bp = Breakpoint(number, fullname, file, line, enabled=enabled, address=address)
                     self.breakpoints[number] = bp
         wx.PostEvent(self, GDBEvent(EVT_GDB_UPDATE_BREAKPOINTS, self, data=self.breakpoints))
                         
@@ -446,7 +451,7 @@ class BreakpointTable(object):
     def __iter__(self):
         return iter([self.__data[key] for key in sorted(self.__data.keys())])
 
-    def remove(self, item):
+    def remove(self, key):
         try:
             del self.__data[key]
         except:
@@ -454,18 +459,19 @@ class BreakpointTable(object):
 
     def get_number(self, file, line):
         for key, breakpoint in self.__data.iteritems():
-            if breakpoint.line == line and breakpoint.fullname == file: return key
+            if breakpoint.line == line and (breakpoint.fullname == file or breakpoint.file == file): return key
         raise KeyError
                     
 class Breakpoint(object):
     
-    def __init__(self, number, fullname, line, enabled=True, address=None):
+    def __init__(self, number, fullname, file, line, enabled=True, address=None):
         self.number = number
         self.line = line
         self.fullname = fullname
+        self.file = file
         self.enabled = enabled
         self.address = address
         
     def __str__(self):
-        return "%s[%d]%s%d" % ('+' if self.enabled else ' ', self.number, self.fullname, self.line) 
+        return "<Breakpoint %s[%d]%s%d>" % ('+' if self.enabled else ' ', self.number, self.fullname, self.line) 
         

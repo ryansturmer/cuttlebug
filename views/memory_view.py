@@ -213,11 +213,13 @@ class MemoryView(view.View):
         self._fetch_data()
         
     def _fetch_data(self):
+        pass
+        '''
         if not self.fetching and self.controller.gdb:
             start, end = self.grid.visible_address_range()
             self.controller.gdb.read_memory(start, self.stride, end-start, callback=self._on_data_fetched)
             self.fetching = True
-            
+        ''' 
     def _on_data_fetched(self, result):
         self.fetching = False
         if hasattr(result, 'memory'):

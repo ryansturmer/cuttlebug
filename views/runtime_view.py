@@ -97,10 +97,15 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         item=self.get_event_item(evt)
         item_data=self.get_item_data(item)
         if hasattr(item_data, 'level') and self.get_children_count(item, False) == 0: #item_data is a stack frame, and we wish to list its locals
-            self.model.stack_list_locals(frame=item_data.level, callback=partial(self.__on_listed_locals, item))
+            if not self.model.running:
+                self.model.stack_list_locals(frame=item_data.level, callback=partial(self.__on_listed_locals, item))
+            else:
+                evt.Veto()
         elif item_data in self.var_registry and self.get_children_count(item, False) == 0:
-            self.model.var_list_children(item_data, callback=partial(self.__on_listed_children, item))
-       
+            if not self.model.running:
+                self.model.var_list_children(item_data, callback=partial(self.__on_listed_children, item))
+            else:
+                evt.Veto()
     def __on_listed_children(self, parent, result):
         if hasattr(result, 'children'):
             for child in result.children:
