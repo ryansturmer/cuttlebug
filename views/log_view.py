@@ -16,6 +16,8 @@ class BuildPane(stc.StyledTextCtrl):
         self.SetReadOnly(False)
         self.SetCaretPeriod(0)
         self.SetCaretForeground(self.GetBackgroundColour())
+        self.SetWrapMode(stc.STC_WRAP_WORD)
+        self.SetUseHorizontalScrollBar(False)
         self.styler = BuildStyler()
         self.Bind(wx.EVT_LEFT_DOWN, self.on_click)
         

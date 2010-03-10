@@ -1,6 +1,7 @@
 import wx
 from options import OptionsEvent, EVT_OPTION_CHANGED
 import wx.lib.colourselect as csel
+import string
 
 class OptionsWidget(object):
     def __init__(self):
@@ -72,3 +73,18 @@ class ColorWidget(OptionsWidget, csel.ColourSelect):
 
     def set_value(self, value):
         self.SetColour(value)
+        
+class ComboBoxWidget(OptionsWidget, wx.ComboBox):
+    
+    def __init__(self, parent, id=-1, choices=None, sorted=False):
+        OptionsWidget.__init__(self)
+        choices = [string.capwords(choice) for choice in choices] if choices else []
+        wx.ComboBox.__init__(self, parent, -1, choices=choices, style=wx.CB_READONLY | (wx.CB_SORT if sorted else 0))
+        self.Bind(wx.EVT_COMBOBOX, self.on_change)
+        
+    def get_value(self):
+        return self.GetValue().lower()
+    
+    def set_value(self, value):
+        self.SetValue(string.capwords(value))
+        

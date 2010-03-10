@@ -153,6 +153,7 @@ class EditorView(view.View):
         
     def find(self):
         self.notebook.find()
+        
     def goto(self, file, line):
         widget = self.notebook.create_file_tab(file)
         if not widget:
@@ -188,7 +189,6 @@ class EditorView(view.View):
         if not widget:
             return
         widget.set_exec_marker(line)
-        print "Styling the appropriate line"
         widget.style_line(line-1, styles.STYLE_EXECUTION_POSITION)
         if goto:
             self.goto(file, line)
@@ -274,7 +274,7 @@ class EditorControl(stc.StyledTextCtrl):
     def on_key(self, evt):
         if evt.GetKeyCode() == wx.WXK_ESCAPE and evt.GetModifiers() == 0:
             self.GetParent().find_bar.hide()
-        print self.GetCurrentPos()
+        #print self.GetCurrentPos()
         
         evt.Skip()
         
@@ -356,8 +356,16 @@ class EditorControl(stc.StyledTextCtrl):
         
         self.mnu_set_bp = m.item("Set Breakpoint", func=self.on_breakpoint_here, icon="stop.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
                                                                                 show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
-        self.mnu_clear_bp = m.item("Clear Breakpoint", func=self.on_clear_breakpoint, icon="stop_disabled.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
+
+        self.mnu_enable_bp = m.item("Enable Breakpoint", func=self.on_enable_breakpoint, icon="stop.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
                                                                                 show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
+
+        self.mnu_disable_bp = m.item("Disable Breakpoint", func=self.on_disable_breakpoint, icon="stop_disabled.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
+                                                                                show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
+
+        self.mnu_clear_bp = m.item("Clear Breakpoint", func=self.on_clear_breakpoint, icon="ex.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
+                                                                                show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
+
         self.popup_menu = m
 
     def on_go_to_pc(self, evt):
@@ -374,6 +382,14 @@ class EditorControl(stc.StyledTextCtrl):
     def on_clear_breakpoint(self, evt):
         line = self.line_from_point(self.click_pos)+1        
         self.controller.clear_breakpoint_byfile(self.project_rel_file_path, line)
+
+    def on_enable_breakpoint(self, evt):
+        line = self.line_from_point(self.click_pos)+1        
+        self.controller.enable_breakpoint_byfile(self.project_rel_file_path, line)
+
+    def on_disable_breakpoint(self, evt):
+        line = self.line_from_point(self.click_pos)+1        
+        self.controller.disable_breakpoint_byfile(self.project_rel_file_path, line)
         
     def line_from_point(self, point):
         return self.LineFromPosition(self.PositionFromPoint(point))
@@ -402,9 +418,14 @@ class EditorControl(stc.StyledTextCtrl):
             if self.breakpoint_on_line(line):
                 self.mnu_clear_bp.show()
                 self.mnu_set_bp.hide()
+                self.mnu_disable_bp.show()
+                self.mnu_enable_bp.hide()
             else:
                 self.mnu_clear_bp.hide()
                 self.mnu_set_bp.show()
+                self.mnu_disable_bp.hide()
+                self.mnu_enable_bp.hide()
+
         else:
             self.mnu_clear_bp.hide()
             self.mnu_set_bp.hide()
@@ -470,6 +491,7 @@ class EditorControl(stc.StyledTextCtrl):
 
     def remove_breakpoint_markers(self):
         self.MarkerDeleteAll(self.BREAKPOINT_MARKER)
+        self.MarkerDeleteAll(self.DISABLED_BREAKPOINT_MARKER)
 
     def set_breakpoint_marker(self, line, disabled=False):
         marker = self.DISABLED_BREAKPOINT_MARKER if disabled else self.BREAKPOINT_MARKER
@@ -517,7 +539,7 @@ class EditorControl(stc.StyledTextCtrl):
             try:
                 path, filename = os.path.split(self.file_path)
                 shortname, ext = os.path.splitext(filename)
-                print languages[ext or shortname]
+                #print languages[ext or shortname]
                 #self.SetLexerLanguage(languages[ext or shortname])
             except Exception, e:
                 print e
@@ -558,12 +580,13 @@ class EditorControl(stc.StyledTextCtrl):
     def style_line(self, line, style):
         start = self.PositionFromLine(line)
         end = self.GetLineEndPosition(line)
-        print "Styling line %d" % line
-        print "start: %d  end: %d" % (start, end)
-        print "Style index: %s" % style
+        #print "Styling line %d" % line
+        #print "start: %d  end: %d" % (start, end)
+        #print "Style index: %s" % style
         #self.IndicatorSetStyle(stc.STC_INDIC0_MASK, )
-        self.StartStyling(start, stc.STC_INDIC1_MASK)
-        self.SetStyling(end-start, 1)
+        #print "Styling length: %s" % (end-start)
+        self.StartStyling(start, 0x1f)
+        self.SetStyling(end-start, stc.STC_C_WORD)
 
     def save(self):
         if self.file_path:

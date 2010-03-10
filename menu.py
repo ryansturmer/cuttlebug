@@ -29,6 +29,9 @@ class MenuItemProxy(object):
         self.enabled = True
         self.icon = icon
 
+    def __str__(self):
+        return "<MenuItemProxy '%s'>" % self.label
+    
     def __get_icon(self):
         return self._icon
     def __set_icon(self, icon):
@@ -60,10 +63,12 @@ class MenuItemProxy(object):
         self.update()
 
     def enable(self):
+        print "enabling %s" % self
         self.enabled = True
         self.update()
 
     def disable(self):
+        print "disabling %s" % self
         self.enabled = False
         self.update()
 
@@ -198,6 +203,7 @@ class MenuManager(object):
             subscription[item]()
 
     def publish(self, token):
+        print "Publishing %s" % token
         self.update(token)
 
 manager = MenuManager()

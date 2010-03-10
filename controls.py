@@ -71,7 +71,7 @@ class StatusBar(wx.StatusBar):
     def get_state(self): return self._state
     
     def __set_text(self, text):
-        self.SetStatusText(str(text), self.TEXT)
+        wx.CallAfter(self.SetStatusText,str(text), self.TEXT)
     def __get_text(self):
         return str(self.GetStatusText())
     text = property(__get_text, __set_text)

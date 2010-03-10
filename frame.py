@@ -94,10 +94,10 @@ class Frame(util.PersistedFrame):
             debug.item('&Step Out\tShift+F6', self.on_step_out, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
             debug.item('&Halt\tShift+F5', self.on_halt, icon="control_stop_blue.png", enable=menu.TARGET_RUNNING, disable=[menu.TARGET_HALTED, menu.TARGET_DETACHED])
             debug.separator()
-            debug.item("Download", self.on_download, icon="application_put.png", enable=menu.TARGET_ATTACHED, disable=menu.TARGET_DETACHED)
-            debug.separator()
-            debug.item('&Attach', self.on_attach, icon="connect.png", show=[menu.PROJECT_OPEN, menu.TARGET_DETACHED], hide=[menu.TARGET_ATTACHED, menu.PROJECT_CLOSE])
+            debug.item('&Attach', self.on_attach, icon="connect.png", show=[menu.PROJECT_OPEN, menu.TARGET_DETACHED], hide=[menu.TARGET_ATTACHED], disable=menu.PROJECT_CLOSE, enable=[menu.PROJECT_OPEN, menu.TARGET_DETACHED])
             debug.item('&Detach', self.on_detach, icon="disconnect.png", show=menu.TARGET_ATTACHED, hide=menu.TARGET_DETACHED)
+            debug.separator()
+            debug.item("Download", self.on_download, icon="application_put.png", enable=menu.TARGET_ATTACHED, disable=menu.TARGET_DETACHED)
 
             # VIEW
             view = menubar.menu("&View")
@@ -117,8 +117,8 @@ class Frame(util.PersistedFrame):
            # devel.item('&GDB Command...', self.on_gdb_command)
            # devel.item('&MI Command...', self.on_mi_command)
         
-            menu.manager.publish(menu.PROJECT_CLOSE)
             menu.manager.publish(menu.TARGET_DETACHED)
+            menu.manager.publish(menu.PROJECT_CLOSE)
         
         def start_busy(self, message=''):
             self.statusbar.message = message
@@ -266,6 +266,9 @@ class Frame(util.PersistedFrame):
         # Event Handlers
         def on_open(self, evt):
             dialog = wx.FileDialog(self, 'Open', style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST|wx.FD_MULTIPLE)
+            dialog.CenterOnParent()
+            dialog.Center()
+            dialog.CenterOnScreen()
             result = dialog.ShowModal()
             if result == wx.ID_OK:
                 paths = dialog.GetPaths()
@@ -274,6 +277,7 @@ class Frame(util.PersistedFrame):
 
         def on_open_project(self, evt):
             dialog = wx.FileDialog(self, 'Open Project', style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
+            dialog.CenterOnParent()
             result = dialog.ShowModal()
             if result == wx.ID_OK:
                 path = dialog.GetPaths()[0]

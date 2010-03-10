@@ -34,6 +34,8 @@ class Type(object):
     
     @property
     def icon_name(self):
+        if self.type == TYPEDEF:
+            return 'unknown_type.png'
         retval = ''
         if self.signed in (SIGNED,UNSIGNED):
             retval = "signed_" if self.signed else "unsigned_"
@@ -41,7 +43,6 @@ class Type(object):
         if self.type in TYPES: retval += TYPES[self.type]
         retval += "_star.png" if self.pointer else ".png"
         return retval
-    
     @staticmethod
     def parse_proper(type_string):
         parts = type_string.split()

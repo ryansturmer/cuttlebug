@@ -130,7 +130,7 @@ class ProjectOptionsDialog(OptionsDialog):
         panel = OptionsPanel(self, "Program")
         panel.add("Code", "Target Executable", TextWidget, key="program.target")
         panel.add("Locations", "Entry Point", TextWidget, key="program.entry_point")
-        panel.add("Locations", "Break on Main", CheckboxWidget, key="program.break_at_main")
+       # panel.add("Locations", "Break on Main", CheckboxWidget, key="program.break_at_main")
         self.add_panel(panel, icon='bug.png')
         
     @staticmethod

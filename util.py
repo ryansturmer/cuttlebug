@@ -544,6 +544,13 @@ class KeyTree(object):
         self._items[key] = item
         self.SetItemPyData(item, (key, None))
         return key
+    
+    def hit_test(self, pos):
+        item, flags = self.HitTest(pos)
+        if item.IsOk():
+            return self.get_key(item), flags
+        else:
+            return TreeItemKey(), flags
     '''
     def walk(self, key):
         first, cookie = self.get_first_child(key)
@@ -652,8 +659,14 @@ class KeyTree(object):
         return key
     
     def delete(self, key):
+        item = self._items[key]
+        if self.get_children_count(key) > 0:            
+            for child in list(self.children(key)):
+                self.delete(child)
+        
         item = self._items.pop(key)
         self.Delete(item)
+                    
     
     def delete_children(self, key):
         item = self._items[key]
@@ -665,3 +678,8 @@ class KeyTree(object):
     def collapse(self, key):
         item = self._items[key]
         self.Collapse(item)
+        
+    def select_item(self, key):
+        item = self._items[key]
+        self.SelectItem(item)
+        

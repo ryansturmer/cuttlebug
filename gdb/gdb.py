@@ -307,9 +307,13 @@ class GDB(wx.EvtHandler):
             for item in data.changelist:
                 if 'value' in item:
                     self.vars.vars[item['name']].data = item['value']
+                if 'new_type' in item:
+                    self.vars.vars[item['name']].type = Type.parse(item['new_type'])
+                if 'new_num_children' in item:
+                    self.vars.vars[item['name']].children = int(item['new_num_children'])                    
             if names:
                 self.post_event(GDBEvent(EVT_GDB_UPDATE_VARS, self, data=names))
-    
+                
     def var_list_children(self, name, callback=None):
         self.__cmd('-var-list-children --all-values %s' % name, internal_callback=self.__on_var_list_children, callback=callback)
     def __on_var_list_children(self, data):
@@ -342,6 +346,11 @@ class GDB(wx.EvtHandler):
         self.__cmd('-stack-select-frame %d' % frame, callback, internal_callback = functools.partial(self.__on_list_locals_fs, callback=callback))
     def __on_list_locals_fs(self, data, callback=None):
         self.__cmd('-stack-list-locals 0', callback=callback)
+
+    def stack_list_arguments(self, frame=0, callback=None):
+        self.__cmd('-stack-select-frame %d' % frame, callback, internal_callback = functools.partial(self.__on_list_arguments_fs, callback=callback))
+    def __on_list_arguments_fs(self, data, callback=None):
+        self.__cmd('-stack-list-arguments 0', callback=callback)
         
     def file_list_globals(self, file='', callback=None):
         self.__cmd('-symbol-list-variables', callback)
@@ -355,7 +364,6 @@ class GDB(wx.EvtHandler):
         
     def exec_continue(self, callback=None):
         self.__cmd('-exec-continue\n', callback)
-
     def exec_step(self, callback=None):
         self.__cmd('-exec-step\n', callback)
 
@@ -373,6 +381,7 @@ class GDB(wx.EvtHandler):
 
     def exec_interrupt(self, callable=None):
         self.__cmd('-exec-interrupt\n', callable)
+    halt = exec_interrupt
 
     def target_download(self, callback=None):
         self.__cmd('-target-download\n', callback)
@@ -381,7 +390,10 @@ class GDB(wx.EvtHandler):
         self.sigint()
         
     def quit(self):
-        self.__cmd('-gdb-exit\n')
+        self.__cmd('-gdb-exit\n', internal_callback=self.__on_quit)
+    def __on_quit(self, data):
+        self.subprocess.terminate()
+        
     
     def read_memory(self, start_addr, stride, count, callback=None):
         self.__cmd('-data-read-memory 0x%x u %d %d 1\n' % (start_addr, stride, count), callback)
@@ -414,14 +426,20 @@ class GDB(wx.EvtHandler):
         self.__cmd('-break-insert %s %s %s:%d' % ("-h" if hardware else "", "-t" if temporary else "", os.path.normpath(file), line), callback=callback, internal_callback=self.__update_breakpoints)
                 
     def break_delete(self, num, callback=None):
+        if isinstance(num, Breakpoint):
+            num = num.number
         self.__cmd("-break-delete %d" % int(num), callback, internal_callback=self.__update_breakpoints)
 
     def break_disable(self, num, callback=None):
+        if isinstance(num, Breakpoint):
+            num = num.number
         self.__cmd("-break-disable %d" % int(num), callback, internal_callback=self.__update_breakpoints)
 
     def break_enable(self, num, callback=None):
+        if isinstance(num, Breakpoint):
+            num = num.number
         self.__cmd("-break-enable %d" % int(num), callback, internal_callback=self.__update_breakpoints)
-        
+                
     def set(self, name, val, callback=None):
         self.__cmd("-gdb-set %s=%s" % (name, val), callback)
     # Set Executable

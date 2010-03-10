@@ -2,5 +2,5 @@ from gdb import GDB, GDBEvent, EVT_GDB_STARTED, EVT_GDB_FINISHED, EVT_GDB_UPDATE
 from GDBMIParser import GDBMIParser
 from GDBMILexer import GDBMILexer
 from gdbvars import Type, Variable, GDBVarModel
-from models import TYPES
+from models import TYPES, GDBStackFrame
 session = GDB()

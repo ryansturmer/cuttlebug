@@ -5,6 +5,10 @@ import os, pickle
 from lxml import etree
 session = {}
 
+FALSE = 0
+TRUE = 1
+PROMPT = 2
+
 def load_session(filename='.session'):
     global session
     try:
@@ -58,6 +62,7 @@ class Settings(util.Category):
         page.add_item('margin_left', 0)
         page.add_item('margin_right', 0)
         page.add_item('show_line_numbers', True)
+        
         indent = editor.add_category('indent')
         indent.add_item('backspace_unindents', True)
         indent.add_item('indentation_guides', True)
@@ -67,7 +72,9 @@ class Settings(util.Category):
 
         debug = self.add_category('debug')
         debug.add_item('jump_to_exec_location', False)
-
+        debug.add_item('run_after_download', False)
+        debug.add_item('load_after_build', 'no')
+        
     @staticmethod
     def load(filename):
         path = os.path.abspath(filename)
@@ -138,7 +145,9 @@ class SettingsDialog(OptionsDialog):
         page_panel.add("Wrap", "Horizontal Scrollbar", CheckboxWidget, key="editor.page.horizontal_scrollbar", label_on_right=True)
 
         debug_panel = OptionsPanel(self, "Debug")
-        debug_panel.add("Runninig", "Jump to Execution Location on HALT", CheckboxWidget, key="debug.jump_to_exec_location")
+        debug_panel.add("Running", "Jump to Execution Location on HALT", CheckboxWidget, key="debug.jump_to_exec_location")
+        debug_panel.add("Running", "Run After Download", CheckboxWidget, key="debug.run_after_load")
+        debug_panel.add("Running", "Download After Successful Build", ComboBoxWidget(debug_panel, choices=['Yes', 'No', 'Prompt']), key="debug.load_after_build")
         
         self.add_panel(editor_panel, icon='style.png')
         self.add_panel(cursor_panel, parent=editor_panel, icon='textfield_rename.png')
