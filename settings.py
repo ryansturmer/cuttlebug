@@ -146,7 +146,7 @@ class SettingsDialog(OptionsDialog):
 
         debug_panel = OptionsPanel(self, "Debug")
         debug_panel.add("Running", "Jump to Execution Location on HALT", CheckboxWidget, key="debug.jump_to_exec_location")
-        debug_panel.add("Running", "Run After Download", CheckboxWidget, key="debug.run_after_load")
+        debug_panel.add("Running", "Run After Download", CheckboxWidget, key="debug.run_after_download")
         debug_panel.add("Running", "Download After Successful Build", ComboBoxWidget(debug_panel, choices=['Yes', 'No', 'Prompt']), key="debug.load_after_build")
         
         self.add_panel(editor_panel, icon='style.png')

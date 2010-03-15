@@ -109,7 +109,7 @@ class Frame(util.PersistedFrame):
             view.item('&Debug\tAlt+D', self.on_toggle_debug_view, icon="bug.png")
             #view.separator()
             #view.item("Windows go here")
-
+            #print menu.manager.pretty()
             # DEVELOPMENT (Remove for production)
            # devel = menubar.menu("&Devel", visible=False)
            # devel.item( 'Development Stuff Goes Here', lambda x : None)
@@ -119,7 +119,7 @@ class Frame(util.PersistedFrame):
         
             menu.manager.publish(menu.TARGET_DETACHED)
             menu.manager.publish(menu.PROJECT_CLOSE)
-        
+            
         def start_busy(self, message=''):
             self.statusbar.message = message
             self.statusbar.working = True

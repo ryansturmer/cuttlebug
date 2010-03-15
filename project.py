@@ -23,7 +23,7 @@ class Project(util.Category):
         build = self.add_category('build')
         build.add_item('build_cmd', 'make')
         build.add_item('clean_cmd', 'clean')
-        build.add_item('rebuild_cmd', '"make clean"; make')
+        #build.add_item('rebuild_cmd', '"make clean"; make')
         
         # Debug
         debug = self.add_category('debug')
@@ -114,7 +114,7 @@ class ProjectOptionsDialog(OptionsDialog):
         panel = OptionsPanel(self, "Build")
         panel.add("Commands", "Build", TextWidget, key="build.build_cmd")
         panel.add("Commands", "Clean", TextWidget, key="build.clean_cmd")
-        panel.add("Commands", "Rebuild", TextWidget, key="build.rebuild_cmd")
+        #panel.add("Commands", "Rebuild", TextWidget, key="build.rebuild_cmd")
         self.add_panel(panel, icon='brick.png')
 
     def create_debug_panel(self):

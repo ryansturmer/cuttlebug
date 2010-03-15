@@ -31,7 +31,8 @@ class MenuItemProxy(object):
 
     def __str__(self):
         return "<MenuItemProxy '%s'>" % self.label
-    
+    def __repr__(self):
+        return str(self)
     def __get_icon(self):
         return self._icon
     def __set_icon(self, icon):
@@ -63,12 +64,10 @@ class MenuItemProxy(object):
         self.update()
 
     def enable(self):
-        print "enabling %s" % self
         self.enabled = True
         self.update()
 
     def disable(self):
-        print "disabling %s" % self
         self.enabled = False
         self.update()
 
@@ -177,6 +176,23 @@ class MenuManager(object):
         window.SetMenuBar(retval)
         return retval
 
+    def pretty(self):
+        retval = ''
+        for topic, d in self._subscriptions.iteritems():
+            retval += "%s\n" % topic
+            for k, v in d.iteritems():
+                name = ""
+                for f in v:
+                    if hasattr(f, '__func__'):
+                        name += f.__func__.__name__ + ","
+                    elif hasattr(v, '__name__'):
+                        name += f.__name__ + ","
+                    else:
+                        name += str(f)
+                name.strip(",")
+                retval += "  %10s : %s\n" % (name, k)
+        return retval
+    
     def menu(self, label='', enable=None, disable=None, show=None, hide=None):
         retval = MenuProxy(self, None, label=label)
         self.subscribe(retval, enable=enable, disable=disable, show=show, hide=hide)
@@ -187,23 +203,25 @@ class MenuManager(object):
             if topics != None:
                 if not (isinstance(topics, list) or isinstance(topics, tuple)):
                     topics = [topics]
-            
                 for topic in topics:
                     if topic not in self._subscriptions:
                         self._subscriptions[topic] = {}
-
-                    self._subscriptions[topic][item] = func
+                    d = self._subscriptions[topic]
+                    if item in d:
+                        d[item].append(func)
+                    else:
+                        d[item] = [func]
 
     def update(self, token):
         if token not in self._subscriptions:
             return
         subscription = self._subscriptions[token]
-        # Call the appropriate function for all the subscribed items
+        # Call the appropriate functions for all the subscribed items
         for item in subscription:
-            subscription[item]()
+            for func in subscription[item]:
+                func()
 
     def publish(self, token):
-        print "Publishing %s" % token
         self.update(token)
 
 manager = MenuManager()

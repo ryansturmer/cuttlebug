@@ -13,14 +13,13 @@ import menu
         
 MNU_ENABLE_BKPT = 0
 MNU_DISABLE_BKPT = 1
-
 class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
     def __init__(self, parent):
         super(RuntimeTree, self).__init__(id=-1, parent=parent, style=wx.TR_DEFAULT_STYLE  | wx.TR_FULL_ROW_HIGHLIGHT | wx.TR_HIDE_ROOT | wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT)
         ArtListMixin.__init__(self)
         KeyTree.__init__(self)
         self.SetFont(wx.Font(8, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        
+        self.parent = parent
         self.Bind(wx.EVT_TREE_ITEM_EXPANDING, self.on_expanding)
         self.Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.on_get_tooltip)
         self.Bind(wx.EVT_TREE_BEGIN_LABEL_EDIT, self.on_begin_label_edit)
@@ -56,11 +55,16 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         
         m = self.menu_manager.menu()
         m.item("Show", func=self.on_show_frame, icon='find.png')
+        m.step_out = m.item("Step Out\tShift+F6", func=self.on_step_out, icon='control_play_blue.png')
         self.menu_frame_item = m
         
         m = self.menu_manager.menu()
         m.item("Add Watch...", func=self.on_add_watch, icon='magnifier_zoom_in.png')
         self.menu_watches = m
+
+        m = self.menu_manager.menu()
+        m.item("Remove Watch", func=self.on_remove_watch, icon='ex.png')
+        self.menu_watch_item = m
         
     def set_model(self, model):
         self.model = model
@@ -130,9 +134,17 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                 elif self.is_frame_item(item):
                     frame = self.get_item_data(item)
                     self.frame = frame
+                    if frame.level == 0 and len(self.frames) > 1:
+                        self.menu_frame_item.step_out.show()
+                    else:
+                        self.menu_frame_item.step_out.hide()
+                        
                     self.PopupMenu(self.menu_frame_item.build(self), evt.GetPoint())
                 elif item == self.watch_item:
                     self.PopupMenu(self.menu_watches.build(self), evt.GetPoint())
+                elif self.is_descendent(item, self.watch_item):
+                    self.selected_item = item
+                    self.PopupMenu(self.menu_watch_item.build(self), evt.GetPoint())
                     
         evt.Skip()
         
@@ -248,22 +260,24 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
             self.var_registry[name] = var_item
             self.lock.release()
             
-    def delete_var_item(self, var_item):
-        if var_item.is_ok():
-            self.delete(var_item)
-
     def on_add_watch(self, evt):
-        dlg = wx.TextEntryDialog(self, "Watch Variable")
+        dlg = wx.TextEntryDialog(self, "Watch Variable", self.last_watch)
         if dlg.ShowModal() == wx.ID_OK:
             var = dlg.GetValue().strip()
-            if ' ' in var:
-                return
+            #if ' ' in var:
+            #    return
             vn = self.get_var_name()
             self.lock.acquire()
             self.pending_var_additions[vn] = self.watch_item
             self.lock.release()
             self.model.var_create(var, floating=True, callback=self.__on_created_var, name=vn)
             
+    def on_remove_watch(self, evt):
+        item = self.get_item_data(self.selected_item)
+        self.model.var_delete(item, callback=partial(self.on_watch_deleted, self.selected_item))
+    def on_watch_deleted(self, watch_item, evt):
+        self.delete(watch_item)
+
     def scrub_vars(self, all_vars=False):
         #TODO use a list
         to_update = {}        
@@ -332,6 +346,9 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                 return None
         return frame
     
+    def on_step_out(self, evt):
+        self.parent.controller.step_out()
+        
     def clear_stack(self):
         n = self.get_frame_count()
         for i in range(n):
@@ -445,6 +462,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         pass        
     
     def clear(self):
+        self.last_watch = ""
         self.DeleteAllItems()
         self.root_item = self.add_root('root')
         self.stack_item = self.append_item(self.root_item,'Call Stack')

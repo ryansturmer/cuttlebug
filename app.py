@@ -326,6 +326,7 @@ class Controller(wx.EvtHandler):
             print "Can't download from state %s" % self.state
 
     def on_downloaded(self, result):
+        wx.CallAfter(self.frame.stop_busy)
         if result.cls == 'error':
             wx.CallAfter(self.frame.error_msg, result.msg)
         else:
@@ -416,16 +417,19 @@ class Controller(wx.EvtHandler):
     # BUILD
     #
     def build(self):
+        self.rebuilding = False
         build_process = build.BuildProcess(self.project.build.build_cmd, notify=self, cwd=self.project.directory, target=self.project.absolute_path(self.project.program.target))
         build_process.start()
     
     def clean(self):
+        self.rebuilding = False
         build_process = build.BuildProcess(self.project.build.clean_cmd, notify=self, cwd=self.project.directory)
         self.build_process = build_process
         build_process.start()
 
     def rebuild(self):
-        build_process = build.BuildProcess(self.project.build.rebuild_cmd, notify=self, cwd=self.project.directory)
+        self.rebuilding = True
+        build_process = build.BuildProcess(self.project.build.clean_cmd, notify=self, cwd=self.project.directory)
         self.build_process = build_process
         build_process.start()
 
@@ -439,6 +443,8 @@ class Controller(wx.EvtHandler):
         self.frame.log_view.show_pane('Build')
         
     def on_build_finished(self, evt):
+        if self.rebuilding:
+            self.build()
         #self.state = IDLE
         self.frame.statusbar.working = False
         self.frame.statusbar.text = ""

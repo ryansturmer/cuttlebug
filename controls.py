@@ -79,11 +79,12 @@ class StatusBar(wx.StatusBar):
     def __set_working(self, working):
         self.__working = bool(working)
         if self.__working: 
-            self.gauge.Pulse()
-            self.work_timer.Start(100)
+            wx.CallAfter(self.gauge.Pulse)
+            wx.CallAfter(self.work_timer.Start,100)
         else:
-            self.work_timer.Stop()
-            self.gauge.SetValue(0)
+            wx.CallAfter(self.work_timer.Stop)
+            wx.CallAfter(self.gauge.SetValue,0)
+    
     def __get_working(self):
         return self.__working
     working = property(__get_working, __set_working)
