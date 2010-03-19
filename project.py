@@ -131,7 +131,7 @@ class ProjectOptionsDialog(OptionsDialog):
         panel.add("Code", "Target Executable", TextWidget, key="program.target")
         panel.add("Locations", "Entry Point", TextWidget, key="program.entry_point")
        # panel.add("Locations", "Break on Main", CheckboxWidget, key="program.break_at_main")
-        self.add_panel(panel, icon='bug.png')
+        self.add_panel(panel, icon='chip.png')
         
     @staticmethod
     def show(parent, project=None):

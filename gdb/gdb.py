@@ -362,6 +362,12 @@ class GDB(wx.EvtHandler):
         return
         print data
         
+    def data_disassemble(self, start_addr=None, end_addr=None, filename=None, linenum=None, lines=1, mode=0, callback=None):
+        if filename:
+            self.__cmd('-data-disassemble -f %s -l %s %s %d' % (filename, linenum, lines, mode), callback=callback)
+        else:
+            self.__cmd('-data-disassemble -s %s -e %s %d' % (start_addr, end_addr, mode), callback=callback)
+            
     def exec_continue(self, callback=None):
         self.__cmd('-exec-continue\n', callback)
     def exec_step(self, callback=None):
@@ -383,6 +389,12 @@ class GDB(wx.EvtHandler):
         self.__cmd('-exec-interrupt\n', callable)
     halt = exec_interrupt
 
+    def exec_next_instruction(self, callable=None):
+        self.__cmd('-exec-next-instruction\n', callable)
+
+    def exec_step_instruction(self, callable=None):
+        self.__cmd('-exec-step-instruction\n', callable)
+        
     def target_download(self, callback=None):
         self.__cmd('-target-download\n', callback)
 

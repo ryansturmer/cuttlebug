@@ -163,6 +163,7 @@ class Controller(wx.EvtHandler):
             self.frame.runtime_view.set_model(self.gdb)
             self.frame.debug_view.set_model(self.gdb)
             self.frame.editor_view.set_model(self.gdb)
+            self.frame.disassembly_view.set_model(self.gdb)
             self.halt()
         if self.state == IDLE or self.state == RUNNING:
             self.exit_current_state()
@@ -235,6 +236,11 @@ class Controller(wx.EvtHandler):
     def step(self):
         if self.state == ATTACHED:
             self.gdb.exec_step()
+
+    def step_instruction(self):
+        if self.state == ATTACHED:
+            self.gdb.exec_step_instruction()
+
     def step_out(self):
         if self.state == ATTACHED:
             self.gdb.exec_finish()

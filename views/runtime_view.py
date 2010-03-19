@@ -10,7 +10,8 @@ from functools import partial
 import gdb
 import os, threading
 import menu
-        
+import settings
+
 MNU_ENABLE_BKPT = 0
 MNU_DISABLE_BKPT = 1
 class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
@@ -38,6 +39,21 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         self.__var_idx = 0
         self.create_popup_menus()
         self.clear()
+        self.load_positions()
+
+    def save_positions(self):
+        cols = self.GetColumnCount()
+        widths = [self.GetColumnWidth(i) for i in range(cols)]
+        settings.session_set('runtime_view_col_widths', widths)
+
+    def load_positions(self):
+        try:
+            widths = settings.session_get('runtime_view_col_widths')
+            cols = self.GetColumnCount()
+            for i in range(cols):
+                self.SetColumnWidth(i, widths[i])
+        except:
+            pass
 
     def create_popup_menus(self):
         self.menu_manager = menu.MenuManager()
@@ -84,6 +100,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         
     def on_register_update(self, evt):
         wx.CallAfter(self.update_registers, evt.data)
+        self.save_positions()
 
     def on_var_update(self, evt):
         names = evt.data

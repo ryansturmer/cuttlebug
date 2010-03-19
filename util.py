@@ -682,4 +682,3 @@ class KeyTree(object):
     def select_item(self, key):
         item = self._items[key]
         self.SelectItem(item)
-        

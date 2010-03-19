@@ -202,3 +202,40 @@ class DictListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.TextEdit
             if key not in items:
                 self.remove_item(key)
         self.Refresh()
+
+class ListControl(wx.ListCtrl):
+    def __init__(self, parent):
+        super(ListControl, self).__init__(parent, -1, style=wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_HRULES)
+        self.data = {}
+    def clear(self):
+        self.DeleteAllItems()
+    def set_columns(self, columns):
+        for i, column in enumerate(columns):
+            self.InsertColumn(i, column)
+    def update_item(self, row, item):
+        for i, s in enumerate(item):
+            s = str(s)
+            self.SetStringItem(row, i, s)
+    def add_item(self, item, data=None, color=wx.BLACK, bgcolor=wx.WHITE):
+        n = self.GetItemCount()
+        for i, s in enumerate(item):
+            s = str(s)
+            if i == 0:
+                self.InsertStringItem(n, s)
+            else:
+                self.SetStringItem(n, i, s)
+        self.SetItemTextColour(n,color)
+        self.SetItemBackgroundColour(n, bgcolor)
+        self.data[n] = data
+    def get_data(self, n):
+        return self.data[n]
+    def auto_size(self):
+        n = self.GetColumnCount()
+        for i in range(n):
+            self.SetColumnWidth(i, -1)
+            s1 = self.GetColumnWidth(i)
+            self.SetColumnWidth(i, -2)
+            s2 = self.GetColumnWidth(i)
+            width = max(s1, s2)
+            if i < n-1: width += 20
+            self.SetColumnWidth(i, width)

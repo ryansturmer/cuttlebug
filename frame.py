@@ -26,6 +26,8 @@ class Frame(util.PersistedFrame):
             self.create_log_view()
             self.create_memory_view()
             self.create_locals_view()
+            self.create_disassembly_view()
+            
             #self.create_breakpoint_view()
             self.create_register_view()
             self.create_project_view()
@@ -89,10 +91,11 @@ class Frame(util.PersistedFrame):
             #build.item('New Custom Build &Target...', self.on_new_build_target, icon="brick.png",enable=[menu.PROJECT_OPEN, menu.BUILD_FINISHED], disable=[menu.PROJECT_CLOSE, menu.BUILD_STARTED])
             # DEBUG (Disabled till a project is opened)
             debug = menubar.menu("&Debug")
-            debug.item('&Run\tF5', self.on_run, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
-            debug.item('&Step\tF6', self.on_step, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
-            debug.item('&Step Out\tShift+F6', self.on_step_out, icon="control_play_blue.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
-            debug.item('&Halt\tShift+F5', self.on_halt, icon="control_stop_blue.png", enable=menu.TARGET_RUNNING, disable=[menu.TARGET_HALTED, menu.TARGET_DETACHED])
+            debug.item('&Run\tF5', self.on_run, icon="run.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
+            debug.item('&Step\tF6', self.on_step, icon="step.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
+            debug.item('&Step Instruction\tCtrl+F6', self.on_step_instruction, icon="step-instruction.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
+            debug.item('&Step Out\tShift+F6', self.on_step_out, icon="step-out.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
+            debug.item('&Halt\tShift+F5', self.on_halt, icon="halt.png", enable=menu.TARGET_RUNNING, disable=[menu.TARGET_HALTED, menu.TARGET_DETACHED])
             debug.separator()
             debug.item('&Attach', self.on_attach, icon="connect.png", show=[menu.PROJECT_OPEN, menu.TARGET_DETACHED], hide=[menu.TARGET_ATTACHED], disable=menu.PROJECT_CLOSE, enable=[menu.PROJECT_OPEN, menu.TARGET_DETACHED])
             debug.item('&Detach', self.on_detach, icon="disconnect.png", show=menu.TARGET_ATTACHED, hide=menu.TARGET_DETACHED)
@@ -107,6 +110,8 @@ class Frame(util.PersistedFrame):
             #view.item('&Breakpoints\tAlt+K', self.on_toggle_breakpoint_view, icon="breakpoint.png")
             view.item('&Logs\tAlt+L', self.on_toggle_log_view, icon="application_view_list.png")
             view.item('&Debug\tAlt+D', self.on_toggle_debug_view, icon="bug.png")
+            view.item('&Disassembly\tAlt+A', self.on_toggle_disassembly_view, icon="chip.png")
+
             #view.separator()
             #view.item("Windows go here")
             #print menu.manager.pretty()
@@ -232,6 +237,11 @@ class Frame(util.PersistedFrame):
             self.debug_view.info = aui.AuiPaneInfo().Caption('Debug').Right().Name('DebugView')
             self.manager.AddPane(self.debug_view, self.debug_view.info)
         
+        def create_disassembly_view(self):
+            self.disassembly_view = views.DisassemblyView(self, controller=self.controller)
+            self.disassembly_view.info = aui.AuiPaneInfo().Caption('Disassembly').Right().Name('DisassemblyView')
+            self.manager.AddPane(self.disassembly_view, self.disassembly_view.info)
+            
         def create_register_view(self):
             pass
 
@@ -277,7 +287,7 @@ class Frame(util.PersistedFrame):
 
         def on_open_project(self, evt):
             dialog = wx.FileDialog(self, 'Open Project', style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
-            dialog.CenterOnParent()
+            #dialog.CenterOnParent()
             result = dialog.ShowModal()
             if result == wx.ID_OK:
                 path = dialog.GetPaths()[0]
@@ -375,6 +385,8 @@ class Frame(util.PersistedFrame):
             self.toggle_view(self.runtime_view)
         def on_toggle_debug_view(self, evt):
             self.toggle_view(self.debug_view)
+        def on_toggle_disassembly_view(self, evt):
+            self.toggle_view(self.disassembly_view)
             
         def toggle_view(self, view):
             info = self.manager.GetPane(view)
@@ -400,6 +412,9 @@ class Frame(util.PersistedFrame):
         def on_step(self, evt):
             self.controller.step()
 
+        def on_step_instruction(self, evt):
+            self.controller.step_instruction()
+            
         def on_step_out(self, evt):
             self.controller.step_out()
 
