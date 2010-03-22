@@ -129,13 +129,17 @@ class LogView(view.View):
 
     def __setup(self):
         self.add_logger(logging.getLogger('stdout'), icon="application_osx_terminal.png", format="%(message)s")
-        self.add_logger(logging.getLogger('gdb.mi'), icon="gnu.png")
+        self.add_logger(logging.getLogger('gdb.mi'), icon="gnu.png", on_input=self.on_gdb_mi_input)
         self.add_logger(logging.getLogger('gdb.stream'), icon="gnu.png")
         self.add_logger(logging.getLogger('errors'), icon="stop.png")
         self.build_pane = BuildPane(self, controller=self.controller)
         self.add_pane(self.build_pane, icon="brick.png")
         log.redirect_stdout('stdout')
 
+    def on_gdb_mi_input(self, input):
+        if self.controller and self.controller.gdb:
+            self.controller.gdb.cmd(input)
+        
     def clear_build(self):
         self.build_pane.clear()
     
