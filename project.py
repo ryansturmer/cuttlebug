@@ -1,10 +1,35 @@
-import pickle, os 
-from odict import OrderedDict
+import os 
 import util
 from options import *
 from jinja2 import Environment, PackageLoader
 from lxml import etree
 
+class Group(object):
+    def __init__(self, name, peripherals=None):
+        self.name=name
+        self.peripherals = peripherals or []
+    def add_peripheral(self, peripheral):
+        self.peripherals.append(peripheral)
+
+class Target(Group): pass
+    
+        
+class Peripheral(object):
+    def __init__(self, name, registers=None):
+        self.name=name    
+        self.registers = registers or []
+    def add_register(self, register):
+        self.registers.append(register)
+
+class SpecialFunctionRegister(object):
+    def __init__(self, name, address, size, permissions):
+        self.address = address
+        self.size = size
+        self.permissions = permissions
+        self.name = name
+        
+        
+        
 class Project(util.Category):
 
     def __init__(self, *args, **kwargs):
@@ -18,6 +43,7 @@ class Project(util.Category):
         general.add_item('project_name', 'Untitled Project')
         general.add_item('project_description', '')
         general.add_item('project_files', [])
+        general.add_item('target', '')
         
         # Build
         build = self.add_category('build')

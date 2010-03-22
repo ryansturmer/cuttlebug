@@ -1,6 +1,7 @@
 import wx
 from options import OptionsEvent, EVT_OPTION_CHANGED
 import wx.lib.colourselect as csel
+import wx.lib.filebrowsebutton as filebrowse
 import string
 
 class OptionsWidget(object):

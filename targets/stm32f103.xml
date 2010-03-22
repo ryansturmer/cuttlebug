@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<peripheral name="advanced_timer">
+	<reg name="CR1" fullname="Control Register 1" offset="0x0" as="short"/>
+	<reg name="CR2" fullname="Control Register 2" offset="0x4" as="short"/>
+	<reg name="SMCR" fullname="Slave Mode Control Register" offset="0x8" as="short"/>
+	<reg name="DIER" fullname="DMA Interrupt Enable Register" offset="0xc" as="short"/>
+	<reg name="SR" fullname="Status Register" offset="0x10" as="short"/>
+	<reg name="EGR" fullname="Event Generation Register" offset="0x14" as="short"/>
+	<reg name="CCMR1" fullname="Capture/Compare Mode Register 1" offset="0x18" as="short"/>
+	<reg name="CCMR2" fullname="Capture/Compare Mode Register 2" offset="0x1c" as="short"/>
+	<reg name="CCER" fullname="Capture/Compare Enable Register" offset="0x20" as="short"/>
+	<reg name="CNT" fullname="Counter" offset="0x24" as="short"/>
+</peripheral>
+
+<peripheral name="gpio">
+	<reg name="CRL" fullname="Port Configuration Register Low" offset="0x0" as="int" />
+	<reg name="CRH" fullname="Port Configuration Register High" offset="0x4" as="int" />
+	<reg name="IDR" fullname="Input Data Register" offset="0x8" as="int" />
+	<reg name="ODR" fullname="Output Data Register" offset="0xc" readas="int" />
+	<reg name="BSR" fullname="Bit Set/Reset: Set Register" offset="0x10" as="short" />
+	<reg name="BRR" fullname="Bit Set/Reset: Reset Register" offset="0x12" as="short" />
+</peripheral>
+
+<target name="STM32F103" version="1.0">
+	<group fullname="Timers">
+		<invoke peripheral="advanced_timer" name="TIM1" fullname="Timer 1" base="0x40012c00" />
+		<invoke peripheral="advanced_timer" name="TIM8" fullname="Timer 8" base="0x40013400" />	
+	</group>
+</part>

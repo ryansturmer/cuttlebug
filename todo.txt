@@ -1,8 +1,5 @@
 GENERAL
- * Build+Download+Run path
-   - pre-run command
  * GDB Wrapper that caches things like breakpoints, etc
- * Line number+function in status bar while running
  * Move to blocking GDB model with spinoff thread for commands (Rather than call-callback method)
  * Syntax colorization for Makefiles
  * Printing support
@@ -12,6 +9,7 @@ GENERAL
  * Jump to entry point after download
  * Handle col numbers in build errors
  * Fix background colors
+ * SFR VIEW!!!
  
 LOGGER
  * right click menu for log tabs:
@@ -19,38 +17,11 @@ LOGGER
    - save log
  * fix newlines in log output
 
-MEMORY VIEW
- * Maybe move to ListCtrl
- * If not, autosize gridlabels and cells
- * support different word sizes
- * support different address widths
- * easy update method
- * cache tosser
- * fix scrolling so updates are less frequent
- * formatting
- * right click menus
-
 GENERIC VIEW
- * creator method
- * store view info inside view object (aui stuff)
-
-BUILD VIEW
- * callback on build complete
- * Fix overlapping build bug (building shouldn't be allowed during another build)
- * Stop build button
- * Auto scrolling of build output
- 
-LOCALS VIEW
- * edit support
- * proper fonts
- * right click menus
- * Doesn't update correctly in windows
- 
+ * Better way of handling AUIInfo
+  
 EDITOR VIEW
- * fix bug for files that can't load (user tried to open a binary file, for example)
  * Hilighting of current line
- * Right click menu
-   - Jump to execution location
  * Editor history
  * Fix folding
  * Hover for local/expression evaluation, address resolution
@@ -60,11 +31,7 @@ EDITOR VIEW
    - Close others
    - Save page/Save page as...
  * Check disk periodically for updated files and reload
- * Hilighting of current line
  * Tooltips for file tabs
- * Apply styles to open files
- * Clearing breakpoints is broken
- * Keyboard shortcuts trapped in editor (ie: CTRL+S and stuff doesn't work)
  
 PROJECT VIEW
  * right click menus
@@ -79,18 +46,11 @@ PROJECT VIEW
  * Periodic refresh of file view
  
 MAIN FRAME
- * View Menu - should have all the views, and should show and hide them correctly
  * Confirmation/error dialog (for program errors)
  
-BREAKPOINT VIEW
- * If breakpoint set FAILS, the target can be convinced that it's running when it's not
-   - Maybe some timer based polling of the GDB session that allows for correction of state
- * Distinction between hardware and software breakpoints
- * Better breakpoint model in gdb object
- * disabling breakpoints
- * Update views properly when breakpoint is deleted
+RUNTIME VIEW
+ * Fix arrays in stack tree
  
 MISC
- * Splash Screen
  * About Box
  * Progress bar "zombies" after build/load

@@ -1,11 +1,11 @@
 import view
 import wx
 import wx.gizmos as gizmos
-import wx.lib.mixins.listctrl as listmix
-import sys
-from odict import OrderedDict
+#import wx.lib.mixins.listctrl as listmix
+#import sys
+#from odict import OrderedDict
 from controls import DictListCtrl
-from util import rgb, ArtListMixin, has_icon, bidict, button, KeyTree, TreeItemKey
+from util import ArtListMixin, has_icon, bidict, KeyTree
 from functools import partial
 import gdb
 import os, threading
@@ -70,7 +70,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         self.menu_breakpoints = m
         
         m = self.menu_manager.menu()
-        m.item("Show", func=self.on_show_frame, icon='find.png')
+        m.item("Show this Frame in Source", func=self.on_show_frame, icon='find.png')
         m.step_out = m.item("Step Out\tShift+F6", func=self.on_step_out, icon='control_play_blue.png')
         self.menu_frame_item = m
         
@@ -212,7 +212,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         item_data=self.get_item_data(item)
         if hasattr(item_data, 'level') and self.get_children_count(item, False) == 0: #item_data is a stack frame, and we wish to list its locals
             if not self.model.running:
-                self.model.stack_list_arguments(frame=item_data.level, callback=partial(self.__xon_listed_arguments, item))
+                self.model.stack_list_arguments(frame=item_data.level, callback=partial(self.__on_listed_arguments, item))
             else:
                 evt.Veto()
         elif item_data in self.var_registry and self.get_children_count(item, False) == 0:
@@ -229,7 +229,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                 self.pending_var_additions[varname] = parent
                 self.lock.release()
                 
-    def __xon_listed_locals(self, frame_item, args, result):
+    def __on_listed_locals(self, frame_item, args, result):
         if result.cls != 'error':
             if hasattr(result, 'locals') and frame_item.is_ok():
                 frame = self.get_item_data(frame_item)
@@ -241,7 +241,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                         self.lock.release()
                         self.model.var_create(item['name'], frame=frame.level, callback=self.__on_created_var, name=varname)
 
-    def __xon_listed_arguments(self, frame_item, result):
+    def __on_listed_arguments(self, frame_item, result):
         if result.cls != 'error':
             if 'stack-args' in result and frame_item.is_ok():
                 frame = self.get_item_data(frame_item)
@@ -249,7 +249,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                 if int(f['level']) != frame.level:
                     raise ValueError("Failed Sanity Check!")
                 args =  f['args']
-                self.model.stack_list_locals(frame=frame.level, callback=partial(self.__xon_listed_locals, frame_item, args))
+                self.model.stack_list_locals(frame=frame.level, callback=partial(self.__on_listed_locals, frame_item, args))
                 
     def __on_created_var(self, result):
         if hasattr(result, 'name'):
@@ -398,7 +398,6 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         self.scrub_vars(all_vars=stack_changed)
 
     def pop_stack_frame(self):
-        stack = self.model.stack
         frame_item = self.get_frame_items()[-1]
         if frame_item.is_ok():
             for child in self.walk(frame_item):
@@ -486,10 +485,13 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         self.breakpoints_item = self.append_item(self.root_item, 'Breakpoints')
         self.registers_item = self.append_item(self.root_item, 'CPU Registers')
         self.watch_item = self.append_item(self.root_item, 'Watch')
+        self.sfr_item = self.append_item(self.root_item, 'Special Function Registers')
+        
         self.set_item_art(self.registers_item, 'chip.png')
         self.set_item_art(self.stack_item, 'stack.png')
         self.set_item_art(self.breakpoints_item, 'breakpoint.png')
         self.set_item_art(self.watch_item, 'magnifier.png')
+        self.set_item_art(self.sfr_item, 'application_view_list.png')
         
         self.lock.acquire()
         self.frames = [] # Frame keys to tree items

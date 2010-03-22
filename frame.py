@@ -22,18 +22,15 @@ class Frame(util.PersistedFrame):
             
             # Create views
             self.manager = aui.AuiManager(self)
-           # self.create_build_view()
-            self.create_log_view()
-            self.create_memory_view()
-            self.create_locals_view()
-            self.create_disassembly_view()
+
+            self.create_views()
             
-            #self.create_breakpoint_view()
-            self.create_register_view()
+            '''
             self.create_project_view()
             self.create_editor_view()
             self.create_runtime_view()
             self.create_debug_view()
+            '''
             
             self.controller.setup_logs()
             self.controller.load_session()
@@ -70,7 +67,7 @@ class Frame(util.PersistedFrame):
             edit.item('&Paste\tCtrl+V', self.on_paste, icon='paste_plain.png')  
             edit.item('&Find...\tCtrl+F', self.on_find, icon='find.png')          
             edit.separator()
-            edit.item('&Styles...', self.on_styles, icon="style.png")
+            edit.item('&Fonts and Colors...', self.on_styles, icon="style.png")
             edit.item('&Options...', self.on_settings, icon='cog_edit.png')
 
             # Project Menu
@@ -100,27 +97,16 @@ class Frame(util.PersistedFrame):
             debug.item('&Attach', self.on_attach, icon="connect.png", show=[menu.PROJECT_OPEN, menu.TARGET_DETACHED], hide=[menu.TARGET_ATTACHED], disable=menu.PROJECT_CLOSE, enable=[menu.PROJECT_OPEN, menu.TARGET_DETACHED])
             debug.item('&Detach', self.on_detach, icon="disconnect.png", show=menu.TARGET_ATTACHED, hide=menu.TARGET_DETACHED)
             debug.separator()
+            debug.item("Reset", self.on_reset, icon="chip.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
             debug.item("Download", self.on_download, icon="application_put.png", enable=menu.TARGET_ATTACHED, disable=menu.TARGET_DETACHED)
-
+            
             # VIEW
             view = menubar.menu("&View")
             view.item('&Project\tAlt+P', self.on_toggle_project_view, icon="package.png")
             view.item('&Runtime\tAlt+R', self.on_toggle_runtime_view, icon="computer.png")
-            view.item('&Memory\tAlt+M', self.on_toggle_memory_view, icon="drive.png")
-            #view.item('&Breakpoints\tAlt+K', self.on_toggle_breakpoint_view, icon="breakpoint.png")
             view.item('&Logs\tAlt+L', self.on_toggle_log_view, icon="application_view_list.png")
             view.item('&Debug\tAlt+D', self.on_toggle_debug_view, icon="bug.png")
             view.item('&Disassembly\tAlt+A', self.on_toggle_disassembly_view, icon="chip.png")
-
-            #view.separator()
-            #view.item("Windows go here")
-            #print menu.manager.pretty()
-            # DEVELOPMENT (Remove for production)
-           # devel = menubar.menu("&Devel", visible=False)
-           # devel.item( 'Development Stuff Goes Here', lambda x : None)
-           # devel.item( 'Read Memory', self.on_read_memory)
-           # devel.item('&GDB Command...', self.on_gdb_command)
-           # devel.item('&MI Command...', self.on_mi_command)
         
             menu.manager.publish(menu.TARGET_DETACHED)
             menu.manager.publish(menu.PROJECT_CLOSE)
@@ -207,65 +193,37 @@ class Frame(util.PersistedFrame):
         def add_view(self, view):
             self.manager.AddPane(view, view.info)
             
-        def create_status_bar(self):
-            self.statusbar = controls.StatusBar(self)
-            self.statusbar.icon = "disconnect.png"
-            self.SetStatusBar(self.statusbar)
-
-        def create_memory_view(self):
-            self.memory_view = views.MemoryView(self, controller=self.controller)
-            self.memory_view.info = aui.AuiPaneInfo().Caption('Memory').Right().Name('MemoryView')
-            self.manager.AddPane(self.memory_view, self.memory_view.info)
-        
-        def create_breakpoint_view(self):
-            self.breakpoint_view = views.BreakpointView(self, controller=self.controller)
-            self.breakpoint_view.info = aui.AuiPaneInfo().Caption('Breakpoints').Right().Name('BreakpointView')
-            self.manager.AddPane(self.breakpoint_view, self.breakpoint_view.info)
-
-        def create_locals_view(self):
-            self.locals_view = views.LocalsView(self, controller=self.controller)
-            self.locals_view.info = aui.AuiPaneInfo().Caption('Variables').Right().Name('VarView')
-            self.manager.AddPane(self.locals_view, self.locals_view.info)
-
-        def create_runtime_view(self):
-            self.runtime_view = views.RuntimeView(self, controller=self.controller)
-            self.runtime_view.info = aui.AuiPaneInfo().Caption('Runtime').Right().Name('RuntimeView')
-            self.manager.AddPane(self.runtime_view, self.runtime_view.info)
-
-        def create_debug_view(self):
-            self.debug_view = views.GDBDebugView(self, controller=self.controller)
-            self.debug_view.info = aui.AuiPaneInfo().Caption('Debug').Right().Name('DebugView')
-            self.manager.AddPane(self.debug_view, self.debug_view.info)
-        
-        def create_disassembly_view(self):
-            self.disassembly_view = views.DisassemblyView(self, controller=self.controller)
-            self.disassembly_view.info = aui.AuiPaneInfo().Caption('Disassembly').Right().Name('DisassemblyView')
-            self.manager.AddPane(self.disassembly_view, self.disassembly_view.info)
+        def create_views(self):
             
-        def create_register_view(self):
-            pass
-
-        #def create_build_view(self):
-        #    self.build_view = views.BuildView(self, controller=self.controller)
-        #    self.build_view.info = aui.AuiPaneInfo().Caption('Build').Bottom().Name('BuildView') 
-        #    self.manager.AddPane(self.build_view, self.build_view.info)
-        
-        def create_log_view(self):
             self.log_view = views.LogView(self, controller = self.controller)
             self.log_view.info = aui.AuiPaneInfo().Caption('Logs').Bottom().Name('LogView') 
             self.manager.AddPane(self.log_view, self.log_view.info)
 
-        def create_editor_view(self):
             self.editor_view = views.EditorView(self, controller=self.controller)
             self.editor_view.info = aui.AuiPaneInfo().CentrePane().PaneBorder(False).Name('EditorView')
             self.manager.AddPane(self.editor_view, self.editor_view.info)
 
-        def create_project_view(self):
             self.project_view = views.ProjectView(self, controller=self.controller)
             self.project_view.Bind(views.EVT_PROJECT_DCLICK_FILE, self.on_project_dclick_file)
-
             self.project_view.info = aui.AuiPaneInfo().Caption('Project').Left().Name('ProjectView') 
             self.manager.AddPane(self.project_view, self.project_view.info)
+
+            self.runtime_view = views.RuntimeView(self, controller=self.controller)
+            self.runtime_view.info = aui.AuiPaneInfo().Caption('Runtime').Right().Name('RuntimeView')
+            self.manager.AddPane(self.runtime_view, self.runtime_view.info)
+
+            self.debug_view = views.GDBDebugView(self, controller=self.controller)
+            self.debug_view.info = aui.AuiPaneInfo().Caption('Debug').Right().Name('DebugView')
+            self.manager.AddPane(self.debug_view, self.debug_view.info)
+
+            self.disassembly_view = views.DisassemblyView(self, controller=self.controller)
+            self.disassembly_view.info = aui.AuiPaneInfo().Caption('Disassembly').Right().Name('DisassemblyView')
+            self.manager.AddPane(self.disassembly_view, self.disassembly_view.info)
+    
+        def create_status_bar(self):
+            self.statusbar = controls.StatusBar(self)
+            self.statusbar.icon = "disconnect.png"
+            self.SetStatusBar(self.statusbar)        
         
         def open_file(self, path):
             self.editor_view.notebook.create_file_tab(path)
@@ -371,8 +329,6 @@ class Frame(util.PersistedFrame):
         def on_detach(self, evt):
             self.controller.detach()
 
-        #def on_toggle_build_view(self, evt):
-        #    self.toggle_view(self.build_view)
         def on_toggle_log_view(self, evt):
             self.toggle_view(self.log_view)
         def on_toggle_breakpoint_view(self, evt):
@@ -424,4 +380,5 @@ class Frame(util.PersistedFrame):
         def on_download(self, evt):
             self.controller.download()
 
-        
+        def on_reset(self, evt):
+            pass
