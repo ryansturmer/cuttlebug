@@ -33,7 +33,7 @@ def get_data_files():
 setup(
     options = {"py2exe":{
         "compressed": 1,
-        "optimize": 2,
+        "optimize": 0,
         "bundle_files": 3,
         "includes": ['encodings', 'encodings.cp437'],
         "packages": [],

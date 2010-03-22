@@ -11,7 +11,7 @@ class DisassemblyView(view.View):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.list, 1, wx.EXPAND)
         self.SetSizer(sizer)
-        
+
     def set_model(self, model):
         self.model = model
 

@@ -252,10 +252,8 @@ if __name__ == "__main__":
 
     def save_func(evt):
         manager.publish("SAVE")
-        print "Save was clicked"
     def close_func(evt):
         manager.publish("CLOSE")
-        print "Close was clicked"
 
     new = file.item("New", hide="SAVE", show="CLOSE")
     open = file.item("Open", disable="SAVE")
