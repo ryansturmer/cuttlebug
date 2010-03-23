@@ -1,32 +1,60 @@
 import os 
 import util
+from util import coroutine
 from options import *
 from jinja2 import Environment, PackageLoader
 from lxml import etree
+import xml.sax
+SIZES = {'byte':1, 'short':2, 'int':4, '1':1,'2':2,'4':4}
 
 class Group(object):
-    def __init__(self, name, peripherals=None):
+    def __init__(self, name, items=None):
         self.name=name
-        self.peripherals = peripherals or []
-    def add_peripheral(self, peripheral):
-        self.peripherals.append(peripheral)
-
-class Target(Group): pass
-    
+        self.items = items or []
+    def add_item(self, item):
+        self.items.append(item)
+                    
+class Target(Group):
+    @staticmethod
+    def load(filename):
+        path = os.path.abspath(filename)
+        fp = open(path, 'r')
+        tree = etree.parse(fp)
+        print Target.__walk(tree.getroot())
         
+    @staticmethod
+    def __walk(item, peripherals=None):
+        peripherals = peripherals or []
+        if item.tag == 'peripheral':
+            name = item.get('name')
+            peripheral = Peripheral(name)
+            for reg in item.iter('reg'):
+                name, fullname, offset, size = reg.get('name'), reg.get('fullname'), reg.get('offset'), reg.get('as')
+                size = SIZES[size.strip().lower()]
+                register = SpecialFunctionRegister(name, fullname, offset, size, 'rw')
+                peripheral.add_register(register)
+            peripherals.append(peripheral)
+        return peripherals
+            
 class Peripheral(object):
     def __init__(self, name, registers=None):
         self.name=name    
         self.registers = registers or []
+        
     def add_register(self, register):
         self.registers.append(register)
 
+    def instantiate(self, base_addr):
+        return Peripheral(self.name, [register.instantiate() for register in self.registers])
+        
 class SpecialFunctionRegister(object):
     def __init__(self, name, address, size, permissions):
         self.address = address
         self.size = size
         self.permissions = permissions
         self.name = name
+    def instantiate(self, base_address):
+        return SpecialFunctionRegister(self.name, base_address+self.address, self.size, self.permissions)
         
         
         
@@ -170,4 +198,4 @@ class Session(object):
         self.project_filename = None
 
 if __name__ == "__main__":
-	Project.create('test_project.xml') 
+	print Target.load('targets/stm32f103.xml')

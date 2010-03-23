@@ -12,6 +12,13 @@ jinja_env = Environment(loader=PackageLoader('dummy', 'templates'))
 settings_template = jinja_env.get_template('settings.xml')
 project_template = jinja_env.get_template('project.xml')    
     
+def coroutine(func):
+    def start(*args, **kwargs):
+        cr = func(*args, **kwargs)
+        cr.next()
+        return cr
+    return start
+
 class bidict(object):
     
     def __init__(self, d=None):
