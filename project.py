@@ -1,11 +1,13 @@
 import os 
 import util
-from util import coroutine
 from options import *
 from jinja2 import Environment, PackageLoader
 from lxml import etree
-import xml.sax
+
 SIZES = {'byte':1, 'short':2, 'int':4, '1':1,'2':2,'4':4}
+
+def str2int(s):
+    return int(s, 16) if 'x' in s else int(s)
 
 class Group(object):
     def __init__(self, name, items=None):
@@ -20,44 +22,82 @@ class Target(Group):
         path = os.path.abspath(filename)
         fp = open(path, 'r')
         tree = etree.parse(fp)
-        print Target.__walk(tree.getroot())
-        
+        peripherals = Target.__get_peripherals(tree.getroot())
+        return Target.__get_target(tree.getroot(), peripherals)
+    
     @staticmethod
-    def __walk(item, peripherals=None):
-        peripherals = peripherals or []
-        if item.tag == 'peripheral':
-            name = item.get('name')
-            peripheral = Peripheral(name)
+    def __get_peripherals(root):
+        peripherals = {}
+        for item in root.iter('peripheral'):
+            peripheral_name = item.get('name')
+            peripheral = Peripheral()
             for reg in item.iter('reg'):
-                name, fullname, offset, size = reg.get('name'), reg.get('fullname'), reg.get('offset'), reg.get('as')
-                size = SIZES[size.strip().lower()]
+                print reg
+                name, fullname, offset, size = reg.get('name'), reg.get('fullname'), str2int(reg.get('offset')), reg.get('as')
+                size = SIZES.get(size.strip().lower(), 4)
                 register = SpecialFunctionRegister(name, fullname, offset, size, 'rw')
                 peripheral.add_register(register)
-            peripherals.append(peripheral)
+            peripherals[peripheral_name] = peripheral
         return peripherals
+    
+    @staticmethod
+    def __get_target(root, peripherals):
+        for target_item in root.iter('target'):
+            name = target_item.get('name')
+            target = Target(name)
+            for item in target_item:
+                target.add_item(Target.__walk(item, peripherals))
+            break
+        return target
+    @staticmethod
+    def __walk(item, peripherals):
+        if item.tag == 'group':
+            retval = Group(item.get('name'))
+            for child in item:
+                retval.add_item(Target.__walk(child, peripherals))
+        elif item.tag == 'invoke':
+            peripheral = peripherals.get(item.get('peripheral'), None)
+            if peripheral:
+                retval = peripheral.instantiate(item.get('name'), str2int(item.get('base')))
+        
+        return retval
             
 class Peripheral(object):
-    def __init__(self, name, registers=None):
+    def __init__(self, name='', registers=None):
         self.name=name    
         self.registers = registers or []
         
     def add_register(self, register):
         self.registers.append(register)
 
-    def instantiate(self, base_addr):
-        return Peripheral(self.name, [register.instantiate() for register in self.registers])
+    def instantiate(self, name, base_addr):
+        return Peripheral(name, [register.instantiate(base_addr) for register in self.registers])
         
+    def pretty(self):
+        retval = "Peripheral '%s'\n" % self.name
+        for register in self.registers:
+            retval += "%s\n" % register
+        return retval
+
 class SpecialFunctionRegister(object):
-    def __init__(self, name, address, size, permissions):
+    def __init__(self, name, fullname, address, size, permissions):
+        self.name = name
+        self.fullname = fullname or name
         self.address = address
         self.size = size
         self.permissions = permissions
-        self.name = name
+        
     def instantiate(self, base_address):
-        return SpecialFunctionRegister(self.name, base_address+self.address, self.size, self.permissions)
-        
-        
-        
+        return SpecialFunctionRegister(self.name, self.fullname, base_address+self.address, self.size, self.permissions)
+
+    @property
+    def expression(self):
+        size = {1:"char",2:"short",4:"int"}[self.size]
+        return "*((%s*)0x%x)" % (size, self.address)
+    
+    def __str__(self):
+        return '<SFR name="%s" %s0x%x %d %s>' % (self.name, '' if self.fullname == self.name else 'fullname="%s" ' % self.fullname, self.address, self.size, self.permissions)
+    
 class Project(util.Category):
 
     def __init__(self, *args, **kwargs):
@@ -198,4 +238,5 @@ class Session(object):
         self.project_filename = None
 
 if __name__ == "__main__":
-	print Target.load('targets/stm32f103.xml')
+    target = Target.load('targets/stm32f103.xml')
+    print target.items[0].items

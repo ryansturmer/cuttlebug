@@ -13,13 +13,10 @@
 	<reg name="CCER" fullname="Capture/Compare Enable Register" offset="0x20" as="short" />
 	<reg name="CNT" fullname="Counter" offset="0x24" as="short" />
 </peripheral>
-
-
-
 <target name="STM32F103">
 	<group fullname="Timers">
-		<invoke peripheral="advanced_timer" name="TIM1" fullname="Timer 1" base="0x40012c00" />
-		<invoke peripheral="advanced_timer" name="TIM8" fullname="Timer 8" base="0x40013400" />	
+		<invoke peripheral="advanced_timer" name="TIM1" fullname="Timer 1 (Advanced Timer)" base="0x40012c00" />
+		<invoke peripheral="advanced_timer" name="TIM8" fullname="Timer 8 (Advanced Timer)" base="0x40013400" />	
 	</group>
 </target>
 </document>
