@@ -13,10 +13,39 @@
 	<reg name="CCER" fullname="Capture/Compare Enable Register" offset="0x20" as="short" />
 	<reg name="CNT" fullname="Counter" offset="0x24" as="short" />
 </peripheral>
+
+<peripheral name="timer">
+	<reg name="CR1" fullname="Control Register 1" offset="0x0" as="int" />
+	<reg name="CR2" fullname="Control Register 2" offset="0x4" as="int" />
+	<reg name="SMCR" fullname="Slave Mode Control Register" offset="0x8" as="int" />
+	<reg name="DIER" fullname="DMA Interrupt Enable Register" offset="0xc" as="int" />
+	<reg name="SR" fullname="Status Register" offset="0x10" as="int" />
+	<reg name="EGR" fullname="Event Generation Register" offset="0x14" as="int" />
+	<reg name="CCMR1" fullname="Capture/Compare Mode Register 1" offset="0x18" as="int" />
+	<reg name="CCMR2" fullname="Capture/Compare Mode Register 2" offset="0x1c" as="int" />
+	<reg name="CCER" fullname="Capture/Compare Enable Register" offset="0x20" as="int" />
+	<reg name="CNT" fullname="Counter" offset="0x24" as="int" />
+	<reg name="PSC" fullname="Prescaler" offset="0x28" as="int" />
+	<reg name="ARR" fullname="Auto Reload Register" offset="0x2c" as="int" />
+	<reg name="CCR1" fullname="Capture/Compare Register 1" offset="0x34" as="int" />
+	<reg name="CCR2" fullname="Capture/Compare Register 2" offset="0x38" as="int" />
+	<reg name="CCR3" fullname="Capture/Compare Register 3" offset="0x3c" as="int" />
+	<reg name="CCR4" fullname="Capture/Compare Register 4" offset="0x40" as="int" />
+	<reg name="DCR" fullname="DMA Control Register" offset="0x48" as="int" />
+</peripheral>
+
 <target name="STM32F103">
 	<group fullname="Timers">
+		<invoke peripheral="timer" name="TIM2" fullname="Timer 2" base="0x40000000" />	
+		<invoke peripheral="timer" name="TIM3" fullname="Timer 3" base="0x40000400" />	
+		<invoke peripheral="timer" name="TIM4" fullname="Timer 4" base="0x40000800" />	
+		<invoke peripheral="timer" name="TIM5" fullname="Timer 5" base="0x40000fff" />	
+		<invoke peripheral="timer" name="TIM6" fullname="Timer 6" base="0x400013ff" />	
+		<invoke peripheral="timer" name="TIM7" fullname="Timer 7" base="0x400017ff" />	
+	</group>
+	<group fullname="Advanced Timers">
 		<invoke peripheral="advanced_timer" name="TIM1" fullname="Timer 1 (Advanced Timer)" base="0x40012c00" />
-		<invoke peripheral="advanced_timer" name="TIM8" fullname="Timer 8 (Advanced Timer)" base="0x40013400" />	
+		<invoke peripheral="timer" name="TIM8" fullname="Timer 8 (Advanced Timer)" base="0x40013400" />	
 	</group>
 </target>
 </document>

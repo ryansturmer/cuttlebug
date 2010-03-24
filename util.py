@@ -578,6 +578,17 @@ class KeyTree(object):
              child, cookie = self.get_next_child(top_item, cookie)
         return retval
         
+    def walk_expanded(self, top_item, include_root=True):
+        if self.get_children_count(top_item) == 0:
+            yield top_item
+        else:
+            if self.is_expanded(top_item):
+                for child in self.children(top_item):
+                    for item in self.walk_expanded(child, include_root=True):
+                        yield item
+        if include_root:
+            yield top_item
+        
     def get_parent(self, key):
         item = self._items[key]
         item = self.GetItemParent(item)
@@ -593,6 +604,10 @@ class KeyTree(object):
                 return True
             parent = self.get_parent(parent)
         return False
+    
+    def is_expanded(self, key):
+        item = self._items[key]
+        return self.IsExpanded(item)
     
     def get_first_child(self, key):
         item = self._items[key]
@@ -632,6 +647,10 @@ class KeyTree(object):
     def get_item_data(self, key):
         item = self._items[key]
         return self.GetItemPyData(item)[1]
+
+    def get_item_text(self, key, col):
+        item = self._items[key]
+        return self.GetItemText(item, col)
     
     def set_item_data(self, key, data):
         item = self._items[key]

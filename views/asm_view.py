@@ -1,6 +1,8 @@
 from controls import ListControl
 import view
 import wx
+import settings
+
 class DisassemblyView(view.View):
     def __init__(self, *args, **kwargs):
         super(DisassemblyView, self).__init__(*args, **kwargs)
@@ -11,13 +13,27 @@ class DisassemblyView(view.View):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.list, 1, wx.EXPAND)
         self.SetSizer(sizer)
+        self.load_positions()
+
+    def save_positions(self):
+        cols = self.list.GetColumnCount()
+        widths = [self.list.GetColumnWidth(i) for i in range(cols)]
+        settings.session_set('asm_view_col_widths', widths)
+
+    def load_positions(self):
+        try:
+            widths = settings.session_get('asm_view_col_widths')
+            cols = self.list.GetColumnCount()
+            for i in range(cols):
+                self.list.SetColumnWidth(i, widths[i])
+        except:
+            pass
 
     def set_model(self, model):
         self.model = model
 
     def on_target_halted(self, a, b):
-        print a
-        print b
+        self.save_positions()
         if self.model:
             self.model.data_disassemble(start_addr="$pc-8", end_addr="$pc+8", callback=self.on_disassembled_data)
          

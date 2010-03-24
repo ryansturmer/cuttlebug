@@ -434,6 +434,9 @@ class GDB(wx.EvtHandler):
             
             self.post_event(GDBEvent(EVT_GDB_UPDATE_REGISTERS, self, data=changed))
 
+    def data_evaluate_expression(self, expression, callback):
+        self.__cmd('-data-evaluate-expression "%s"' % expression, callback=callback)
+        
     def break_insert(self, file, line, hardware=False, temporary=False, callback=None):
         self.__cmd('-break-insert %s %s %s:%d' % ("-h" if hardware else "", "-t" if temporary else "", os.path.normpath(file), line), callback=callback, internal_callback=self.__update_breakpoints)
                 

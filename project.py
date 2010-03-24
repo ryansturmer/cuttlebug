@@ -12,6 +12,7 @@ def str2int(s):
 class Group(object):
     def __init__(self, name, items=None):
         self.name=name
+        self.fullname = name
         self.items = items or []
     def add_item(self, item):
         self.items.append(item)
@@ -52,7 +53,7 @@ class Target(Group):
     @staticmethod
     def __walk(item, peripherals):
         if item.tag == 'group':
-            retval = Group(item.get('name'))
+            retval = Group(item.get('name') or item.get('fullname'))
             for child in item:
                 retval.add_item(Target.__walk(child, peripherals))
         elif item.tag == 'invoke':
@@ -161,6 +162,7 @@ class Project(util.Category):
                     pass # We could log an error here or something
         walk(project, tree.getroot())
         project.modified = False
+        project.target = Target.load('targets/stm32f103.xml')
         return project
     
     @staticmethod

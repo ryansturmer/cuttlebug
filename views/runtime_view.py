@@ -11,11 +11,13 @@ import gdb
 import os, threading
 import menu
 import settings
+import project
 
 MNU_ENABLE_BKPT = 0
 MNU_DISABLE_BKPT = 1
 class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
     def __init__(self, parent):
+        self.parent = parent
         super(RuntimeTree, self).__init__(id=-1, parent=parent, style=wx.TR_DEFAULT_STYLE  | wx.TR_FULL_ROW_HIGHLIGHT | wx.TR_HIDE_ROOT | wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT)
         ArtListMixin.__init__(self)
         KeyTree.__init__(self)
@@ -89,7 +91,9 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         self.model.Bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, self.on_breakpoint_update)
         self.model.Bind(gdb.EVT_GDB_UPDATE_REGISTERS, self.on_register_update)
         self.model.Bind(gdb.EVT_GDB_FINISHED, self.on_gdb_finished)
-                
+        self.model.Bind(gdb.EVT_GDB_STOPPED, self.on_gdb_stopped)
+        wx.CallAfter(self.build_sfr_tree)
+
     def get_var_name(self):
         name = "rtv_%d" % self.__var_idx
         self.__var_idx += 1
@@ -181,6 +185,8 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         if name in self.var_registry: 
             if self.is_descendent(item, self.get_frame_items()[-1]):
                 return
+        if self.is_descendent(item, self.sfr_item):
+            return
         evt.Veto()
             
     def on_select_item(self, evt):
@@ -194,6 +200,12 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         if name in self.var_registry and name in self.model.vars:
             new_var_value = evt.GetLabel()
             self.model.var_assign(name, new_var_value)
+        
+        if self.is_descendent(item, self.sfr_item):
+            reg = self.get_item_data(item)
+            if hasattr(reg, 'expression'):
+                self.model.data_evaluate_expression('%s=%s' % (reg.expression, evt.GetLabel()), callback=partial(self.on_sfr_data, item,True))
+            
         evt.Veto()
             
     def on_get_tooltip(self, evt):
@@ -210,6 +222,11 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
     def on_expanding(self, evt):
         item=self.get_event_item(evt)
         item_data=self.get_item_data(item)
+                
+        if self.is_descendent(item, self.sfr_item):
+            self.update_sfr_tree(item, force_root=True, colorize=False)
+            return
+        
         if hasattr(item_data, 'level') and self.get_children_count(item, False) == 0: #item_data is a stack frame, and we wish to list its locals
             if not self.model.running:
                 self.model.stack_list_arguments(frame=item_data.level, callback=partial(self.__on_listed_arguments, item))
@@ -472,8 +489,55 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                     item = self.register_registry[name]
                     self.set_item_text(item, registers[name], 1)
                     self.set_item_text_colour(item, wx.RED)
-                    
+              
+    def build_sfr_tree(self):
+        if not self.parent.controller.project:
+            return
+        target_model = self.parent.controller.project.target
+        def walk(self, tree_item, item):
+            if isinstance(item, project.Group):
+                group_item = self.append_item(tree_item, item.name)
+                for child in item.items:
+                    walk(self, group_item, child)
+            elif isinstance(item, project.Peripheral):
+                peripheral_item = self.append_item(tree_item, item.name)
+                for child in item.registers:
+                    walk(self, peripheral_item, child)
+            elif isinstance(item, project.SpecialFunctionRegister):
+                sfr_item = self.append_item(tree_item, item.fullname)
+                self.set_item_data(sfr_item, item)
+        tree_item = self.sfr_item
+        for item in target_model.items:
+            walk(self, tree_item, item)     
         
+    def on_gdb_stopped(self, evt):
+        self.update_sfr_tree(self.sfr_item)
+        evt.Skip()
+        
+    def update_sfr_tree(self, sfr_item, force_root=False, colorize=True):
+        if force_root: 
+            items = self.children(sfr_item)
+        else:
+            items = [sfr_item]
+        
+        for i in items:
+            for tree_item in self.walk_expanded(i, False):
+                item = self.get_item_data(tree_item)
+                if hasattr(item, 'expression'):
+                    self.model.data_evaluate_expression(item.expression, callback=partial(self.on_sfr_data, tree_item, colorize))
+
+    def on_sfr_data(self, item, colorize, data):
+        if data.cls == "done" and hasattr(data, 'value'):
+            wx.CallAfter(self.update_sfr_value, item, data.value, colorize)
+    
+    def update_sfr_value(self, item, value, colorize=True):
+        current_value = self.get_item_text(item, 1)
+        self.set_item_text(item, value, 1)
+        if current_value != value and colorize:
+            self.set_item_text_colour(item, wx.RED)
+        else:
+            self.set_item_text_colour(item, wx.BLACK)
+            
     def update(self):
         pass        
     
@@ -501,7 +565,6 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         self.register_registry = bidict()
         self.lock.release()
         self.breakpoint = None
-        
         
     def __get_evt_item(self, evt):
         item = evt.GetItem()
