@@ -159,7 +159,7 @@ class Controller(wx.EvtHandler):
         menu.manager.publish(menu.TARGET_ATTACHED)
         #print "Entering the ATTACHED state."
         if self.state == IDLE:
-           # self.frame.locals_view.set_model(self.gdb.vars)
+            # self.frame.locals_view.set_model(self.gdb.vars)
             self.frame.runtime_view.set_model(self.gdb)
             self.frame.debug_view.set_model(self.gdb)
             self.frame.editor_view.set_model(self.gdb)
