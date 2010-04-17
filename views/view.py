@@ -29,7 +29,7 @@ class View(wx.Panel):
             self._bind(app.EVT_APP_TARGET_HALTED, "on_target_halted")
             
 #            self._bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, "on_breakpoint_update")
- #           self._bind(gdb.EVT_GDB_UPDATE_LOCALS, "on_locals_update")
+#            self._bind(gdb.EVT_GDB_UPDATE_LOCALS, "on_locals_update")
 
     def set_model(self, model):
         self.model = model

@@ -54,11 +54,11 @@ class QuickFindBar(wx.Panel):
         self.textctrl.SetFocus()
         self.GetParent().Thaw()
         
-    def hide(self):
-        self.GetParent().Freeze()
-        self.Hide()
-        self.GetParent().Layout()
-        self.GetParent().Thaw()
+#    def hide(self):
+#        self.GetParent().Freeze()
+#        self.Hide()
+#        self.GetParent().Layout()
+#        self.GetParent().Thaw()
         
     def on_next(self, evt):
         self.find_next(self.textctrl.GetValue())
@@ -96,6 +96,7 @@ class QuickFindBar(wx.Panel):
         
     def on_enter(self, evt):
         self.find_next(self.textctrl.GetValue())
+        evt.Skip()
         
     def on_key(self, evt):
         if evt.GetKeyCode() == wx.WXK_ESCAPE and evt.GetModifiers() == 0:
@@ -167,19 +168,19 @@ class EditorView(view.View):
         else:
             self.notebook.close_file(filename)
     def cut(self):
-        window = self.current_editor.Cut()
+        self.current_editor.Cut()
 
     def copy(self):
-        window = self.current_editor.Copy()
+        self.current_editor.Copy()
 
     def paste(self):
-        window = self.current_editor.Paste()
+        self.current_editor.Paste()
 
     def undo(self):
-        window = self.current_editor.Undo()
+        self.current_editor.Undo()
 
     def redo(self):
-        window = self.current_editor.Redo()
+        self.current_editor.Redo()
         
         
     def set_exec_location(self, file, line, goto = False):

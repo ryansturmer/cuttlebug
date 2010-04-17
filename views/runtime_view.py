@@ -1,9 +1,6 @@
 import view
 import wx
 import wx.gizmos as gizmos
-#import wx.lib.mixins.listctrl as listmix
-#import sys
-#from odict import OrderedDict
 from controls import DictListCtrl
 from util import ArtListMixin, has_icon, bidict, KeyTree
 from functools import partial
@@ -18,7 +15,7 @@ MNU_DISABLE_BKPT = 1
 class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
     def __init__(self, parent):
         self.parent = parent
-        super(RuntimeTree, self).__init__(id=-1, parent=parent, style=wx.TR_DEFAULT_STYLE  | wx.TR_FULL_ROW_HIGHLIGHT | wx.TR_HIDE_ROOT | wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT)
+        gizmos.TreeListCtrl.__init__(self, id=-1, parent=parent, style=wx.TR_DEFAULT_STYLE  | wx.TR_FULL_ROW_HIGHLIGHT | wx.TR_HIDE_ROOT | wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT | wx.TR_EDIT_LABELS)
         ArtListMixin.__init__(self)
         KeyTree.__init__(self)
         self.SetFont(wx.Font(8, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
@@ -31,7 +28,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         #self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.Bind(wx.EVT_LEFT_DCLICK, self.on_dclick)
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.on_item_right_click)
-        
+
         self.model = None
         self.AddColumn('Context')
         self.AddColumn('Value')      
@@ -173,41 +170,42 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         #print "Got a dclick!"
         id = self.__get_evt_item(evt)
         if self.model and self.is_descendent(id, self.breakpoints_item):
-            bkpt = self.get_item_data(item)
+            bkpt = self.get_item_data(id)
             if bkpt.enabled:
                 self.model.break_disable(bkpt)
             else:
                 self.model.break_enable(bkpt)
-            
+                            
     def on_begin_label_edit(self, evt):
         item = self.get_event_item(evt)
         name = self.get_item_data(item)
         if name in self.var_registry: 
             if self.is_descendent(item, self.get_frame_items()[-1]):
+                evt.Skip()
                 return
         if self.is_descendent(item, self.sfr_item):
+            evt.Skip()
             return
+        print "Veto!"
         evt.Veto()
             
     def on_select_item(self, evt):
-        item = self.get_event_item(evt)
+        #item = self.get_event_item(evt)
         #print self.get_item_data(item)
         evt.Skip()
         
     def on_end_label_edit(self, evt):
+        print "Finishing the edit process"
         item = self.get_event_item(evt)
         name = self.get_item_data(item)
         if name in self.var_registry and name in self.model.vars:
             new_var_value = evt.GetLabel()
             self.model.var_assign(name, new_var_value)
-        
         if self.is_descendent(item, self.sfr_item):
             reg = self.get_item_data(item)
             if hasattr(reg, 'expression'):
                 self.model.data_evaluate_expression('%s=%s' % (reg.expression, evt.GetLabel()), callback=partial(self.on_sfr_data, item,True))
-            
         evt.Veto()
-            
     def on_get_tooltip(self, evt):
         item = self.get_event_item(evt)
         if self.model and item:
@@ -596,6 +594,7 @@ class RuntimeView(view.View):
     def __init__(self, *args, **kwargs):
         super(RuntimeView, self).__init__(*args, **kwargs)
         self.tree = RuntimeTree(self)
+#      self.tree.Bind(wx.EVT_KEY_DOWN, self.tree.on_key_down)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.tree, 1, wx.EXPAND)
         self.SetSizer(sizer)

@@ -10,6 +10,8 @@ GENERAL
  * Handle col numbers in build errors
  * Fix background colors
  * SFR VIEW!!!
+ * Add SVN number of the build to the status bar/about box?
+ 
  
 LOGGER
  * right click menu for log tabs:

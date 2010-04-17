@@ -10,7 +10,7 @@ import styles, style_dialog
 class Frame(util.PersistedFrame):
 
         def __init__(self, parent=None, title="Cuttlebug"):
-            super(Frame, self).__init__(parent, -1, title, size=(1024,768))
+            super(Frame, self).__init__(parent, -1, title, size=(1024,768), style=wx.DEFAULT_FRAME_STYLE & ~wx.TAB_TRAVERSAL)
             self.SetIcon(wx.Icon('icons/cuttlebug.png', wx.BITMAP_TYPE_PNG))
             self.controller = app.Controller(self)            
 
@@ -208,7 +208,7 @@ class Frame(util.PersistedFrame):
             self.project_view.info = aui.AuiPaneInfo().Caption('Project').Left().Name('ProjectView') 
             self.manager.AddPane(self.project_view, self.project_view.info)
 
-            self.runtime_view = views.RuntimeView(self, controller=self.controller)
+            self.runtime_view = views.RuntimeView(self, style=0, controller=self.controller)
             self.runtime_view.info = aui.AuiPaneInfo().Caption('Runtime').Right().Name('RuntimeView')
             self.manager.AddPane(self.runtime_view, self.runtime_view.info)
 
