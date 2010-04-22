@@ -3,7 +3,7 @@ import wx.aui as aui
 import wx.stc as stc
 import os
 import wx
-import util, view, menu, icons, util, app, gdb, styles
+import util, view, menu, icons, util, app, gdb, styles, settings
 
 #TODO fix code folding
 #TODO fix updating the colorization settings so you don't have to close and reopen existing tabs
@@ -190,7 +190,6 @@ class EditorView(view.View):
         if not widget:
             return
         widget.set_exec_marker(line)
-        widget.style_line(line-1, styles.STYLE_EXECUTION_POSITION)
         if goto:
             self.goto(file, line)
             
@@ -245,6 +244,7 @@ class EditorControl(stc.StyledTextCtrl):
     SYMBOL_MARGIN = 1
     FOLDING_MARGIN = 2
 
+    EXECUTION_BKGND_MARKER = 4
     EXECUTION_MARKER = 3
     BREAKPOINT_MARKER = 2
     DISABLED_BREAKPOINT_MARKER = 1
@@ -263,7 +263,6 @@ class EditorControl(stc.StyledTextCtrl):
         self.SetMarginWidth(1, 16)
         self.click_pos = None
         #self.SetMarginMask(1, 1<<31)
-        self.define_markers()
         self.create_popup_menu()
         self.SetEOLMode(stc.STC_EOL_LF)
         self.SetModEventMask(stc.STC_MOD_INSERTTEXT | stc.STC_MOD_DELETETEXT | stc.STC_PERFORMED_UNDO | stc.STC_PERFORMED_REDO | stc.STC_PERFORMED_USER)
@@ -288,8 +287,9 @@ class EditorControl(stc.StyledTextCtrl):
     def define_markers(self):
         # Execution Marker (for showing current program location)
         self.MarkerDefine(self.EXECUTION_MARKER, stc.STC_MARK_ARROW)
-        self.MarkerSetBackground(self.EXECUTION_MARKER, "yellow") 
-        #self.MarkerSetForeground(self.EXECUTION_MARKER, "darkgrey") 
+        self.MarkerSetBackground(self.EXECUTION_MARKER, wx.Colour(*self.controller.settings.editor.exec_marker_color))         
+        self.MarkerDefine(self.EXECUTION_BKGND_MARKER, stc.STC_MARK_BACKGROUND)
+        self.MarkerSetBackground(self.EXECUTION_BKGND_MARKER, wx.Colour(*self.controller.settings.editor.exec_marker_color))
         
         # Breakpoint Marker (for showing user-selected breakpoints)
         self.MarkerDefine(self.BREAKPOINT_MARKER, stc.STC_MARK_CIRCLE)
@@ -300,6 +300,8 @@ class EditorControl(stc.StyledTextCtrl):
         self.MarkerDefine(self.DISABLED_BREAKPOINT_MARKER, stc.STC_MARK_CIRCLE)
         self.MarkerSetBackground(self.DISABLED_BREAKPOINT_MARKER, "grey") 
         #self.MarkerSetForeground(self.DISABLED_BREAKPOINT_MARKER, "darkgrey") 
+        
+                                 
         
     def on_update_ui(self, evt):
         self.controller.frame.statusbar.line = self.current_line()+1
@@ -434,14 +436,14 @@ class EditorControl(stc.StyledTextCtrl):
         self.PopupMenu(self.popup_menu.build(self)) 
         evt.Skip()
         
-    def get_name(self):
+    @property
+    def name(self):
         if self.file_path:
             root, name = os.path.split(self.file_path)
         else:
             name = 'Untitled'
         
         return ("*" + name) if self.GetModify() else name 
-    name = property(get_name)
     
     def apply_settings(self):
         settings = self.controller.settings.editor
@@ -450,6 +452,7 @@ class EditorControl(stc.StyledTextCtrl):
         self.IndicatorSetStyle(2, stc.STC_INDIC_ROUNDBOX)
         self.IndicatorSetForeground(2, wx.BLUE)
         
+        self.IndicatorSetStyle(0, 40)
         self.SetCaretForeground(settings.cursor.foreground_color)
         self.SetCaretLineVisible(settings.line_visible)
         self.SetCaretLineBack(settings.cursor.background_color)
@@ -472,6 +475,7 @@ class EditorControl(stc.StyledTextCtrl):
         self.SetMargins(settings.page.margin_left, settings.page.margin_right)
         
         #self.apply_bookmark_settings()
+        self.define_markers()
         self.apply_folding_settings()
         self.show_line_numbers()
         self.detect_language()
@@ -482,13 +486,11 @@ class EditorControl(stc.StyledTextCtrl):
 
     def remove_exec_marker(self):
         self.MarkerDeleteAll(self.EXECUTION_MARKER)
+        self.MarkerDeleteAll(self.EXECUTION_BKGND_MARKER)
 
     def set_exec_marker(self, line):
-        if line != None:
-            if self.MarkerGet(line-1) & (1 << self.EXECUTION_MARKER):
-                pass
-            else:
-                self.MarkerAdd(line-1, self.EXECUTION_MARKER)
+        self.MarkerAdd(line-1, self.EXECUTION_MARKER)
+        self.MarkerAdd(line-1, self.EXECUTION_BKGND_MARKER)
 
     def remove_breakpoint_markers(self):
         self.MarkerDeleteAll(self.BREAKPOINT_MARKER)
@@ -535,7 +537,7 @@ class EditorControl(stc.StyledTextCtrl):
             self.apply_language(manager, language)
 
     def set_lexer_language(self, language=None):
-        languages = {'.c':'cpp', '.C':'cpp', '.h':'cpp', '.H':'cpp', 'makefile':'makefile', 'Makefile':'makefile'}
+        #languages = {'.c':'cpp', '.C':'cpp', '.h':'cpp', '.H':'cpp', 'makefile':'makefile', 'Makefile':'makefile'}
         if not language:
             try:
                 path, filename = os.path.split(self.file_path)
@@ -573,22 +575,12 @@ class EditorControl(stc.StyledTextCtrl):
     def apply_style(self, style):
         s = style
         id = s.number
+        
         self.StyleSetFontAttr(id, s.size, s.font, s.bold, s.italic, s.underline)
         self.StyleSetBackground(id, s.create_background())
         self.StyleSetForeground(id, s.create_foreground())
         self.StyleSetEOLFilled(id, s.eol_filled)
         
-    def style_line(self, line, style):
-        start = self.PositionFromLine(line)
-        end = self.GetLineEndPosition(line)
-        #print "Styling line %d" % line
-        #print "start: %d  end: %d" % (start, end)
-        #print "Style index: %s" % style
-        #self.IndicatorSetStyle(stc.STC_INDIC0_MASK, )
-        #print "Styling length: %s" % (end-start)
-        self.StartStyling(start, 0x1f)
-        self.SetStyling(end-start, stc.STC_C_WORD)
-
     def save(self):
         if self.file_path:
             try:
@@ -624,7 +616,6 @@ class EditorControl(stc.StyledTextCtrl):
             if file:
                 file.close()
         self.detect_language()
-#        self.style_line(5, 38)
 
     def apply_folding_settings(self):
         if self.controller and self.controller.settings.editor.fold:
@@ -791,7 +782,7 @@ class Notebook(aui.AuiNotebook):
         
         if path:
             edit_widget.open_file(path)
-        self.AddPage(panel, edit_widget.get_name(), True)
+        self.AddPage(panel, edit_widget.name, True)
         idx = self.GetPageIndex(panel)
         if idx >= 0:
             self.SetPageBitmap(idx, util.get_icon(icons.get_file_icon(path)))

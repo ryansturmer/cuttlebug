@@ -13,7 +13,6 @@ STYLE_BUILD_WARNING = 2
 STYLE_BUILD_ERROR = 3
 STYLE_BUILD_LINENO = 4
 STYLE_BUILD_LINK = 5
-STYLE_EXECUTION_POSITION = 6
 
 def create_color(red, green, blue):
     return wx.Colour(red, green, blue)
@@ -103,6 +102,11 @@ class Style(object):
         self._background = background
         self._eol_filled = eol_filled
         
+    def __str__(self):
+        return "<Style num=%d, font=%s, size=%s, fg=%s, bg=%s>" % (self._number, self._font, self._size, self._foreground, self._background)
+    def __repr__(self):
+        return str(self)
+    
     def __int__(self):
         return self._number
     
@@ -115,7 +119,7 @@ class Style(object):
             setattr(self, '_%s' % name, value)
     def __getattr__(self, name):
         if name.startswith('_'):
-           return object.__getattribute__(self, name)
+            return object.__getattribute__(self, name)
         
         value = getattr(self, '_%s' % name)
         if value is None and self._parent:
@@ -177,7 +181,6 @@ def create_app_styles(parent):
         Style(parent, stc.STC_STYLE_CONTROLCHAR, 'Control Character'),
         Style(parent, stc.STC_STYLE_INDENTGUIDE, 'Indentation Guides'),
         Style(parent, stc.STC_STYLE_LINENUMBER, 'Line Number Margin'),
-        Style(parent, STYLE_EXECUTION_POSITION, 'Execution Position', eol_filled=True)
     ]
     return app_styles
 

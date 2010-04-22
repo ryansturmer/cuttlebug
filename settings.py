@@ -40,7 +40,8 @@ class Settings(util.Category):
         editor = self.add_category('editor')
         editor.add_item('view_whitespace', False)
         editor.add_item('line_visible', False)
-
+        editor.add_item('exec_marker_color', (255,255,0))
+        
         editor.add_item('fold', True)
         editor.add_item('fold_margin_size', 16)
 
@@ -52,7 +53,7 @@ class Settings(util.Category):
         cursor.add_item('background_color', (255,255,255))
         cursor.add_item('selection_foreground_color', (0,0,255))
         cursor.add_item('selection_background_color', (255,0,0))
-
+    
         page = editor.add_category('page')
         page.add_item('wrap', False)
         page.add_item('edge_column', 1)
@@ -127,6 +128,7 @@ class SettingsDialog(OptionsDialog):
         editor_panel = OptionsPanel(self, "Editor")
         editor_panel.add("Misc", "Show Whitespace", CheckboxWidget, key="editor.view_whitespace")
         editor_panel.add("Misc", "Code Folding", CheckboxWidget, key="editor.fold")
+        editor_panel.add("Misc", "Execution Marker Color", ColorWidget, key="editor.exec_marker_color")
         
         # Cursor
         cursor_panel = OptionsPanel(self, "Cursor")
