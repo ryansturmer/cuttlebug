@@ -1,14 +1,16 @@
 import wx
 import os, threading, subprocess, pickle
 import odict
-from jinja2 import Environment, PackageLoader
+from jinja2 import Environment, PackageLoader, FileSystemLoader
 from os.path import abspath, dirname, normcase, normpath, splitdrive
 from os.path import join as path_join, commonprefix
 import wx.lib.platebtn as platebtn
 
 PLATEBTN_DEFAULT_STYLE = platebtn.PB_STYLE_GRADIENT | platebtn.PB_STYLE_SQUARE 
 PLATEBTN_DEFAULT_COLOUR = wx.WHITE
-jinja_env = Environment(loader=PackageLoader('dummy', 'templates'))
+#jinja_env = Environment(loader=PackageLoader('dummy', 'templates'))
+jinja_env = Environment(loader=FileSystemLoader('templates/'))
+
 settings_template = jinja_env.get_template('settings.xml')
 project_template = jinja_env.get_template('project.xml')    
     

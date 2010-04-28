@@ -1,2 +1,2 @@
-copy "installer\version.dat" "\\all-devel-01\server\htdocs\ade"
-copy "installer\setup.exe" "\\all-devel-01\server\htdocs\ade"
+CALL build.bat
+"C:\Program Files\Inno Setup 5\Compil32.exe" /cc installer_win32.iss

@@ -1,7 +1,6 @@
 import wx, log
-import util, frame, settings
+import frame, settings
 from jinja2 import Environment, PackageLoader
-
 
 def set_path():
     import os

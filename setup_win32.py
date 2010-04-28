@@ -3,6 +3,7 @@ import pickle
 import datetime
 import py2exe
 import sys
+import pkg_resources
 from distutils.core import setup
 
 # Don't require the command line argument.
@@ -27,6 +28,10 @@ def get_data_files():
     data_files = ['default-styles.dat']
     data_files += tree('./tests')
     data_files += tree('./icons')
+    data_files += tree('./extras')
+    data_files += tree('./templates')
+    data_files += tree('./targets')
+    
     return data_files
     
 # Build the distribution.
@@ -35,8 +40,10 @@ setup(
         "compressed": 1,
         "optimize": 0,
         "bundle_files": 3,
-        "includes": ['encodings', 'encodings.cp437'],
-        "packages": [],
+        "includes": ['pkg_resources', 'encodings', 'encodings.cp437'],
+        #"excludes": ['dummy'],
+        "packages": ['lxml', 'gzip'],
+        "dll_excludes": ["MSVCP90.dll"]
     }},
     windows = [{
         "script": "main.py",

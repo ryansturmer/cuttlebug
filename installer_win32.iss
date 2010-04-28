@@ -15,7 +15,7 @@ AppUpdatesURL=http://www.example.org
 DefaultDirName={pf}\Cuttlebug
 DefaultGroupName=Cuttlebug
 AllowNoIcons=yes
-OutputDir=C:\Documents and Settings\rsturmer\My Documents\Projects\Home\Cuttlebug\install
+OutputDir=install
 OutputBaseFilename=setup
 Compression=lzma
 SolidCompression=yes
@@ -28,8 +28,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Documents and Settings\rsturmer\My Documents\Projects\Home\Cuttlebug\dist\cuttlebug.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Documents and Settings\rsturmer\My Documents\Projects\Home\Cuttlebug\dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist\cuttlebug.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
