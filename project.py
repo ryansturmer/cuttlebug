@@ -33,7 +33,6 @@ class Target(Group):
             peripheral_name = item.get('name')
             peripheral = Peripheral()
             for reg in item.iter('reg'):
-                print reg
                 name, fullname, offset, size = reg.get('name'), reg.get('fullname'), str2int(reg.get('offset')), reg.get('as')
                 size = SIZES.get(size.strip().lower(), 4)
                 register = SpecialFunctionRegister(name, fullname, offset, size, 'rw')
@@ -162,7 +161,10 @@ class Project(util.Category):
                     pass # We could log an error here or something
         walk(project, tree.getroot())
         project.modified = False
-        project.target = Target.load('targets/stm32f103.xml')
+        try:
+            project.target = Target.load(project.general.target)
+        except:
+            project.target = Target()
         return project
     
     @staticmethod
@@ -203,7 +205,8 @@ class ProjectOptionsDialog(OptionsDialog):
         
     def create_general_panel(self):
         panel = OptionsPanel(self, "General")
-        panel.add("Informations", "Project Name", TextWidget, key="general.project_name")
+        panel.add("Project Information", "Project Name", TextWidget, key="general.project_name")
+        panel.add("Project Information", "Target Platform", TargetChoiceWidget, key="general.target")
         self.add_panel(panel, icon='application_view_list.png')
     
     def create_build_panel(self):

@@ -2,7 +2,8 @@ import wx
 from options import OptionsEvent, EVT_OPTION_CHANGED
 import wx.lib.colourselect as csel
 import wx.lib.filebrowsebutton as filebrowse
-import string
+import string, os
+import util
 
 class OptionsWidget(object):
     def __init__(self):
@@ -88,4 +89,23 @@ class ComboBoxWidget(OptionsWidget, wx.ComboBox):
     
     def set_value(self, value):
         self.SetValue(string.capwords(value))
+
+class TargetChoiceWidget(OptionsWidget, wx.ComboBox):
+    
+    def __init__(self, parent, id=-1, directory="targets"):
+        OptionsWidget.__init__(self)
+        choices = util.readable_files_in_directory(directory)
+        choices = dict([(self.__format_path(choice), choice) for choice in choices])
+        self.map = choices
+        wx.ComboBox.__init__(self, parent, -1, choices=choices.keys(), style=wx.CB_READONLY | (wx.CB_SORT if sorted else 0))
+        self.Bind(wx.EVT_COMBOBOX, self.on_change)
+        
+    def __format_path(self, path):
+        return os.path.basename(path).upper().rstrip('.XML')
+    
+    def get_value(self):
+        return self.map.get(self.GetValue(), '')
+    
+    def set_value(self, value):
+        self.SetValue(self.__format_path(value))
         

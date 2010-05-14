@@ -9,7 +9,7 @@ import wx.lib.platebtn as platebtn
 PLATEBTN_DEFAULT_STYLE = platebtn.PB_STYLE_GRADIENT | platebtn.PB_STYLE_SQUARE 
 PLATEBTN_DEFAULT_COLOUR = wx.WHITE
 #jinja_env = Environment(loader=PackageLoader('dummy', 'templates'))
-jinja_env = Environment(loader=FileSystemLoader('templates/'))
+jinja_env = Environment(loader=FileSystemLoader('./templates/'))
 
 settings_template = jinja_env.get_template('settings.xml')
 project_template = jinja_env.get_template('project.xml')    
@@ -480,6 +480,16 @@ class Category(object):
         return self.items.keys()
     children = property(__get_children)
     
+def readable_files_in_directory(dir):
+    files = os.listdir(dir)
+    retval = []
+    for file in files:
+        full_path = os.path.join(dir, file)
+        if os.path.isfile(full_path) and os.access(full_path, os.F_OK | os.R_OK):
+            retval.append(full_path)
+    return retval
+        
+                                                    
 def pickle_file(object, filename):
         fp = open(os.path.abspath(filename),'wb')
         pickle.dump(object, fp, -1)
@@ -533,7 +543,6 @@ class ArtListMixin(object):
             if art not in self.__art:
                 self.__art[art] = self.__image_list.Add(get_icon(art))
         self.SetImageList(self.__image_list, *self.__args, **self.__kwargs)
-
 
 class TreeItemKey(object):
     def __init__(self, parent):
