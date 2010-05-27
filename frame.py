@@ -381,4 +381,4 @@ class Frame(util.PersistedFrame):
             self.controller.download()
 
         def on_reset(self, evt):
-            pass
+            self.controller.jump_to_entry_point()

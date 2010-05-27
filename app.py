@@ -323,7 +323,22 @@ class Controller(wx.EvtHandler):
             evt = AppEvent(EVT_APP_TARGET_HALTED, self, data=(result.frame.fullname, int(result.frame.line)))
             wx.PostEvent(self, evt)
             print result
-        ''' 
+        '''
+        
+    def jump_to_entry_point(self):
+            #TODO: This is a hack, not cross-platform compatible.
+            wx.CallAfter(self.frame.start_busy, "Jumping to entry point...")
+            self.gdb.set("$pc", self.project.program.entry_point, self.on_at_entry_point)
+
+    def on_at_entry_point(self, result):
+        wx.CallAfter(self.frame.stop_busy)
+        if result.cls == 'error':
+            wx.CallAfter(self.frame.error_msg, result.msg)
+        else:
+            self.frame.statusbar.text = "Ready!"
+            self.gdb.halt()
+#            self.gdb.update()
+         
     def download(self):
         if self.state == ATTACHED:
             wx.CallAfter(self.frame.start_busy, "Downloading to target...")
@@ -336,18 +351,8 @@ class Controller(wx.EvtHandler):
         if result.cls == 'error':
             wx.CallAfter(self.frame.error_msg, result.msg)
         else:
-            #TODO: This is a hack, not cross-platform compatible.
-            self.gdb.set("$pc", self.project.program.entry_point, self.on_at_entry_point)
-            pass
-        
-    def on_at_entry_point(self, result):
-        wx.CallAfter(self.frame.stop_busy)
-        if result.cls == 'error':
-            wx.CallAfter(self.frame.error_msg, result.msg)
-        else:
-            self.frame.statusbar.text = "Ready!"
-            self.gdb.halt()
-#            self.gdb.update()
+            self.jump_to_entry_point()
+            
     # ATTACH TO GDB
     def attach(self):
         if self.state == IDLE:
