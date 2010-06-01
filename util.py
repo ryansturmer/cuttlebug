@@ -10,10 +10,14 @@ PLATEBTN_DEFAULT_STYLE = platebtn.PB_STYLE_GRADIENT | platebtn.PB_STYLE_SQUARE
 PLATEBTN_DEFAULT_COLOUR = wx.WHITE
 #jinja_env = Environment(loader=PackageLoader('dummy', 'templates'))
 jinja_env = Environment(loader=FileSystemLoader('./templates/'))
-
-settings_template = jinja_env.get_template('settings.xml')
-project_template = jinja_env.get_template('project.xml')    
+settings_template = None
+project_template = None
     
+def load_templates():
+    global settings_template, project_template
+    settings_template = jinja_env.get_template('settings.xml')
+    project_template = jinja_env.get_template('project.xml')
+
 def coroutine(func):
     def start(*args, **kwargs):
         cr = func(*args, **kwargs)

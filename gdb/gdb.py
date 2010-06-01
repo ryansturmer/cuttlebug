@@ -1,10 +1,10 @@
 import wx
-import os, threading, time, logging
+import os, threading, logging
 import antlr3, GDBMILexer, GDBMIParser
-import util, odict
 import functools
-
 from models import Type, Variable, GDBVarModel, GDBStackModel, GDBRegisterModel
+import util, odict
+
 STOPPED = 0
 RUNNING = 1
 
@@ -38,7 +38,6 @@ EVT_GDB_UPDATE_VARS = wx.PyEventBinder(wx.NewEventType())
 EVT_GDB_UPDATE_STACK = wx.PyEventBinder(wx.NewEventType())
 EVT_GDB_UPDATE_REGISTERS = wx.PyEventBinder(wx.NewEventType())
 
-
 EVT_GDB_RUNNING = wx.PyEventBinder(wx.NewEventType())
 EVT_GDB_STOPPED = wx.PyEventBinder(wx.NewEventType())
 
@@ -57,9 +56,8 @@ class GDB(wx.EvtHandler):
 
         # Parser for GDBMI commands
         self.cmd_string = cmd
-        self.vars = GDBVarModel(self)
-        self.stack = GDBStackModel(self)
-        self.registers = GDBRegisterModel(self)
+        
+        self.__clear()
         
     def start(self):
         self.__clear()
@@ -91,7 +89,7 @@ class GDB(wx.EvtHandler):
         self.var_update()
         self.data_list_register_values()
 
-    def __parse(self, string):
+    def parse(self, string):
         '''
         Parse a SINGLE gdb-mi response, returning a GDBMIResponse object
         '''
@@ -134,7 +132,7 @@ class GDB(wx.EvtHandler):
         self.__mi_log(line)
         self.buffer += line
         if line.strip() == '(gdb)':
-            response = self.__parse(self.buffer)
+            response = self.parse(self.buffer)
             self.handle_response(response)
             self.buffer = ''
     
@@ -167,6 +165,7 @@ class GDB(wx.EvtHandler):
             self.__log_log(txt)
 
         results = (response.result, response.exc, response.status, response.notify)
+        print results
         for result in results:
             command = ''
             if result != None: 
@@ -183,8 +182,10 @@ class GDB(wx.EvtHandler):
                 if result.cls == 'error':
                     self.__on_error(command, result)
                 elif result.cls == 'stopped':
+                    print "GOT A STOPPED RESPONSE"
                     self.__on_stopped(result)
                 elif result.cls == 'running':
+                    print "OK RUNNING NOW"
                     self.__on_running(result)
                 else:
                     self.post_event(GDBEvent(EVT_GDB_UPDATE, self, data=result))
@@ -508,3 +509,12 @@ class Breakpoint(object):
     def __str__(self):
         return "<Breakpoint %s[%d]%s%d>" % ('+' if self.enabled else ' ', self.number, self.fullname, self.line) 
         
+if __name__ == "__main__":
+    
+    session = GDB()
+    result = session.parse('*stopped,frame={addr="0x08000252",func="Delay",args=[{name="nCount",value="275526"}],file="main.c",fullname="C:\\Documents and Settings\\Cuttlebug Developer\\My Documents\\projects\\example_projects\\stm32f103\\blink_led/main.c",line="81"},thread-id="1",stopped-threads="all"')
+    print result.exc
+    print result
+    
+    result = session.parse('1^done,register-names=["r0","r1","r2","r3","r4","r5","r6","r7","r8","r9","r10","r11","r12","sp","lr","pc","f0","f1","f2","f3","f4","f5","f6","f7","fps","cpsr","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""]')
+    print result

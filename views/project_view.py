@@ -51,7 +51,7 @@ class ProjectView(view.View):
                     self.tree.Expand(item)
             else:
                 self.tree.Expand(item)
-        
+       
     def setup_menus(self):
         manager = menu.MenuManager()
         pmenu = manager.menu()
@@ -151,8 +151,20 @@ class ProjectTree(wx.TreeCtrl):
         self.set_project(None)
         self.backups_visible = False
         self.Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.on_get_tooltip)
+        self.Bind(wx.EVT_MOTION, self.on_motion)
+        self.tooltip_flag = False
+
+    def on_motion(self, evt):
+        self.tooltip_flag = False 
+        self.SetToolTipString('')
 
     def on_get_tooltip(self, evt):
+        print "getting tooltip"
+        self.tooltip_flag = True
+        wx.CallLater(1000, self.set_tool_tip(evt))
+        evt.Skip()
+        
+    def set_tool_tip(self, evt):
         item = evt.GetItem()
         if item == self.root_item:
             if self.project:
@@ -164,7 +176,7 @@ class ProjectTree(wx.TreeCtrl):
                 evt.SetToolTip(data + "  " + util.human_size(stat.st_size))
             except:
                 pass
-        evt.Skip() 
+        
     def show_backups(self, show):
         self.backups_visible = bool(show)
 

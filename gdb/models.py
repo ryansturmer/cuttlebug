@@ -1,4 +1,3 @@
-import gdb
 import odict
 from util import bidict
 

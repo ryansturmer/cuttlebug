@@ -1,4 +1,4 @@
-# $ANTLR 3.1.2 /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g 2009-04-30 23:19:14
+# $ANTLR 3.1.2 GDBMI.g 2010-06-01 19:07:00
 
 import sys
 from antlr3 import *
@@ -81,7 +81,7 @@ tokenNames = [
 
 
 class GDBMIParser(Parser):
-    grammarFileName = "/home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g"
+    grammarFileName = "GDBMI.g"
     antlr_version = version_str_to_tuple("3.1.2")
     antlr_version_str = "3.1.2"
     tokenNames = tokenNames
@@ -134,7 +134,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "result_record"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:50:1: result_record returns [val] : ( TOKEN )? RESULT RESULT_CLASS ( COMMA result )* NL ;
+    # GDBMI.g:50:1: result_record returns [val] : ( TOKEN )? RESULT RESULT_CLASS ( COMMA result )* NL ;
     def result_record(self, ):
 
         retval = self.result_record_return()
@@ -161,19 +161,19 @@ class GDBMIParser(Parser):
         	
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:54:2: ( ( TOKEN )? RESULT RESULT_CLASS ( COMMA result )* NL )
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:54:4: ( TOKEN )? RESULT RESULT_CLASS ( COMMA result )* NL
+                # GDBMI.g:54:2: ( ( TOKEN )? RESULT RESULT_CLASS ( COMMA result )* NL )
+                # GDBMI.g:54:4: ( TOKEN )? RESULT RESULT_CLASS ( COMMA result )* NL
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:54:4: ( TOKEN )?
+                # GDBMI.g:54:4: ( TOKEN )?
                 alt1 = 2
                 LA1_0 = self.input.LA(1)
 
                 if (LA1_0 == TOKEN) :
                     alt1 = 1
                 if alt1 == 1:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:54:5: TOKEN
+                    # GDBMI.g:54:5: TOKEN
                     pass 
                     TOKEN1=self.match(self.input, TOKEN, self.FOLLOW_TOKEN_in_result_record60)
 
@@ -199,7 +199,7 @@ class GDBMIParser(Parser):
                 #action start
                 retval.val.cls = str(RESULT_CLASS3.text)
                 #action end
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:56:4: ( COMMA result )*
+                # GDBMI.g:56:4: ( COMMA result )*
                 while True: #loop2
                     alt2 = 2
                     LA2_0 = self.input.LA(1)
@@ -209,7 +209,7 @@ class GDBMIParser(Parser):
 
 
                     if alt2 == 1:
-                        # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:56:5: COMMA result
+                        # GDBMI.g:56:5: COMMA result
                         pass 
                         COMMA4=self.match(self.input, COMMA, self.FOLLOW_COMMA_in_result_record82)
 
@@ -268,7 +268,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "output"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:58:1: output returns [response] : ( out_of_band_record NL )* ( result_record )? EOM ( WS )* ;
+    # GDBMI.g:58:1: output returns [response] : ( out_of_band_record NL )* ( result_record )? EOM ( WS )* ;
     def output(self, ):
 
         retval = self.output_return()
@@ -293,17 +293,17 @@ class GDBMIParser(Parser):
         	
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:63:2: ( ( out_of_band_record NL )* ( result_record )? EOM ( WS )* )
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:63:4: ( out_of_band_record NL )* ( result_record )? EOM ( WS )*
+                # GDBMI.g:63:2: ( ( out_of_band_record NL )* ( result_record )? EOM ( WS )* )
+                # GDBMI.g:63:4: ( out_of_band_record NL )* ( result_record )? EOM ( WS )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:63:4: ( out_of_band_record NL )*
+                # GDBMI.g:63:4: ( out_of_band_record NL )*
                 while True: #loop3
                     alt3 = 2
                     alt3 = self.dfa3.predict(self.input)
                     if alt3 == 1:
-                        # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:63:5: out_of_band_record NL
+                        # GDBMI.g:63:5: out_of_band_record NL
                         pass 
                         self._state.following.append(self.FOLLOW_out_of_band_record_in_output113)
                         out_of_band_record7 = self.out_of_band_record()
@@ -338,14 +338,14 @@ class GDBMIParser(Parser):
                         break #loop3
 
 
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:77:7: ( result_record )?
+                # GDBMI.g:77:7: ( result_record )?
                 alt4 = 2
                 LA4_0 = self.input.LA(1)
 
                 if ((TOKEN <= LA4_0 <= RESULT)) :
                     alt4 = 1
                 if alt4 == 1:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:77:7: result_record
+                    # GDBMI.g:77:7: result_record
                     pass 
                     self._state.following.append(self.FOLLOW_result_record_in_output121)
                     result_record9 = self.result_record()
@@ -365,7 +365,7 @@ class GDBMIParser(Parser):
                 EOM10_tree = self._adaptor.createWithPayload(EOM10)
                 self._adaptor.addChild(root_0, EOM10_tree)
 
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:79:8: ( WS )*
+                # GDBMI.g:79:8: ( WS )*
                 while True: #loop5
                     alt5 = 2
                     LA5_0 = self.input.LA(1)
@@ -375,7 +375,7 @@ class GDBMIParser(Parser):
 
 
                     if alt5 == 1:
-                        # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:79:8: WS
+                        # GDBMI.g:79:8: WS
                         pass 
                         WS11=self.match(self.input, WS, self.FOLLOW_WS_in_output128)
 
@@ -423,7 +423,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "async_record"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:81:1: async_record returns [exc,status,notify] : ( exec_async_output | status_async_output | notify_async_output );
+    # GDBMI.g:81:1: async_record returns [exc,status,notify] : ( exec_async_output | status_async_output | notify_async_output );
     def async_record(self, ):
 
         retval = self.async_record_return()
@@ -446,7 +446,7 @@ class GDBMIParser(Parser):
         	
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:87:2: ( exec_async_output | status_async_output | notify_async_output )
+                # GDBMI.g:87:2: ( exec_async_output | status_async_output | notify_async_output )
                 alt6 = 3
                 LA6 = self.input.LA(1)
                 if LA6 == TOKEN:
@@ -474,7 +474,7 @@ class GDBMIParser(Parser):
                     raise nvae
 
                 if alt6 == 1:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:87:3: exec_async_output
+                    # GDBMI.g:87:3: exec_async_output
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -489,7 +489,7 @@ class GDBMIParser(Parser):
 
 
                 elif alt6 == 2:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:88:2: status_async_output
+                    # GDBMI.g:88:2: status_async_output
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -504,7 +504,7 @@ class GDBMIParser(Parser):
 
 
                 elif alt6 == 3:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:89:2: notify_async_output
+                    # GDBMI.g:89:2: notify_async_output
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -553,7 +553,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "out_of_band_record"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:91:1: out_of_band_record returns [exc,status,notify,target,console,log] : ( async_record | stream_record );
+    # GDBMI.g:91:1: out_of_band_record returns [exc,status,notify,target,console,log] : ( async_record | stream_record );
     def out_of_band_record(self, ):
 
         retval = self.out_of_band_record_return()
@@ -573,7 +573,7 @@ class GDBMIParser(Parser):
         	
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:96:2: ( async_record | stream_record )
+                # GDBMI.g:96:2: ( async_record | stream_record )
                 alt7 = 2
                 LA7_0 = self.input.LA(1)
 
@@ -587,7 +587,7 @@ class GDBMIParser(Parser):
                     raise nvae
 
                 if alt7 == 1:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:96:4: async_record
+                    # GDBMI.g:96:4: async_record
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -606,7 +606,7 @@ class GDBMIParser(Parser):
 
 
                 elif alt7 == 2:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:101:2: stream_record
+                    # GDBMI.g:101:2: stream_record
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -654,7 +654,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "exec_async_output"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:107:1: exec_async_output returns [val] : ( TOKEN )? EXEC async_output ;
+    # GDBMI.g:107:1: exec_async_output returns [val] : ( TOKEN )? EXEC async_output ;
     def exec_async_output(self, ):
 
         retval = self.exec_async_output_return()
@@ -672,19 +672,19 @@ class GDBMIParser(Parser):
 
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:108:2: ( ( TOKEN )? EXEC async_output )
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:108:4: ( TOKEN )? EXEC async_output
+                # GDBMI.g:108:2: ( ( TOKEN )? EXEC async_output )
+                # GDBMI.g:108:4: ( TOKEN )? EXEC async_output
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:108:4: ( TOKEN )?
+                # GDBMI.g:108:4: ( TOKEN )?
                 alt8 = 2
                 LA8_0 = self.input.LA(1)
 
                 if (LA8_0 == TOKEN) :
                     alt8 = 1
                 if alt8 == 1:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:108:5: TOKEN
+                    # GDBMI.g:108:5: TOKEN
                     pass 
                     TOKEN17=self.match(self.input, TOKEN, self.FOLLOW_TOKEN_in_exec_async_output208)
 
@@ -740,7 +740,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "status_async_output"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:110:1: status_async_output returns [val] : ( TOKEN )? STATUS async_output ;
+    # GDBMI.g:110:1: status_async_output returns [val] : ( TOKEN )? STATUS async_output ;
     def status_async_output(self, ):
 
         retval = self.status_async_output_return()
@@ -758,19 +758,19 @@ class GDBMIParser(Parser):
 
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:111:2: ( ( TOKEN )? STATUS async_output )
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:111:4: ( TOKEN )? STATUS async_output
+                # GDBMI.g:111:2: ( ( TOKEN )? STATUS async_output )
+                # GDBMI.g:111:4: ( TOKEN )? STATUS async_output
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:111:4: ( TOKEN )?
+                # GDBMI.g:111:4: ( TOKEN )?
                 alt9 = 2
                 LA9_0 = self.input.LA(1)
 
                 if (LA9_0 == TOKEN) :
                     alt9 = 1
                 if alt9 == 1:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:111:5: TOKEN
+                    # GDBMI.g:111:5: TOKEN
                     pass 
                     TOKEN20=self.match(self.input, TOKEN, self.FOLLOW_TOKEN_in_status_async_output231)
 
@@ -826,7 +826,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "notify_async_output"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:113:1: notify_async_output returns [val] : ( TOKEN )? NOTIFY async_output ;
+    # GDBMI.g:113:1: notify_async_output returns [val] : ( TOKEN )? NOTIFY async_output ;
     def notify_async_output(self, ):
 
         retval = self.notify_async_output_return()
@@ -844,19 +844,19 @@ class GDBMIParser(Parser):
 
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:114:2: ( ( TOKEN )? NOTIFY async_output )
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:114:4: ( TOKEN )? NOTIFY async_output
+                # GDBMI.g:114:2: ( ( TOKEN )? NOTIFY async_output )
+                # GDBMI.g:114:4: ( TOKEN )? NOTIFY async_output
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:114:4: ( TOKEN )?
+                # GDBMI.g:114:4: ( TOKEN )?
                 alt10 = 2
                 LA10_0 = self.input.LA(1)
 
                 if (LA10_0 == TOKEN) :
                     alt10 = 1
                 if alt10 == 1:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:114:5: TOKEN
+                    # GDBMI.g:114:5: TOKEN
                     pass 
                     TOKEN23=self.match(self.input, TOKEN, self.FOLLOW_TOKEN_in_notify_async_output254)
 
@@ -912,7 +912,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "async_output"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:116:1: async_output returns [val] : ASYNC_CLASS ( COMMA result )* NL ;
+    # GDBMI.g:116:1: async_output returns [val] : ASYNC_CLASS ( COMMA result )* NL ;
     def async_output(self, ):
 
         retval = self.async_output_return()
@@ -935,8 +935,8 @@ class GDBMIParser(Parser):
         	
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:120:2: ( ASYNC_CLASS ( COMMA result )* NL )
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:120:4: ASYNC_CLASS ( COMMA result )* NL
+                # GDBMI.g:120:2: ( ASYNC_CLASS ( COMMA result )* NL )
+                # GDBMI.g:120:4: ASYNC_CLASS ( COMMA result )* NL
                 pass 
                 root_0 = self._adaptor.nil()
 
@@ -948,7 +948,7 @@ class GDBMIParser(Parser):
                 #action start
                 retval.val.cls = ASYNC_CLASS26.text 
                 #action end
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:120:48: ( COMMA result )*
+                # GDBMI.g:120:48: ( COMMA result )*
                 while True: #loop11
                     alt11 = 2
                     LA11_0 = self.input.LA(1)
@@ -958,7 +958,7 @@ class GDBMIParser(Parser):
 
 
                     if alt11 == 1:
-                        # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:120:49: COMMA result
+                        # GDBMI.g:120:49: COMMA result
                         pass 
                         COMMA27=self.match(self.input, COMMA, self.FOLLOW_COMMA_in_async_output287)
 
@@ -1017,7 +1017,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "var"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:123:1: var returns [txt] : STRING ;
+    # GDBMI.g:123:1: var returns [txt] : STRING ;
     def var(self, ):
 
         retval = self.var_return()
@@ -1031,8 +1031,8 @@ class GDBMIParser(Parser):
 
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:124:2: ( STRING )
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:124:4: STRING
+                # GDBMI.g:124:2: ( STRING )
+                # GDBMI.g:124:4: STRING
                 pass 
                 root_0 = self._adaptor.nil()
 
@@ -1078,7 +1078,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "result"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:126:1: result returns [key,val] : ( var '=' value ) ;
+    # GDBMI.g:126:1: result returns [key,val] : ( var '=' value ) ;
     def result(self, ):
 
         retval = self.result_return()
@@ -1096,13 +1096,13 @@ class GDBMIParser(Parser):
 
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:127:2: ( ( var '=' value ) )
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:127:4: ( var '=' value )
+                # GDBMI.g:127:2: ( ( var '=' value ) )
+                # GDBMI.g:127:4: ( var '=' value )
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:127:4: ( var '=' value )
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:127:5: var '=' value
+                # GDBMI.g:127:4: ( var '=' value )
+                # GDBMI.g:127:5: var '=' value
                 pass 
                 self._state.following.append(self.FOLLOW_var_in_result327)
                 var31 = self.var()
@@ -1161,7 +1161,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "value"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:132:1: value returns [val] : ( const | tuple | list );
+    # GDBMI.g:132:1: value returns [val] : ( const | tuple | list );
     def value(self, ):
 
         retval = self.value_return()
@@ -1179,7 +1179,7 @@ class GDBMIParser(Parser):
 
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:132:21: ( const | tuple | list )
+                # GDBMI.g:132:21: ( const | tuple | list )
                 alt12 = 3
                 LA12 = self.input.LA(1)
                 if LA12 == C_STRING:
@@ -1194,7 +1194,7 @@ class GDBMIParser(Parser):
                     raise nvae
 
                 if alt12 == 1:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:132:23: const
+                    # GDBMI.g:132:23: const
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -1209,7 +1209,7 @@ class GDBMIParser(Parser):
 
 
                 elif alt12 == 2:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:132:54: tuple
+                    # GDBMI.g:132:54: tuple
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -1224,7 +1224,7 @@ class GDBMIParser(Parser):
 
 
                 elif alt12 == 3:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:132:82: list
+                    # GDBMI.g:132:82: list
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -1268,7 +1268,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "const"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:134:1: const returns [txt] : C_STRING ;
+    # GDBMI.g:134:1: const returns [txt] : C_STRING ;
     def const(self, ):
 
         retval = self.const_return()
@@ -1282,8 +1282,8 @@ class GDBMIParser(Parser):
 
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:135:2: ( C_STRING )
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:135:4: C_STRING
+                # GDBMI.g:135:2: ( C_STRING )
+                # GDBMI.g:135:4: C_STRING
                 pass 
                 root_0 = self._adaptor.nil()
 
@@ -1328,7 +1328,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "tuple"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:137:1: tuple returns [items] : ( '{}' | '{' a= result ( COMMA b= result )* '}' );
+    # GDBMI.g:137:1: tuple returns [items] : ( '{}' | '{' a= result ( COMMA b= result )* '}' );
     def tuple(self, ):
 
         retval = self.tuple_return()
@@ -1353,7 +1353,7 @@ class GDBMIParser(Parser):
         retval.items = GDBMITuple() 
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:139:2: ( '{}' | '{' a= result ( COMMA b= result )* '}' )
+                # GDBMI.g:139:2: ( '{}' | '{' a= result ( COMMA b= result )* '}' )
                 alt14 = 2
                 LA14_0 = self.input.LA(1)
 
@@ -1367,7 +1367,7 @@ class GDBMIParser(Parser):
                     raise nvae
 
                 if alt14 == 1:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:139:4: '{}'
+                    # GDBMI.g:139:4: '{}'
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -1379,7 +1379,7 @@ class GDBMIParser(Parser):
 
 
                 elif alt14 == 2:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:140:4: '{' a= result ( COMMA b= result )* '}'
+                    # GDBMI.g:140:4: '{' a= result ( COMMA b= result )* '}'
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -1396,7 +1396,7 @@ class GDBMIParser(Parser):
                     #action start
                     retval.items[a.key] = a.val
                     #action end
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:140:41: ( COMMA b= result )*
+                    # GDBMI.g:140:41: ( COMMA b= result )*
                     while True: #loop13
                         alt13 = 2
                         LA13_0 = self.input.LA(1)
@@ -1406,7 +1406,7 @@ class GDBMIParser(Parser):
 
 
                         if alt13 == 1:
-                            # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:140:42: COMMA b= result
+                            # GDBMI.g:140:42: COMMA b= result
                             pass 
                             COMMA40=self.match(self.input, COMMA, self.FOLLOW_COMMA_in_tuple412)
 
@@ -1466,7 +1466,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "stream_record"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:143:1: stream_record returns [console, target, log] : ( console_stream_output | target_stream_output | log_stream_output );
+    # GDBMI.g:143:1: stream_record returns [console, target, log] : ( console_stream_output | target_stream_output | log_stream_output );
     def stream_record(self, ):
 
         retval = self.stream_record_return()
@@ -1489,7 +1489,7 @@ class GDBMIParser(Parser):
         	
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:149:2: ( console_stream_output | target_stream_output | log_stream_output )
+                # GDBMI.g:149:2: ( console_stream_output | target_stream_output | log_stream_output )
                 alt15 = 3
                 LA15 = self.input.LA(1)
                 if LA15 == CONSOLE:
@@ -1504,7 +1504,7 @@ class GDBMIParser(Parser):
                     raise nvae
 
                 if alt15 == 1:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:149:4: console_stream_output
+                    # GDBMI.g:149:4: console_stream_output
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -1519,7 +1519,7 @@ class GDBMIParser(Parser):
 
 
                 elif alt15 == 2:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:150:4: target_stream_output
+                    # GDBMI.g:150:4: target_stream_output
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -1534,7 +1534,7 @@ class GDBMIParser(Parser):
 
 
                 elif alt15 == 3:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:151:4: log_stream_output
+                    # GDBMI.g:151:4: log_stream_output
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -1578,7 +1578,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "list"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:153:1: list returns [items] : ( '[]' | '[' a= value ( COMMA b= value )* ']' | '[' c= result ( COMMA d= result )* ']' );
+    # GDBMI.g:153:1: list returns [items] : ( '[]' | '[' a= value ( COMMA b= value )* ']' | '[' c= result ( COMMA d= result )* ']' );
     def list(self, ):
 
         retval = self.list_return()
@@ -1613,7 +1613,7 @@ class GDBMIParser(Parser):
         retval.items=[] 
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:155:2: ( '[]' | '[' a= value ( COMMA b= value )* ']' | '[' c= result ( COMMA d= result )* ']' )
+                # GDBMI.g:155:2: ( '[]' | '[' a= value ( COMMA b= value )* ']' | '[' c= result ( COMMA d= result )* ']' )
                 alt18 = 3
                 LA18_0 = self.input.LA(1)
 
@@ -1637,7 +1637,7 @@ class GDBMIParser(Parser):
                     raise nvae
 
                 if alt18 == 1:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:155:4: '[]'
+                    # GDBMI.g:155:4: '[]'
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -1649,7 +1649,7 @@ class GDBMIParser(Parser):
 
 
                 elif alt18 == 2:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:156:4: '[' a= value ( COMMA b= value )* ']'
+                    # GDBMI.g:156:4: '[' a= value ( COMMA b= value )* ']'
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -1666,7 +1666,7 @@ class GDBMIParser(Parser):
                     #action start
                     retval.items.append(a.val)
                     #action end
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:156:39: ( COMMA b= value )*
+                    # GDBMI.g:156:39: ( COMMA b= value )*
                     while True: #loop16
                         alt16 = 2
                         LA16_0 = self.input.LA(1)
@@ -1676,7 +1676,7 @@ class GDBMIParser(Parser):
 
 
                         if alt16 == 1:
-                            # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:156:40: COMMA b= value
+                            # GDBMI.g:156:40: COMMA b= value
                             pass 
                             COMMA47=self.match(self.input, COMMA, self.FOLLOW_COMMA_in_list494)
 
@@ -1705,7 +1705,7 @@ class GDBMIParser(Parser):
 
 
                 elif alt18 == 3:
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:157:4: '[' c= result ( COMMA d= result )* ']'
+                    # GDBMI.g:157:4: '[' c= result ( COMMA d= result )* ']'
                     pass 
                     root_0 = self._adaptor.nil()
 
@@ -1722,7 +1722,7 @@ class GDBMIParser(Parser):
                     #action start
                     retval.items.append(dict( ((c.key,c.val),) ))
                     #action end
-                    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:157:59: ( COMMA d= result )*
+                    # GDBMI.g:157:59: ( COMMA d= result )*
                     while True: #loop17
                         alt17 = 2
                         LA17_0 = self.input.LA(1)
@@ -1732,7 +1732,7 @@ class GDBMIParser(Parser):
 
 
                         if alt17 == 1:
-                            # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:157:60: COMMA d= result
+                            # GDBMI.g:157:60: COMMA d= result
                             pass 
                             COMMA50=self.match(self.input, COMMA, self.FOLLOW_COMMA_in_list518)
 
@@ -1790,7 +1790,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "console_stream_output"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:159:1: console_stream_output returns [txt] : CONSOLE C_STRING ;
+    # GDBMI.g:159:1: console_stream_output returns [txt] : CONSOLE C_STRING ;
     def console_stream_output(self, ):
 
         retval = self.console_stream_output_return()
@@ -1806,8 +1806,8 @@ class GDBMIParser(Parser):
 
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:160:2: ( CONSOLE C_STRING )
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:160:4: CONSOLE C_STRING
+                # GDBMI.g:160:2: ( CONSOLE C_STRING )
+                # GDBMI.g:160:4: CONSOLE C_STRING
                 pass 
                 root_0 = self._adaptor.nil()
 
@@ -1857,7 +1857,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "target_stream_output"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:162:1: target_stream_output returns [txt] : TARGET C_STRING ;
+    # GDBMI.g:162:1: target_stream_output returns [txt] : TARGET C_STRING ;
     def target_stream_output(self, ):
 
         retval = self.target_stream_output_return()
@@ -1873,8 +1873,8 @@ class GDBMIParser(Parser):
 
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:163:2: ( TARGET C_STRING )
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:163:4: TARGET C_STRING
+                # GDBMI.g:163:2: ( TARGET C_STRING )
+                # GDBMI.g:163:4: TARGET C_STRING
                 pass 
                 root_0 = self._adaptor.nil()
 
@@ -1924,7 +1924,7 @@ class GDBMIParser(Parser):
 
 
     # $ANTLR start "log_stream_output"
-    # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:165:1: log_stream_output returns [txt] : LOG C_STRING ;
+    # GDBMI.g:165:1: log_stream_output returns [txt] : LOG C_STRING ;
     def log_stream_output(self, ):
 
         retval = self.log_stream_output_return()
@@ -1940,8 +1940,8 @@ class GDBMIParser(Parser):
 
         try:
             try:
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:166:2: ( LOG C_STRING )
-                # /home/ryansturmer/projects/jorel/cuttlebug/gdb/GDBMI.g:166:4: LOG C_STRING
+                # GDBMI.g:166:2: ( LOG C_STRING )
+                # GDBMI.g:166:4: LOG C_STRING
                 pass 
                 root_0 = self._adaptor.nil()
 

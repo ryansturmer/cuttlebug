@@ -1,5 +1,4 @@
 import wx, log
-from jinja2 import Environment, PackageLoader
 
 def set_path():
     import os
@@ -24,6 +23,8 @@ def show_splash():
 
 def run():
     set_path()
+    import util
+    util.load_templates()
     activate_psyco()
     import settings
     settings.load_session()

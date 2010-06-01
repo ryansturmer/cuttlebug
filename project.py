@@ -164,7 +164,7 @@ class Project(util.Category):
         try:
             project.target = Target.load(project.general.target)
         except:
-            project.target = Target()
+            project.target = Target("target")
         return project
     
     @staticmethod
