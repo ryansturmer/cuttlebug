@@ -183,7 +183,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
             if self.is_descendent(item, self.get_frame_items()[-1]):
                 evt.Skip()
                 return
-        if self.is_descendent(item, self.sfr_item):
+        if self.is_descendent(item, self.sfr_item) or self.is_descendent(item, self.watch_item):
             evt.Skip()
             return
         evt.Veto()
@@ -199,7 +199,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         if name in self.var_registry and name in self.model.vars:
             new_var_value = evt.GetLabel()
             self.model.var_assign(name, new_var_value)
-        if self.is_descendent(item, self.sfr_item):
+        if self.is_descendent(item, self.sfr_item) or self.is_descendent(item, self.watch_item):
             reg = self.get_item_data(item)
             if hasattr(reg, 'expression'):
                 self.model.data_evaluate_expression('%s=%s' % (reg.expression, evt.GetLabel()), callback=partial(self.on_sfr_data, item,True))
