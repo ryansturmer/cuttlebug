@@ -173,7 +173,7 @@ C_STRING
 	: '"' ('\\''"' | ~('"' |'\n'|'\r'))* '"';
 
 ASYNC_CLASS
-	: 'stopped' | 'thread-group-created' | 'thread-created';
+	: 'stopped' | 'thread-group-created' | 'thread-created' | 'running' | 'download';
 
 RESULT_CLASS
 	: 'done'
