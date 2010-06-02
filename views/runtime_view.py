@@ -186,7 +186,6 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         if self.is_descendent(item, self.sfr_item):
             evt.Skip()
             return
-        print "Veto!"
         evt.Veto()
             
     def on_select_item(self, evt):
@@ -195,7 +194,6 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         evt.Skip()
         
     def on_end_label_edit(self, evt):
-        print "Finishing the edit process"
         item = self.get_event_item(evt)
         name = self.get_item_data(item)
         if name in self.var_registry and name in self.model.vars:

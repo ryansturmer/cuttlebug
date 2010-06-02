@@ -116,7 +116,6 @@ def get_text(parent, question, title="", default=""):
     dlg.Destroy()
   
 def launch(file):
-    print file
     if os.name == 'posix':
         os.system('xdg-open %s' % file)
     elif os.name == 'nt':
@@ -396,7 +395,6 @@ class Process(subprocess.Popen):
 
     def sigint(self):        
         import win32api, win32con
-        print "Issuing SIGINT"
         win32api.GenerateConsoleCtrlEvent(win32con.CTRL_C_EVENT, self.pid)
 
 class Category(object):

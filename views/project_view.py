@@ -159,7 +159,7 @@ class ProjectTree(wx.TreeCtrl):
         self.SetToolTipString('')
 
     def on_get_tooltip(self, evt):
-        print "getting tooltip"
+        #print "getting tooltip"
         self.tooltip_flag = True
         wx.CallLater(1000, self.set_tool_tip(evt))
         evt.Skip()

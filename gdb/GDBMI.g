@@ -53,14 +53,14 @@ result_record returns [val]
 	}
 	: (TOKEN {$val.token = int($TOKEN.text)})? RESULT 
 	   RESULT_CLASS {$val.cls = str($RESULT_CLASS.text)} 
-	  (COMMA result {$val[$result.key] = $result.val})* NL;
+	  (COMMA result {$val[$result.key] = $result.val})* WS* NL;
 	
 output returns [response]
 	@init {
 	$response = GDBMIResponse()	
 	}
 	// Newline added for debugging
-	: (out_of_band_record NL{
+	: (out_of_band_record NL {
 		if $out_of_band_record.console:
 			$response.console.append($out_of_band_record.console)
 		if $out_of_band_record.target:
@@ -76,7 +76,7 @@ output returns [response]
 			
 	})*  result_record? {
 	$response.result=$result_record.val
-	} EOM WS*;
+	} WS* NL?;
 
 async_record returns [exc,status,notify]
 	@init {
@@ -173,7 +173,7 @@ C_STRING
 	: '"' ('\\''"' | ~('"' |'\n'|'\r'))* '"';
 
 ASYNC_CLASS
-	: 'stopped';
+	: 'stopped' | 'thread-group-created' | 'thread-created';
 
 RESULT_CLASS
 	: 'done'

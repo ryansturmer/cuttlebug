@@ -259,6 +259,7 @@ class Controller(wx.EvtHandler):
             evt = AppEvent(EVT_APP_TARGET_RUNNING, self)
             wx.PostEvent(self, evt)
         elif result.cls.lower() == "stopped":
+            print "STOPPED?!?!"
             print result
         else:
             print "UNEXPECTED PROBLEM WHILE RUNNING"

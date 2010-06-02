@@ -130,9 +130,9 @@ class GDB(wx.EvtHandler):
 
     def on_stdout(self, line):
         self.__mi_log(line)
-        self.buffer += line
-        if line.strip() == '(gdb)':
-            response = self.parse(self.buffer)
+        #self.buffer += line
+        if line.strip() != '(gdb)':
+            response = self.parse(line)
             self.handle_response(response)
             self.buffer = ''
     
@@ -165,7 +165,6 @@ class GDB(wx.EvtHandler):
             self.__log_log(txt)
 
         results = (response.result, response.exc, response.status, response.notify)
-        print results
         for result in results:
             command = ''
             if result != None: 
@@ -182,10 +181,8 @@ class GDB(wx.EvtHandler):
                 if result.cls == 'error':
                     self.__on_error(command, result)
                 elif result.cls == 'stopped':
-                    print "GOT A STOPPED RESPONSE"
                     self.__on_stopped(result)
                 elif result.cls == 'running':
-                    print "OK RUNNING NOW"
                     self.__on_running(result)
                 else:
                     self.post_event(GDBEvent(EVT_GDB_UPDATE, self, data=result))
@@ -512,9 +509,10 @@ class Breakpoint(object):
 if __name__ == "__main__":
     
     session = GDB()
-    result = session.parse('*stopped,frame={addr="0x08000252",func="Delay",args=[{name="nCount",value="275526"}],file="main.c",fullname="C:\\Documents and Settings\\Cuttlebug Developer\\My Documents\\projects\\example_projects\\stm32f103\\blink_led/main.c",line="81"},thread-id="1",stopped-threads="all"')
-    print result.exc
-    print result
+    #result = session.parse('*stopped,frame={addr="0x08000252",func="Delay",args=[{name="nCount",value="275526"}],file="main.c",fullname="C:\\Documents and Settings\\Cuttlebug Developer\\My Documents\\projects\\example_projects\\stm32f103\\blink_led/main.c",line="81"},thread-id="1",stopped-threads="all"')
+    #print result.exc
+    #print result
     
-    result = session.parse('1^done,register-names=["r0","r1","r2","r3","r4","r5","r6","r7","r8","r9","r10","r11","r12","sp","lr","pc","f0","f1","f2","f3","f4","f5","f6","f7","fps","cpsr","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""]')
+    test = ('~"Remote debugging using localhost:3333\\n"\r\n=thread-group-created,id="42000"\r\n=thread-created,id="1",group-id="42000"\r\n~"0x08000268 in Delay (nCount=539340) at main.c:80\\n"\r\n~"80\\t  for(; nCount != 0; nCount--) {\\n"\r\n*stopped,frame={addr="0x08000268",func="Delay",args=[{name="nCount",value="539340"}],file="main.c",fullname="C:\\\\Documents and Settings\\\\Cuttlebug Developer\\\\My Documents\\\\projects\\\\example_projects\\\\stm32f103\\\\blink_led/main.c",line="80"},thread-id="1",stopped-threads="all"\r\n2^done\r\n(gdb) \r\n')
+    result = session.parse(test) 
     print result

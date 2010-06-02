@@ -142,7 +142,7 @@ class MemoryGridControl(grid.Grid):
         row2 = abs(y2)/self.GetDefaultRowSize()
         start_addr = self.GetTable().address_from_row(row1-1 if row1-1 >= 0 else 0)
         end_addr = self.GetTable().address_from_row(row2+1) + self.GetNumberCols()*self.GetTable().stride
-        print "getting visible address range: %s" % ((start_addr, end_addr),)
+        #print "getting visible address range: %s" % ((start_addr, end_addr),)
         return (start_addr, end_addr)
 
     def set_font(self, face, size=9):

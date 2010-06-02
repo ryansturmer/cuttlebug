@@ -55,17 +55,13 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin):
         item = evt.GetItem()
         data = self.GetPyData(item)
         if data in self.vars and data in self.model.vars:
-            print "Editing varname %s" % data
             new_var_value = evt.GetLabel()
             self.model.var_assign(data, new_var_value)
         evt.Veto()
             
     def on_get_tooltip(self, evt):
         item = evt.GetItem()
-        print self.model
-        print item
         if self.model and item:
-            print self.model
             if item == self.stack_item:
                 evt.SetToolTip(wx.ToolTip("Stack Depth: %d frames" % self.model.stack.depth))            
         data = self.GetPyData(item)
@@ -159,7 +155,6 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin):
         self.SetItemImage(item, self.art[name], style)
         
     def on_var_update(self, evt):
-        print "Runtime view is processing a var update."
         names = evt.data
         for name in names:
             if name in self.model.vars:
@@ -173,7 +168,6 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin):
                 if name in self.vars: wx.CallAfter(self.delete_var_item,name)
                     
     def on_stack_update(self, evt):
-        print "Runtime view is processing a stack update"
         if self.model:
             stack = self.model.stack
             stack_keys = set([frame.key for frame in stack])
@@ -191,7 +185,6 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin):
                 self.set_item_art(item, 'frame_active.png')
         
     def on_breakpoint_update(self, evt):
-        print "Runtime view is processing a breakpoint update"
         if self.model:
             breakpoints = self.model.breakpoints
             #self.DeletChildren(self.breakpoints_item)

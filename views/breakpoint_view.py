@@ -119,8 +119,7 @@ class BreakpointView(view.View):
         self.SetSizer(sizer)
         
     def on_breakpoint_update(self, data):
-        print "Processing breakpoint update..."
-        
+        pass
     def update(self):
         self.list.update(self.controller.gdb.breakpoints)
     

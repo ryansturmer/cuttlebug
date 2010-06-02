@@ -263,20 +263,16 @@ class OptionsDialog(wx.Dialog):
         self.book.add_panel(page, page.name, parent=parent, icon=icon)
 
     def on_apply(self, evt):
-       print "apply"
        self.apply_changes()
 
     def on_ok(self, evt):
-        print "ok"
         self.apply_changes()
         self.EndModal(self.changed)
     
     def on_cancel(self, evt):
-        print "cancel"
         self.EndModal(0)
 
     def apply_changes(self):
-        print "Applying changes in %s" % self
         if self.data:
             for key in self.bindings:
                 widget = self.bindings[key]

@@ -1,4 +1,4 @@
-# $ANTLR 3.1.2 GDBMI.g 2010-06-01 19:07:00
+# $ANTLR 3.1.2 GDBMI.g 2010-06-01 23:07:12
 
 import sys
 from antlr3 import *
@@ -9,29 +9,29 @@ from antlr3.compat import set, frozenset
 HIDDEN = BaseRecognizer.HIDDEN
 
 # token types
-CONSOLE=17
-ASYNC_CLASS=14
+CONSOLE=16
+ASYNC_CLASS=13
 T__25=25
 T__24=24
 T__23=23
-LOG=19
+LOG=18
 T__22=22
 T__21=21
-STATUS=12
+STATUS=11
 T__20=20
 RESULT=5
-EXEC=11
-TARGET=18
+EXEC=10
+TARGET=17
 EOF=-1
 TOKEN=4
-WS=10
-EOM=9
+WS=8
+EOM=19
 COMMA=7
-NOTIFY=13
+NOTIFY=12
 RESULT_CLASS=6
-NL=8
-C_STRING=16
-STRING=15
+NL=9
+C_STRING=15
+STRING=14
 
 
 class GDBMILexer(Lexer):
@@ -45,15 +45,26 @@ class GDBMILexer(Lexer):
             state = RecognizerSharedState()
         Lexer.__init__(self, input, state)
 
-        self.dfa6 = self.DFA6(
-            self, 6,
-            eot = self.DFA6_eot,
-            eof = self.DFA6_eof,
-            min = self.DFA6_min,
-            max = self.DFA6_max,
-            accept = self.DFA6_accept,
-            special = self.DFA6_special,
-            transition = self.DFA6_transition
+        self.dfa2 = self.DFA2(
+            self, 2,
+            eot = self.DFA2_eot,
+            eof = self.DFA2_eof,
+            min = self.DFA2_min,
+            max = self.DFA2_max,
+            accept = self.DFA2_accept,
+            special = self.DFA2_special,
+            transition = self.DFA2_transition
+            )
+
+        self.dfa7 = self.DFA7(
+            self, 7,
+            eot = self.DFA7_eot,
+            eof = self.DFA7_eof,
+            min = self.DFA7_min,
+            max = self.DFA7_max,
+            accept = self.DFA7_accept,
+            special = self.DFA7_special,
+            transition = self.DFA7_transition
             )
 
 
@@ -293,11 +304,25 @@ class GDBMILexer(Lexer):
             _type = ASYNC_CLASS
             _channel = DEFAULT_CHANNEL
 
-            # GDBMI.g:176:2: ( 'stopped' )
-            # GDBMI.g:176:4: 'stopped'
-            pass 
-            self.match("stopped")
+            # GDBMI.g:176:2: ( 'stopped' | 'thread-group-created' | 'thread-created' )
+            alt2 = 3
+            alt2 = self.dfa2.predict(self.input)
+            if alt2 == 1:
+                # GDBMI.g:176:4: 'stopped'
+                pass 
+                self.match("stopped")
 
+
+            elif alt2 == 2:
+                # GDBMI.g:176:16: 'thread-group-created'
+                pass 
+                self.match("thread-group-created")
+
+
+            elif alt2 == 3:
+                # GDBMI.g:176:41: 'thread-created'
+                pass 
+                self.match("thread-created")
 
 
             self._state.type = _type
@@ -319,56 +344,56 @@ class GDBMILexer(Lexer):
             _channel = DEFAULT_CHANNEL
 
             # GDBMI.g:179:2: ( 'done' | 'running' | 'connected' | 'error' | 'exit' )
-            alt2 = 5
-            LA2 = self.input.LA(1)
-            if LA2 == 100:
-                alt2 = 1
-            elif LA2 == 114:
-                alt2 = 2
-            elif LA2 == 99:
-                alt2 = 3
-            elif LA2 == 101:
-                LA2_4 = self.input.LA(2)
+            alt3 = 5
+            LA3 = self.input.LA(1)
+            if LA3 == 100:
+                alt3 = 1
+            elif LA3 == 114:
+                alt3 = 2
+            elif LA3 == 99:
+                alt3 = 3
+            elif LA3 == 101:
+                LA3_4 = self.input.LA(2)
 
-                if (LA2_4 == 114) :
-                    alt2 = 4
-                elif (LA2_4 == 120) :
-                    alt2 = 5
+                if (LA3_4 == 114) :
+                    alt3 = 4
+                elif (LA3_4 == 120) :
+                    alt3 = 5
                 else:
-                    nvae = NoViableAltException("", 2, 4, self.input)
+                    nvae = NoViableAltException("", 3, 4, self.input)
 
                     raise nvae
 
             else:
-                nvae = NoViableAltException("", 2, 0, self.input)
+                nvae = NoViableAltException("", 3, 0, self.input)
 
                 raise nvae
 
-            if alt2 == 1:
+            if alt3 == 1:
                 # GDBMI.g:179:4: 'done'
                 pass 
                 self.match("done")
 
 
-            elif alt2 == 2:
+            elif alt3 == 2:
                 # GDBMI.g:180:4: 'running'
                 pass 
                 self.match("running")
 
 
-            elif alt2 == 3:
+            elif alt3 == 3:
                 # GDBMI.g:181:4: 'connected'
                 pass 
                 self.match("connected")
 
 
-            elif alt2 == 4:
+            elif alt3 == 4:
                 # GDBMI.g:182:4: 'error'
                 pass 
                 self.match("error")
 
 
-            elif alt2 == 5:
+            elif alt3 == 5:
                 # GDBMI.g:183:4: 'exit'
                 pass 
                 self.match("exit")
@@ -403,15 +428,15 @@ class GDBMILexer(Lexer):
                 raise mse
 
             # GDBMI.g:186:31: ( '-' | '_' | 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' )*
-            while True: #loop3
-                alt3 = 2
-                LA3_0 = self.input.LA(1)
+            while True: #loop4
+                alt4 = 2
+                LA4_0 = self.input.LA(1)
 
-                if (LA3_0 == 45 or (48 <= LA3_0 <= 57) or (65 <= LA3_0 <= 90) or LA3_0 == 95 or (97 <= LA3_0 <= 122)) :
-                    alt3 = 1
+                if (LA4_0 == 45 or (48 <= LA4_0 <= 57) or (65 <= LA4_0 <= 90) or LA4_0 == 95 or (97 <= LA4_0 <= 122)) :
+                    alt4 = 1
 
 
-                if alt3 == 1:
+                if alt4 == 1:
                     # GDBMI.g:
                     pass 
                     if self.input.LA(1) == 45 or (48 <= self.input.LA(1) <= 57) or (65 <= self.input.LA(1) <= 90) or self.input.LA(1) == 95 or (97 <= self.input.LA(1) <= 122):
@@ -424,7 +449,7 @@ class GDBMILexer(Lexer):
 
 
                 else:
-                    break #loop3
+                    break #loop4
 
 
 
@@ -452,12 +477,12 @@ class GDBMILexer(Lexer):
             # GDBMI.g:189:4: ( '\\r' )? '\\n'
             pass 
             # GDBMI.g:189:4: ( '\\r' )?
-            alt4 = 2
-            LA4_0 = self.input.LA(1)
+            alt5 = 2
+            LA5_0 = self.input.LA(1)
 
-            if (LA4_0 == 13) :
-                alt4 = 1
-            if alt4 == 1:
+            if (LA5_0 == 13) :
+                alt5 = 1
+            if alt5 == 1:
                 # GDBMI.g:189:5: '\\r'
                 pass 
                 self.match(13)
@@ -521,29 +546,29 @@ class GDBMILexer(Lexer):
             # GDBMI.g:194:4: ( '0' .. '9' )+
             pass 
             # GDBMI.g:194:4: ( '0' .. '9' )+
-            cnt5 = 0
-            while True: #loop5
-                alt5 = 2
-                LA5_0 = self.input.LA(1)
+            cnt6 = 0
+            while True: #loop6
+                alt6 = 2
+                LA6_0 = self.input.LA(1)
 
-                if ((48 <= LA5_0 <= 57)) :
-                    alt5 = 1
+                if ((48 <= LA6_0 <= 57)) :
+                    alt6 = 1
 
 
-                if alt5 == 1:
+                if alt6 == 1:
                     # GDBMI.g:194:5: '0' .. '9'
                     pass 
                     self.matchRange(48, 57)
 
 
                 else:
-                    if cnt5 >= 1:
-                        break #loop5
+                    if cnt6 >= 1:
+                        break #loop6
 
-                    eee = EarlyExitException(5, self.input)
+                    eee = EarlyExitException(6, self.input)
                     raise eee
 
-                cnt5 += 1
+                cnt6 += 1
 
 
 
@@ -787,135 +812,135 @@ class GDBMILexer(Lexer):
 
     def mTokens(self):
         # GDBMI.g:1:8: ( T__20 | T__21 | T__22 | T__23 | T__24 | T__25 | C_STRING | ASYNC_CLASS | RESULT_CLASS | STRING | NL | WS | TOKEN | COMMA | EOM | CONSOLE | TARGET | LOG | EXEC | STATUS | NOTIFY | RESULT )
-        alt6 = 22
-        alt6 = self.dfa6.predict(self.input)
-        if alt6 == 1:
+        alt7 = 22
+        alt7 = self.dfa7.predict(self.input)
+        if alt7 == 1:
             # GDBMI.g:1:10: T__20
             pass 
             self.mT__20()
 
 
-        elif alt6 == 2:
+        elif alt7 == 2:
             # GDBMI.g:1:16: T__21
             pass 
             self.mT__21()
 
 
-        elif alt6 == 3:
+        elif alt7 == 3:
             # GDBMI.g:1:22: T__22
             pass 
             self.mT__22()
 
 
-        elif alt6 == 4:
+        elif alt7 == 4:
             # GDBMI.g:1:28: T__23
             pass 
             self.mT__23()
 
 
-        elif alt6 == 5:
+        elif alt7 == 5:
             # GDBMI.g:1:34: T__24
             pass 
             self.mT__24()
 
 
-        elif alt6 == 6:
+        elif alt7 == 6:
             # GDBMI.g:1:40: T__25
             pass 
             self.mT__25()
 
 
-        elif alt6 == 7:
+        elif alt7 == 7:
             # GDBMI.g:1:46: C_STRING
             pass 
             self.mC_STRING()
 
 
-        elif alt6 == 8:
+        elif alt7 == 8:
             # GDBMI.g:1:55: ASYNC_CLASS
             pass 
             self.mASYNC_CLASS()
 
 
-        elif alt6 == 9:
+        elif alt7 == 9:
             # GDBMI.g:1:67: RESULT_CLASS
             pass 
             self.mRESULT_CLASS()
 
 
-        elif alt6 == 10:
+        elif alt7 == 10:
             # GDBMI.g:1:80: STRING
             pass 
             self.mSTRING()
 
 
-        elif alt6 == 11:
+        elif alt7 == 11:
             # GDBMI.g:1:87: NL
             pass 
             self.mNL()
 
 
-        elif alt6 == 12:
+        elif alt7 == 12:
             # GDBMI.g:1:90: WS
             pass 
             self.mWS()
 
 
-        elif alt6 == 13:
+        elif alt7 == 13:
             # GDBMI.g:1:93: TOKEN
             pass 
             self.mTOKEN()
 
 
-        elif alt6 == 14:
+        elif alt7 == 14:
             # GDBMI.g:1:99: COMMA
             pass 
             self.mCOMMA()
 
 
-        elif alt6 == 15:
+        elif alt7 == 15:
             # GDBMI.g:1:105: EOM
             pass 
             self.mEOM()
 
 
-        elif alt6 == 16:
+        elif alt7 == 16:
             # GDBMI.g:1:109: CONSOLE
             pass 
             self.mCONSOLE()
 
 
-        elif alt6 == 17:
+        elif alt7 == 17:
             # GDBMI.g:1:117: TARGET
             pass 
             self.mTARGET()
 
 
-        elif alt6 == 18:
+        elif alt7 == 18:
             # GDBMI.g:1:124: LOG
             pass 
             self.mLOG()
 
 
-        elif alt6 == 19:
+        elif alt7 == 19:
             # GDBMI.g:1:128: EXEC
             pass 
             self.mEXEC()
 
 
-        elif alt6 == 20:
+        elif alt7 == 20:
             # GDBMI.g:1:133: STATUS
             pass 
             self.mSTATUS()
 
 
-        elif alt6 == 21:
+        elif alt7 == 21:
             # GDBMI.g:1:140: NOTIFY
             pass 
             self.mNOTIFY()
 
 
-        elif alt6 == 22:
+        elif alt7 == 22:
             # GDBMI.g:1:147: RESULT
             pass 
             self.mRESULT()
@@ -926,58 +951,110 @@ class GDBMILexer(Lexer):
 
 
 
-    # lookup tables for DFA #6
+    # lookup tables for DFA #2
 
-    DFA6_eot = DFA.unpack(
-        u"\1\uffff\1\31\1\uffff\1\33\2\uffff\5\13\21\uffff\15\13\1\57\3"
-        u"\13\1\57\1\13\1\uffff\2\13\1\57\3\13\1\71\1\57\1\13\1\uffff\1\13"
-        u"\1\57"
+    DFA2_eot = DFA.unpack(
+        u"\13\uffff"
         )
 
-    DFA6_eof = DFA.unpack(
-        u"\74\uffff"
+    DFA2_eof = DFA.unpack(
+        u"\13\uffff"
         )
 
-    DFA6_min = DFA.unpack(
-        u"\1\11\1\175\1\uffff\1\135\2\uffff\1\164\1\157\1\165\1\157\1\162"
-        u"\21\uffff\1\157\3\156\1\162\1\151\1\160\1\145\2\156\1\157\1\164"
-        u"\1\160\1\55\1\151\1\145\1\162\1\55\1\145\1\uffff\1\156\1\143\1"
-        u"\55\1\144\1\147\1\164\2\55\1\145\1\uffff\1\144\1\55"
+    DFA2_min = DFA.unpack(
+        u"\1\163\1\uffff\1\150\1\162\1\145\1\141\1\144\1\55\1\143\2\uffff"
         )
 
-    DFA6_max = DFA.unpack(
-        u"\1\176\1\175\1\uffff\1\135\2\uffff\1\164\1\157\1\165\1\157\1\170"
-        u"\21\uffff\1\157\3\156\1\162\1\151\1\160\1\145\2\156\1\157\1\164"
-        u"\1\160\1\172\1\151\1\145\1\162\1\172\1\145\1\uffff\1\156\1\143"
-        u"\1\172\1\144\1\147\1\164\2\172\1\145\1\uffff\1\144\1\172"
+    DFA2_max = DFA.unpack(
+        u"\1\164\1\uffff\1\150\1\162\1\145\1\141\1\144\1\55\1\147\2\uffff"
         )
 
-    DFA6_accept = DFA.unpack(
-        u"\2\uffff\1\3\1\uffff\1\6\1\7\5\uffff\1\12\1\13\1\14\1\15\1\16"
-        u"\1\17\1\20\1\21\1\22\1\23\1\24\1\25\1\26\1\1\1\2\1\4\1\5\23\uffff"
-        u"\1\11\11\uffff\1\10\2\uffff"
+    DFA2_accept = DFA.unpack(
+        u"\1\uffff\1\1\7\uffff\1\2\1\3"
         )
 
-    DFA6_special = DFA.unpack(
-        u"\74\uffff"
+    DFA2_special = DFA.unpack(
+        u"\13\uffff"
         )
 
             
-    DFA6_transition = [
-        DFA.unpack(u"\1\15\1\14\2\uffff\1\14\22\uffff\1\15\1\uffff\1\5\3"
-        u"\uffff\1\23\1\uffff\1\20\1\uffff\1\24\1\25\1\17\3\uffff\12\16\3"
-        u"\uffff\1\26\2\uffff\1\22\32\13\1\3\1\uffff\1\4\1\27\1\13\1\uffff"
-        u"\2\13\1\11\1\7\1\12\14\13\1\10\1\6\7\13\1\1\1\uffff\1\2\1\21"),
-        DFA.unpack(u"\1\30"),
+    DFA2_transition = [
+        DFA.unpack(u"\1\1\1\2"),
         DFA.unpack(u""),
-        DFA.unpack(u"\1\32"),
+        DFA.unpack(u"\1\3"),
+        DFA.unpack(u"\1\4"),
+        DFA.unpack(u"\1\5"),
+        DFA.unpack(u"\1\6"),
+        DFA.unpack(u"\1\7"),
+        DFA.unpack(u"\1\10"),
+        DFA.unpack(u"\1\12\3\uffff\1\11"),
+        DFA.unpack(u""),
+        DFA.unpack(u"")
+    ]
+
+    # class definition for DFA #2
+
+    DFA2 = DFA
+    # lookup tables for DFA #7
+
+    DFA7_eot = DFA.unpack(
+        u"\1\uffff\1\32\1\uffff\1\34\2\uffff\6\14\21\uffff\20\14\1\64\3"
+        u"\14\1\64\2\14\1\uffff\2\14\1\64\4\14\1\100\1\14\1\64\1\14\1\uffff"
+        u"\5\14\1\64\11\14\1\100\5\14\1\100"
+        )
+
+    DFA7_eof = DFA.unpack(
+        u"\127\uffff"
+        )
+
+    DFA7_min = DFA.unpack(
+        u"\1\11\1\175\1\uffff\1\135\2\uffff\1\164\1\150\1\157\1\165\1\157"
+        u"\1\162\21\uffff\1\157\1\162\3\156\1\162\1\151\1\160\2\145\2\156"
+        u"\1\157\1\164\1\160\1\141\1\55\1\151\1\145\1\162\1\55\1\145\1\144"
+        u"\1\uffff\1\156\1\143\1\55\1\144\1\55\1\147\1\164\1\55\1\143\1\55"
+        u"\1\145\1\uffff\2\162\1\144\1\157\1\145\1\55\1\165\1\141\1\160\1"
+        u"\164\1\55\1\145\1\143\1\144\1\162\1\55\1\145\1\141\1\164\1\145"
+        u"\1\144\1\55"
+        )
+
+    DFA7_max = DFA.unpack(
+        u"\1\176\1\175\1\uffff\1\135\2\uffff\1\164\1\150\1\157\1\165\1\157"
+        u"\1\170\21\uffff\1\157\1\162\3\156\1\162\1\151\1\160\2\145\2\156"
+        u"\1\157\1\164\1\160\1\141\1\172\1\151\1\145\1\162\1\172\1\145\1"
+        u"\144\1\uffff\1\156\1\143\1\172\1\144\1\55\1\147\1\164\1\172\1\147"
+        u"\1\172\1\145\1\uffff\2\162\1\144\1\157\1\145\1\172\1\165\1\141"
+        u"\1\160\1\164\1\55\1\145\1\143\1\144\1\162\1\172\1\145\1\141\1\164"
+        u"\1\145\1\144\1\172"
+        )
+
+    DFA7_accept = DFA.unpack(
+        u"\2\uffff\1\3\1\uffff\1\6\1\7\6\uffff\1\12\1\13\1\14\1\15\1\16"
+        u"\1\17\1\20\1\21\1\22\1\23\1\24\1\25\1\26\1\1\1\2\1\4\1\5\27\uffff"
+        u"\1\11\13\uffff\1\10\26\uffff"
+        )
+
+    DFA7_special = DFA.unpack(
+        u"\127\uffff"
+        )
+
+            
+    DFA7_transition = [
+        DFA.unpack(u"\1\16\1\15\2\uffff\1\15\22\uffff\1\16\1\uffff\1\5\3"
+        u"\uffff\1\24\1\uffff\1\21\1\uffff\1\25\1\26\1\20\3\uffff\12\17\3"
+        u"\uffff\1\27\2\uffff\1\23\32\14\1\3\1\uffff\1\4\1\30\1\14\1\uffff"
+        u"\2\14\1\12\1\10\1\13\14\14\1\11\1\6\1\7\6\14\1\1\1\uffff\1\2\1"
+        u"\22"),
+        DFA.unpack(u"\1\31"),
+        DFA.unpack(u""),
+        DFA.unpack(u"\1\33"),
         DFA.unpack(u""),
         DFA.unpack(u""),
-        DFA.unpack(u"\1\34"),
         DFA.unpack(u"\1\35"),
         DFA.unpack(u"\1\36"),
         DFA.unpack(u"\1\37"),
-        DFA.unpack(u"\1\40\5\uffff\1\41"),
+        DFA.unpack(u"\1\40"),
+        DFA.unpack(u"\1\41"),
+        DFA.unpack(u"\1\42\5\uffff\1\43"),
         DFA.unpack(u""),
         DFA.unpack(u""),
         DFA.unpack(u""),
@@ -995,8 +1072,6 @@ class GDBMILexer(Lexer):
         DFA.unpack(u""),
         DFA.unpack(u""),
         DFA.unpack(u""),
-        DFA.unpack(u"\1\42"),
-        DFA.unpack(u"\1\43"),
         DFA.unpack(u"\1\44"),
         DFA.unpack(u"\1\45"),
         DFA.unpack(u"\1\46"),
@@ -1008,36 +1083,66 @@ class GDBMILexer(Lexer):
         DFA.unpack(u"\1\54"),
         DFA.unpack(u"\1\55"),
         DFA.unpack(u"\1\56"),
-        DFA.unpack(u"\1\13\2\uffff\12\13\7\uffff\32\13\4\uffff\1\13\1\uffff"
-        u"\32\13"),
+        DFA.unpack(u"\1\57"),
         DFA.unpack(u"\1\60"),
         DFA.unpack(u"\1\61"),
         DFA.unpack(u"\1\62"),
-        DFA.unpack(u"\1\13\2\uffff\12\13\7\uffff\32\13\4\uffff\1\13\1\uffff"
-        u"\32\13"),
         DFA.unpack(u"\1\63"),
-        DFA.unpack(u""),
-        DFA.unpack(u"\1\64"),
+        DFA.unpack(u"\1\14\2\uffff\12\14\7\uffff\32\14\4\uffff\1\14\1\uffff"
+        u"\32\14"),
         DFA.unpack(u"\1\65"),
-        DFA.unpack(u"\1\13\2\uffff\12\13\7\uffff\32\13\4\uffff\1\13\1\uffff"
-        u"\32\13"),
         DFA.unpack(u"\1\66"),
         DFA.unpack(u"\1\67"),
+        DFA.unpack(u"\1\14\2\uffff\12\14\7\uffff\32\14\4\uffff\1\14\1\uffff"
+        u"\32\14"),
         DFA.unpack(u"\1\70"),
-        DFA.unpack(u"\1\13\2\uffff\12\13\7\uffff\32\13\4\uffff\1\13\1\uffff"
-        u"\32\13"),
-        DFA.unpack(u"\1\13\2\uffff\12\13\7\uffff\32\13\4\uffff\1\13\1\uffff"
-        u"\32\13"),
-        DFA.unpack(u"\1\72"),
+        DFA.unpack(u"\1\71"),
         DFA.unpack(u""),
+        DFA.unpack(u"\1\72"),
         DFA.unpack(u"\1\73"),
-        DFA.unpack(u"\1\13\2\uffff\12\13\7\uffff\32\13\4\uffff\1\13\1\uffff"
-        u"\32\13")
+        DFA.unpack(u"\1\14\2\uffff\12\14\7\uffff\32\14\4\uffff\1\14\1\uffff"
+        u"\32\14"),
+        DFA.unpack(u"\1\74"),
+        DFA.unpack(u"\1\75"),
+        DFA.unpack(u"\1\76"),
+        DFA.unpack(u"\1\77"),
+        DFA.unpack(u"\1\14\2\uffff\12\14\7\uffff\32\14\4\uffff\1\14\1\uffff"
+        u"\32\14"),
+        DFA.unpack(u"\1\102\3\uffff\1\101"),
+        DFA.unpack(u"\1\14\2\uffff\12\14\7\uffff\32\14\4\uffff\1\14\1\uffff"
+        u"\32\14"),
+        DFA.unpack(u"\1\103"),
+        DFA.unpack(u""),
+        DFA.unpack(u"\1\104"),
+        DFA.unpack(u"\1\105"),
+        DFA.unpack(u"\1\106"),
+        DFA.unpack(u"\1\107"),
+        DFA.unpack(u"\1\110"),
+        DFA.unpack(u"\1\14\2\uffff\12\14\7\uffff\32\14\4\uffff\1\14\1\uffff"
+        u"\32\14"),
+        DFA.unpack(u"\1\111"),
+        DFA.unpack(u"\1\112"),
+        DFA.unpack(u"\1\113"),
+        DFA.unpack(u"\1\114"),
+        DFA.unpack(u"\1\115"),
+        DFA.unpack(u"\1\116"),
+        DFA.unpack(u"\1\117"),
+        DFA.unpack(u"\1\120"),
+        DFA.unpack(u"\1\121"),
+        DFA.unpack(u"\1\14\2\uffff\12\14\7\uffff\32\14\4\uffff\1\14\1\uffff"
+        u"\32\14"),
+        DFA.unpack(u"\1\122"),
+        DFA.unpack(u"\1\123"),
+        DFA.unpack(u"\1\124"),
+        DFA.unpack(u"\1\125"),
+        DFA.unpack(u"\1\126"),
+        DFA.unpack(u"\1\14\2\uffff\12\14\7\uffff\32\14\4\uffff\1\14\1\uffff"
+        u"\32\14")
     ]
 
-    # class definition for DFA #6
+    # class definition for DFA #7
 
-    DFA6 = DFA
+    DFA7 = DFA
  
 
 
