@@ -254,16 +254,18 @@ class Controller(wx.EvtHandler):
         self.gdb.exec_continue(self.on_running)
             
     def on_running(self, result):
-        if result.cls.lower() == "running":
-            self.change_state(RUNNING)
-            evt = AppEvent(EVT_APP_TARGET_RUNNING, self)
-            wx.PostEvent(self, evt)
-        elif result.cls.lower() == "stopped":
-            print "STOPPED?!?!"
+        try:
+            if result.cls.lower() == "running":
+                self.change_state(RUNNING)
+                evt = AppEvent(EVT_APP_TARGET_RUNNING, self)
+                wx.PostEvent(self, evt)
+            elif result.cls.lower() == "stopped":
+                print "STOPPED?!?!"
+                print result
+            else:
+                raise "UNEXPECTED PROBLEM WHILE RUNNING"
+        except:
             print result
-        else:
-            print "UNEXPECTED PROBLEM WHILE RUNNING"
-
     def run_to(self, file, line):
         if self.state == ATTACHED:
             self.gdb.exec_until(file, line)

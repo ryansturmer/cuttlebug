@@ -16,7 +16,7 @@ class QuickFindBar(wx.Panel):
         super(QuickFindBar, self).__init__(parent, -1)
         self.editor = editor
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        btn = util.plate_button(self, icon='ex.png')
+        btn = util.plate_button(self, func=self.on_close, icon='ex.png')
         lbl = wx.StaticText(self, -1, "Find:")
         match_case = util.checkbox(self, label="Match Case")
         whole_word = util.checkbox(self, label="Whole Word")
@@ -38,7 +38,6 @@ class QuickFindBar(wx.Panel):
         sizer.Add(whole_word, 0, wx.CENTER)
 
         self.SetSizer(sizer)
-        btn.Bind(wx.EVT_BUTTON, self.on_close)
         txt.Bind(wx.EVT_TEXT_ENTER, self.on_enter)
         txt.Bind(wx.EVT_TEXT, self.on_text)
         txt.Bind(wx.EVT_KEY_DOWN, self.on_key)

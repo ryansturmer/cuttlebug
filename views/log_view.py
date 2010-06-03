@@ -3,7 +3,7 @@ import wx.aui as aui
 import wx.stc as stc
 import view, util, log, styles
 import logging, re
-
+from editor_view import QuickFindBar
 
 class BuildPane(stc.StyledTextCtrl):
     def __init__(self, *args, **kwargs):
@@ -182,8 +182,13 @@ class LogPane(wx.Panel):
         font = self.txt.GetFont()
         font.SetFaceName("Courier New")
         self.txt.SetFont(font)
+        self.find_bar = QuickFindBar(self, self.txt)
+        #self.find_bar.hide()
+
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.txt, 1, wx.EXPAND)
+        sizer.Add(self.find_bar, 0)
+    
         if on_input:
             self.input_txt = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
             font = self.input_txt.GetFont()

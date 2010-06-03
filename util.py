@@ -212,7 +212,7 @@ def plate_button(window, label='', func=None, icon=None, id=wx.ID_ANY, style=PLA
             btn = platebtn.PlateButton(window, id, label=label, style=style)
             btn.SetPressColor(PLATEBTN_DEFAULT_COLOUR)
         if func:
-            btn.Bind(wx.EVT_BUTTON, func)
+            window.Bind(wx.EVT_BUTTON, func, btn)
         return btn
 
 def checkbox(window, label='', func=None, id=wx.ID_ANY):
