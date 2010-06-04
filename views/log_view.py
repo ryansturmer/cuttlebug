@@ -183,7 +183,7 @@ class LogPane(wx.Panel):
         font.SetFaceName("Courier New")
         self.txt.SetFont(font)
         self.find_bar = QuickFindBar(self, self.txt)
-        #self.find_bar.hide()
+        self.find_bar.hide()
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.txt, 1, wx.EXPAND)

@@ -207,17 +207,17 @@ class Frame(util.PersistedFrame):
             self.project_view.Bind(views.EVT_PROJECT_DCLICK_FILE, self.on_project_dclick_file)
             self.project_view.info = aui.AuiPaneInfo().Caption('Project').Left().Name('ProjectView') 
             self.manager.AddPane(self.project_view, self.project_view.info)
-
+    
             self.runtime_view = views.RuntimeView(self, style=0, controller=self.controller)
-            self.runtime_view.info = aui.AuiPaneInfo().Caption('Runtime').Right().Name('RuntimeView')
+            self.runtime_view.info = aui.AuiPaneInfo().Caption('Runtime').Right().Name('RuntimeView').MinSize((250,50))
             self.manager.AddPane(self.runtime_view, self.runtime_view.info)
 
             self.debug_view = views.GDBDebugView(self, controller=self.controller)
-            self.debug_view.info = aui.AuiPaneInfo().Caption('Debug').Right().Name('DebugView')
+            self.debug_view.info = aui.AuiPaneInfo().Caption('Debug').Right().Name('DebugView').MinSize((250,50))
             self.manager.AddPane(self.debug_view, self.debug_view.info)
 
             self.disassembly_view = views.DisassemblyView(self, controller=self.controller)
-            self.disassembly_view.info = aui.AuiPaneInfo().Caption('Disassembly').Right().Name('DisassemblyView')
+            self.disassembly_view.info = aui.AuiPaneInfo().Caption('Disassembly').Right().Name('DisassemblyView').MinSize((250,50))
             self.manager.AddPane(self.disassembly_view, self.disassembly_view.info)
     
         def create_status_bar(self):
