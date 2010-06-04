@@ -105,7 +105,7 @@ class Frame(util.PersistedFrame):
             view.item('&Project\tAlt+P', self.on_toggle_project_view, icon="package.png")
             view.item('&Runtime\tAlt+R', self.on_toggle_runtime_view, icon="computer.png")
             view.item('&Logs\tAlt+L', self.on_toggle_log_view, icon="application_view_list.png")
-            view.item('&Debug\tAlt+D', self.on_toggle_debug_view, icon="bug.png")
+            #view.item('&Debug\tAlt+D', self.on_toggle_debug_view, icon="bug.png")
             view.item('&Disassembly\tAlt+A', self.on_toggle_disassembly_view, icon="chip.png")
         
             menu.manager.publish(menu.TARGET_DETACHED)
@@ -212,9 +212,9 @@ class Frame(util.PersistedFrame):
             self.runtime_view.info = aui.AuiPaneInfo().Caption('Runtime').Right().Name('RuntimeView').MinSize((250,50))
             self.manager.AddPane(self.runtime_view, self.runtime_view.info)
 
-            self.debug_view = views.GDBDebugView(self, controller=self.controller)
-            self.debug_view.info = aui.AuiPaneInfo().Caption('Debug').Right().Name('DebugView').MinSize((250,50))
-            self.manager.AddPane(self.debug_view, self.debug_view.info)
+            #self.debug_view = views.GDBDebugView(self, controller=self.controller)
+            #self.debug_view.info = aui.AuiPaneInfo().Caption('Debug').Right().Name('DebugView').MinSize((250,50))
+            #self.manager.AddPane(self.debug_view, self.debug_view.info)
 
             self.disassembly_view = views.DisassemblyView(self, controller=self.controller)
             self.disassembly_view.info = aui.AuiPaneInfo().Caption('Disassembly').Right().Name('DisassemblyView').MinSize((250,50))

@@ -18,25 +18,33 @@ class DisassemblyView(view.View):
         self.list = ListControl(self)
         self.list.set_columns(['address', 'instruction'])
         self.list.SetFont(wx.Font(8, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        self.list.auto_size()
+#        self.list.auto_size()
+        try:
+            self.load_positions()
+        except:
+            self.list.auto_size()
+        self.list.Bind(wx.EVT_LIST_COL_END_DRAG, self.on_col_resize)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.list, 1, wx.EXPAND)
         self.SetSizer(sizer)
-        self.load_positions()
-
+ 
+    def on_col_resize(self, evt):
+        self.save_positions()
+        evt.Skip()
+        
     def save_positions(self):
         cols = self.list.GetColumnCount()
         widths = [self.list.GetColumnWidth(i) for i in range(cols)]
+        print widths
         settings.session_set('asm_view_col_widths', widths)
 
     def load_positions(self):
-        try:
-            widths = settings.session_get('asm_view_col_widths')
-            cols = self.list.GetColumnCount()
-            for i in range(cols):
-                self.list.SetColumnWidth(i, widths[i])
-        except:
-            pass
+        widths = settings.session_get('asm_view_col_widths')
+        cols = self.list.GetColumnCount()
+        if cols != len(widths):
+            raise Exception("Wrong number of saved column widths.")
+        for i, width, in enumerate(widths):
+            self.list.SetColumnWidth(i, width)
 
     def set_model(self, model):
         self.model = model

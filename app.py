@@ -469,7 +469,7 @@ class Controller(wx.EvtHandler):
         if target:
             result = wx.NO
             if self.settings.debug.load_after_build == 'prompt':
-                dlg = wx.MessageDialog(self.frame, "%s Was Modified.  Reload?" % self.project.program.target, "", wx.YES_NO)
+                dlg = wx.MessageDialog(self.frame, "%s Was Modified.  Reload?" % self.project.program.target, "Reload", wx.YES_NO)
                 dlg.CenterOnParent()
                 result = dlg.ShowModal()
                 
