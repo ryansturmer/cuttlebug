@@ -375,22 +375,27 @@ class Process(subprocess.Popen):
         if start:
             self.start()
 
-        self.stdoutworker = ThreadWorker(self.monitor_stream, self.stdout_func, self.stdout)
+        self.stdoutworker = ThreadWorker(self.monitor_stream, self.stdout_func, self.stdout, end=True)
         self.stderrworker = ThreadWorker(self.monitor_stream, self.stderr_func, self.stderr)
 
-        self.stdoutworker.start()        
         self.stderrworker.start()
+        self.stdoutworker.start()        
 
-    def monitor_stream(self, func, stream):
+    def monitor_stream(self, func, stream, end=False):
         while True:
-            data = stream.readline()
+            try:
+                data = stream.readline()
+            except IOError, e:
+                print e
+                break
+            
             if data:
-                if func:
-                    func(data)
+                func(data)
             else:
                 self.done = True
                 break
-        if self.end:
+        
+        if end and self.end:
             self.end()
 
     def sigint(self):        
