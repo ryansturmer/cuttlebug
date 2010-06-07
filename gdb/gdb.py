@@ -149,7 +149,7 @@ class GDB(wx.EvtHandler):
         # We make some corrections to the debugger state based on feedback from error messages
         if "while target is running" in record.msg: 
             self.__on_running(record)
-        elif "while target is stopped" in record.msg or "not executing" in record.msg:
+        elif "while target is stopped" in record.msg or "not executing" or "not running" in record.msg:
             self.__on_stopped(record)
         self.post_event(GDBEvent(EVT_GDB_ERROR, self, data=record.msg))
    
