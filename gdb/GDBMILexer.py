@@ -1,4 +1,4 @@
-# $ANTLR 3.1.2 GDBMI.g 2010-06-02 20:43:58
+# $ANTLR 3.1.2 GDBMI.g 2010-06-06 12:34:15
 
 import sys
 from antlr3 import *
@@ -304,8 +304,8 @@ class GDBMILexer(Lexer):
             _type = ASYNC_CLASS
             _channel = DEFAULT_CHANNEL
 
-            # GDBMI.g:176:2: ( 'stopped' | 'thread-group-created' | 'thread-created' | 'running' | 'download' )
-            alt2 = 5
+            # GDBMI.g:176:2: ( 'stopped' | 'thread-group-created' | 'thread-created' | 'running' | 'download' | 'thread-group-exited' )
+            alt2 = 6
             alt2 = self.dfa2.predict(self.input)
             if alt2 == 1:
                 # GDBMI.g:176:4: 'stopped'
@@ -335,6 +335,12 @@ class GDBMILexer(Lexer):
                 # GDBMI.g:176:72: 'download'
                 pass 
                 self.match("download")
+
+
+            elif alt2 == 6:
+                # GDBMI.g:176:85: 'thread-group-exited'
+                pass 
+                self.match("thread-group-exited")
 
 
             self._state.type = _type
@@ -966,29 +972,29 @@ class GDBMILexer(Lexer):
     # lookup tables for DFA #2
 
     DFA2_eot = DFA.unpack(
-        u"\15\uffff"
+        u"\24\uffff"
         )
 
     DFA2_eof = DFA.unpack(
-        u"\15\uffff"
+        u"\24\uffff"
         )
 
     DFA2_min = DFA.unpack(
         u"\1\144\1\uffff\1\150\2\uffff\1\162\1\145\1\141\1\144\1\55\1\143"
-        u"\2\uffff"
+        u"\1\162\1\uffff\1\157\1\165\1\160\1\55\1\143\2\uffff"
         )
 
     DFA2_max = DFA.unpack(
         u"\1\164\1\uffff\1\150\2\uffff\1\162\1\145\1\141\1\144\1\55\1\147"
-        u"\2\uffff"
+        u"\1\162\1\uffff\1\157\1\165\1\160\1\55\1\145\2\uffff"
         )
 
     DFA2_accept = DFA.unpack(
-        u"\1\uffff\1\1\1\uffff\1\4\1\5\6\uffff\1\2\1\3"
+        u"\1\uffff\1\1\1\uffff\1\4\1\5\7\uffff\1\3\5\uffff\1\2\1\6"
         )
 
     DFA2_special = DFA.unpack(
-        u"\15\uffff"
+        u"\24\uffff"
         )
 
             
@@ -1004,6 +1010,13 @@ class GDBMILexer(Lexer):
         DFA.unpack(u"\1\11"),
         DFA.unpack(u"\1\12"),
         DFA.unpack(u"\1\14\3\uffff\1\13"),
+        DFA.unpack(u"\1\15"),
+        DFA.unpack(u""),
+        DFA.unpack(u"\1\16"),
+        DFA.unpack(u"\1\17"),
+        DFA.unpack(u"\1\20"),
+        DFA.unpack(u"\1\21"),
+        DFA.unpack(u"\1\22\1\uffff\1\23"),
         DFA.unpack(u""),
         DFA.unpack(u"")
     ]
@@ -1016,11 +1029,11 @@ class GDBMILexer(Lexer):
     DFA7_eot = DFA.unpack(
         u"\1\uffff\1\32\1\uffff\1\34\2\uffff\6\14\21\uffff\23\14\1\70\2"
         u"\14\1\70\4\14\1\uffff\1\14\1\70\5\14\1\105\1\14\1\105\2\14\1\uffff"
-        u"\2\14\1\105\3\14\1\70\11\14\1\105\5\14\1\105"
+        u"\2\14\1\105\3\14\1\70\12\14\1\105\11\14\2\105"
         )
 
     DFA7_eof = DFA.unpack(
-        u"\135\uffff"
+        u"\143\uffff"
         )
 
     DFA7_min = DFA.unpack(
@@ -1030,7 +1043,7 @@ class GDBMILexer(Lexer):
         u"\1\145\1\144\1\156\1\157\1\uffff\1\143\1\55\1\144\1\55\1\147\1"
         u"\141\1\164\1\55\1\143\1\55\1\144\1\145\1\uffff\2\162\1\55\1\144"
         u"\1\157\1\145\1\55\1\165\1\141\1\160\1\164\1\55\1\145\1\143\1\144"
-        u"\1\162\1\55\1\145\1\141\1\164\1\145\1\144\1\55"
+        u"\1\162\1\170\1\55\1\145\1\151\1\141\2\164\2\145\2\144\2\55"
         )
 
     DFA7_max = DFA.unpack(
@@ -1040,18 +1053,18 @@ class GDBMILexer(Lexer):
         u"\145\1\162\1\172\1\145\1\144\1\156\1\157\1\uffff\1\143\1\172\1"
         u"\144\1\55\1\147\1\141\1\164\1\172\1\147\1\172\1\144\1\145\1\uffff"
         u"\2\162\1\172\1\144\1\157\1\145\1\172\1\165\1\141\1\160\1\164\1"
-        u"\55\1\145\1\143\1\144\1\162\1\172\1\145\1\141\1\164\1\145\1\144"
-        u"\1\172"
+        u"\55\2\145\1\144\1\162\1\170\1\172\1\145\1\151\1\141\2\164\2\145"
+        u"\2\144\2\172"
         )
 
     DFA7_accept = DFA.unpack(
         u"\2\uffff\1\3\1\uffff\1\6\1\7\6\uffff\1\12\1\13\1\14\1\15\1\16"
         u"\1\17\1\20\1\21\1\22\1\23\1\24\1\25\1\26\1\1\1\2\1\4\1\5\33\uffff"
-        u"\1\11\14\uffff\1\10\27\uffff"
+        u"\1\11\14\uffff\1\10\35\uffff"
         )
 
     DFA7_special = DFA.unpack(
-        u"\135\uffff"
+        u"\143\uffff"
         )
 
             
@@ -1150,16 +1163,23 @@ class GDBMILexer(Lexer):
         DFA.unpack(u"\1\122"),
         DFA.unpack(u"\1\123"),
         DFA.unpack(u"\1\124"),
-        DFA.unpack(u"\1\125"),
-        DFA.unpack(u"\1\126"),
+        DFA.unpack(u"\1\125\1\uffff\1\126"),
         DFA.unpack(u"\1\127"),
-        DFA.unpack(u"\1\14\2\uffff\12\14\7\uffff\32\14\4\uffff\1\14\1\uffff"
-        u"\32\14"),
         DFA.unpack(u"\1\130"),
         DFA.unpack(u"\1\131"),
+        DFA.unpack(u"\1\14\2\uffff\12\14\7\uffff\32\14\4\uffff\1\14\1\uffff"
+        u"\32\14"),
         DFA.unpack(u"\1\132"),
         DFA.unpack(u"\1\133"),
         DFA.unpack(u"\1\134"),
+        DFA.unpack(u"\1\135"),
+        DFA.unpack(u"\1\136"),
+        DFA.unpack(u"\1\137"),
+        DFA.unpack(u"\1\140"),
+        DFA.unpack(u"\1\141"),
+        DFA.unpack(u"\1\142"),
+        DFA.unpack(u"\1\14\2\uffff\12\14\7\uffff\32\14\4\uffff\1\14\1\uffff"
+        u"\32\14"),
         DFA.unpack(u"\1\14\2\uffff\12\14\7\uffff\32\14\4\uffff\1\14\1\uffff"
         u"\32\14")
     ]

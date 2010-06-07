@@ -296,7 +296,7 @@ def create_languages(base_style):
         block_comment=('/*', '*/'),
     )
     result.append(java)
-    
+
     # C
     style = Style(base_style, name='C Base Style')
     c = Language(
@@ -436,7 +436,7 @@ def create_languages(base_style):
     
     # HTML
     style = Style(base_style, name='XML Base Style')
-    html = Language(
+    xml = Language(
         name='XML',
         #extensions=['html', 'htm', 'shtml', 'shtm', 'xhtml'],
         extensions=['xml'],
@@ -468,12 +468,12 @@ def create_languages(base_style):
         line_comment='',
         block_comment=('<!--', '-->'),
     )
-    #result.append(html)
+    result.append(xml)
     
     style = Style(base_style, name='Makefile')
     makefile = Language(
         name='Makefile',
-        extensions=['mk', 'makefile', 'Makefile'],
+        extensions=['mk', 'makefile', 'Makefile', 'make', 'cmake'],
         lexer=stc.STC_LEX_MAKEFILE,
         base_style=style,
         styles=[

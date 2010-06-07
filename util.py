@@ -314,50 +314,7 @@ class ThreadWorker(threading.Thread):
             #print "omg exception"
             #print e
             raise
-'''
-import proc
 
-class Process(proc.Popen):
-
-    def __init__(self, cmd, start=None, stdout=None, stderr=None, end=None):
-        self.start = start
-        self.end = end
-        self.stdout_func = stdout
-        self.stderr_func = stderr
-        self.done = False
-        super(Process, self).__init__(cmd, shell=True, stdout=proc.PIPE, stderr=proc.PIPE, stdin=proc.PIPE)
-        if start:
-            start()
-        
-        self.outworker = ThreadWorker(self.__monitor, self.recv, self.stdout_func)
-        self.errworker = ThreadWorker(self.__monitor, self.recv_err, self.stderr_func)
-        #self.doneworker = ThreadWorker(self.__watch_for_done)
-        
-        self.outworker.start()
-        self.errworker.start()
-        #self.doneworker.start()
-    
-    def write(self, data):
-        self.send(data)
-
-    def __monitor(self, f, g):
-        buffer = ''
-        while True:
-            ch = f(1)
-            if buffer:
-                buffer += ch
-                print buffer
-            if ch == '\n':
-                if g:
-                    g(buffer)
-                buffer = ''
-
-    def __watch_for_done(self):
-        self.wait()
-        self.done = True
-        if self.end:
-            self.end()
-'''
 class Process(subprocess.Popen):
     def __init__(self, cmd, start=None, stdout=None, stderr=None, end=None, cwd=os.curdir):
         self.start = start

@@ -33,7 +33,7 @@ class Controller(wx.EvtHandler):
         self.gdb = gdb.session
         self.frame = frame
         self.project = None
-        self.download_after_attach = False
+        self.download_request = False
         try:
             self.settings = settings.Settings.load(".settings")
         except Exception, e:
@@ -159,27 +159,34 @@ class Controller(wx.EvtHandler):
         menu.manager.publish(menu.TARGET_ATTACHED)
         #print "Entering the ATTACHED state."
         if self.state == IDLE:
-            # self.frame.locals_view.set_model(self.gdb.vars)
+            #self.frame.debug_view.set_model(self.gdb)
             self.frame.runtime_view.set_model(self.gdb)
-            self.frame.debug_view.set_model(self.gdb)
             self.frame.editor_view.set_model(self.gdb)
             self.frame.disassembly_view.set_model(self.gdb)
-            self.halt()
-        if self.state == IDLE or self.state == RUNNING:
             self.exit_current_state()
             self.frame.statusbar.icon = "connect.png"
             self.state = ATTACHED
+            self.halt(callback=self.do_post_attach_cmd, download=self.download_request)
+                        
+        elif self.state == RUNNING:
+            self.exit_current_state()
+            self.frame.statusbar.icon = "connect.png"
+            self.state = ATTACHED
+            if self.download_request:
+                self.download()
+
+        elif self.state == ATTACHED:
+            if self.download_request:
+                self.download()
             #self.frame.statusbar.set_state("Halted")
         else:
             self.error_logger.log(logging.WARN, "Tried to attach from state %d" % self.state)
 
     def exit_attached_state(self):
         pass
-        #print "Exiting the ATTACHED state."
 
     def enter_running_state(self):
         menu.manager.publish(menu.TARGET_RUNNING)
-        #print "Entering the RUNNING state."
         if self.state == ATTACHED:
             self.exit_current_state()
             self.frame.statusbar.icon = "connect_green.png"
@@ -190,10 +197,8 @@ class Controller(wx.EvtHandler):
 
     def exit_running_state(self):
         menu.manager.publish(menu.TARGET_HALTED)
-        #print "Exiting the RUNNING state."
 
     def enter_idle_state(self):
-        #print "Entering the IDLE state"
         self.exit_current_state()
         menu.manager.publish(menu.TARGET_DETACHED)
         self.frame.statusbar.icon = "disconnect.png"
@@ -204,7 +209,6 @@ class Controller(wx.EvtHandler):
 
     def exit_idle_state(self):
         pass
-        #print "Exiting the IDLE state"
 
     def exit_current_state(self):
         try:
@@ -228,6 +232,17 @@ class Controller(wx.EvtHandler):
 
     def change_state(self, state):    
         self.enter_state(state)
+
+    def do_post_attach_cmd(self, cmd):
+        if self.project.debug.post_attach_cmd:
+            self.gdb.command(self.project.debug.post_attach_cmd, self.do_post_post_attach_cmd)
+        else:
+            if self.download_request:
+                self.download()
+            
+    def do_post_post_attach_cmd(self, result):
+        if self.download_request:
+            self.download()
 
     # ==========================================================
     
@@ -260,7 +275,6 @@ class Controller(wx.EvtHandler):
                 evt = AppEvent(EVT_APP_TARGET_RUNNING, self)
                 wx.PostEvent(self, evt)
             elif result.cls.lower() == "stopped":
-                print "STOPPED?!?!"
                 print result
             else:
                 raise "UNEXPECTED PROBLEM WHILE RUNNING"
@@ -310,8 +324,9 @@ class Controller(wx.EvtHandler):
         pass
         #self.frame.editor_view.update_breakpoints()                
         
-    def halt(self):
-        self.gdb.exec_interrupt(self.on_halted)
+    def halt(self, callback=None, download=False):
+        self.download_request = download
+        self.gdb.exec_interrupt(callback)
         #self.gdb.sig_interrupt()
         
     def set_exec_location(self, file, line, goto=False):
@@ -319,14 +334,6 @@ class Controller(wx.EvtHandler):
         
     def on_halted(self, result):
         self.gdb.update()
-        '''
-        if result.cls == "stopped":
-            self.change_state(ATTACHED)
-            print result
-            evt = AppEvent(EVT_APP_TARGET_HALTED, self, data=(result.frame.fullname, int(result.frame.line)))
-            wx.PostEvent(self, evt)
-            print result
-        '''
         
     def jump_to_entry_point(self):
             #TODO: This is a hack, not cross-platform compatible.
@@ -343,6 +350,7 @@ class Controller(wx.EvtHandler):
 #            self.gdb.update()
          
     def download(self):
+        self.download_request = False
         if self.state == ATTACHED:
             wx.CallAfter(self.frame.start_busy, "Downloading to target...")
             self.gdb.target_download(callback=self.on_downloaded)
@@ -357,7 +365,8 @@ class Controller(wx.EvtHandler):
             self.jump_to_entry_point()
             
     # ATTACH TO GDB
-    def attach(self):
+    def attach(self, download=False):
+        self.download_request = download
         if self.state == IDLE:
             self.gdb.cmd_string = "%s -n -q -i mi" % self.project.debug.gdb_executable
             try:
@@ -374,11 +383,10 @@ class Controller(wx.EvtHandler):
         self.frame.statusbar.text = ""
         if result.cls == "error":
             self.frame.error_msg(result.msg)
+            self.frame.statusbar.working = False
+            self.frame.statusbar.text = ""
         else:
             self.change_state(ATTACHED)
-            if self.download_after_attach:
-                self.download_after_attach = False
-                self.download()
         
     # DETACH FROM TARGET
     def detach(self):
@@ -393,6 +401,7 @@ class Controller(wx.EvtHandler):
     def on_gdb_started(self, evt):
         try:
             self.gdb.command('set target-async on')
+            self.frame.statusbar.text = "Attaching to target..."
             self.gdb.set_exec(self.project.absolute_path(self.project.program.target))
             self.gdb.command(self.project.debug.attach_cmd, callback=self.on_attach_cmd)
         except Exception, e:
@@ -467,19 +476,20 @@ class Controller(wx.EvtHandler):
 
         target = evt.data
         if target:
-            result = wx.NO
+            result = wx.ID_NO
             if self.settings.debug.load_after_build == 'prompt':
                 dlg = wx.MessageDialog(self.frame, "%s Was Modified.  Reload?" % self.project.program.target, "Reload", wx.YES_NO)
                 dlg.CenterOnParent()
                 result = dlg.ShowModal()
-                
-            if self.settings.debug.load_after_build == 'yes' or result == wx.YES:
+
+            if self.settings.debug.load_after_build == 'yes' or result == wx.ID_YES:
                 if self.state == IDLE:
-                    self.download_after_attach = True
-                    self.attach()
+                    self.attach(download=True)
+                elif self.state == RUNNING:
+                    self.halt(download=True)
                 else:
                     self.download()
-
+                    
     def on_build_update(self, evt):
         self.frame.log_view.update_build(str(evt.data))
         evt.Skip()

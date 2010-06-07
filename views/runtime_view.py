@@ -28,6 +28,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         #self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.Bind(wx.EVT_LEFT_DCLICK, self.on_dclick)
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.on_item_right_click)
+        self.Bind(wx.EVT_LIST_COL_END_DRAG, self.on_col_resize)
 
         self.model = None
         self.AddColumn('Context')
@@ -40,6 +41,9 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         self.clear()
         self.load_positions()
 
+    def on_col_resize(self, evt):
+        self.save_positions()
+        
     def save_positions(self):
         cols = self.GetColumnCount()
         widths = [self.GetColumnWidth(i) for i in range(cols)]
@@ -49,8 +53,10 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         try:
             widths = settings.session_get('runtime_view_col_widths')
             cols = self.GetColumnCount()
-            for i in range(cols):
-                self.SetColumnWidth(i, widths[i])
+            if len(widths) != cols:
+                raise Exception("Mismatch of stored column widths")
+            for i, width in enumerate(widths):
+                self.SetColumnWidth(i, width)
         except:
             pass
 
@@ -545,7 +551,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         self.breakpoints_item = self.append_item(self.root_item, 'Breakpoints')
         self.registers_item = self.append_item(self.root_item, 'CPU Registers')
         self.watch_item = self.append_item(self.root_item, 'Watch')
-        self.sfr_item = self.append_item(self.root_item, 'Special Function Registers')
+        self.sfr_item = self.append_item(self.root_item, 'HW Registers')
         
         self.set_item_art(self.registers_item, 'chip.png')
         self.set_item_art(self.stack_item, 'stack.png')

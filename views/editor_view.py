@@ -3,7 +3,7 @@ import wx.aui as aui
 import wx.stc as stc
 import os
 import wx
-import util, view, menu, icons, util, app, gdb, styles, settings
+import view, menu, icons, util, app, gdb 
 
 #TODO fix code folding
 #TODO fix updating the colorization settings so you don't have to close and reopen existing tabs
@@ -52,13 +52,7 @@ class QuickFindBar(wx.Panel):
         self.GetParent().Layout()
         self.textctrl.SetFocus()
         self.GetParent().Thaw()
-        
-#    def hide(self):
-#        self.GetParent().Freeze()
-#        self.Hide()
-#        self.GetParent().Layout()
-#        self.GetParent().Thaw()
-        
+
     def on_next(self, evt):
         self.find_next(self.textctrl.GetValue())
 
@@ -534,17 +528,6 @@ class EditorControl(stc.StyledTextCtrl):
             else:
                 language = None
             self.apply_language(manager, language)
-
-    def set_lexer_language(self, language=None):
-        #languages = {'.c':'cpp', '.C':'cpp', '.h':'cpp', '.H':'cpp', 'makefile':'makefile', 'Makefile':'makefile'}
-        if not language:
-            try:
-                path, filename = os.path.split(self.file_path)
-                shortname, ext = os.path.splitext(filename)
-                #print languages[ext or shortname]
-                #self.SetLexerLanguage(languages[ext or shortname])
-            except Exception, e:
-                print e
 
     def apply_language(self, manager, language):
         self.language = language

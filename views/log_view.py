@@ -35,6 +35,7 @@ class BuildPane(stc.StyledTextCtrl):
     def update(self, text):
         self.SetReadOnly(False)
         self.AddStyledText(self.styler.style(text))
+        self.ScrollLines(1000)
         self.SetReadOnly(True)
         
     def clear(self):
@@ -177,7 +178,7 @@ class LogPane(wx.Panel):
 
     def __init__(self, parent, logger, format=None, on_input=None):
         super(LogPane, self).__init__(parent, -1, style=wx.BORDER_STATIC, size=(800,150))
-        self.txt = wx.TextCtrl(self, -1, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH2|wx.BORDER_SUNKEN)
+        self.txt = wx.TextCtrl(self, -1, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH2)
         self.__input_handler = None
         font = self.txt.GetFont()
         font.SetFaceName("Courier New")
@@ -220,7 +221,7 @@ class LogPane(wx.Panel):
     # TODO hook these up
     def on_hide(self, evt):
         self.handler.unregister(self.listener)
-        event.Skip()
+        evt.Skip()
 
     def on_show(self, evt):
         self.handler.register(self.listener)

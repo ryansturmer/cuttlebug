@@ -35,7 +35,6 @@ class DisassemblyView(view.View):
     def save_positions(self):
         cols = self.list.GetColumnCount()
         widths = [self.list.GetColumnWidth(i) for i in range(cols)]
-        print widths
         settings.session_set('asm_view_col_widths', widths)
 
     def load_positions(self):

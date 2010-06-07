@@ -25,13 +25,6 @@ class Frame(util.PersistedFrame):
 
             self.create_views()
             
-            '''
-            self.create_project_view()
-            self.create_editor_view()
-            self.create_runtime_view()
-            self.create_debug_view()
-            '''
-            
             self.controller.setup_logs()
             self.controller.load_session()
             self.controller.setup_gdb()
