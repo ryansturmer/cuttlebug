@@ -136,6 +136,7 @@ class LogView(view.View):
         self.build_pane = BuildPane(self, controller=self.controller)
         self.add_pane(self.build_pane, icon="brick.png")
         log.redirect_stdout('stdout')
+        log.redirect_stderr('errors')
 
     def on_gdb_mi_input(self, input):
         if self.controller and self.controller.gdb:

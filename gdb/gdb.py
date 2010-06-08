@@ -4,6 +4,7 @@ import antlr3, GDBMILexer, GDBMIParser
 import functools
 from models import Type, Variable, GDBVarModel, GDBStackModel, GDBRegisterModel
 import util, odict
+import logging
 
 STOPPED = 0
 RUNNING = 1
@@ -93,11 +94,16 @@ class GDB(wx.EvtHandler):
         '''
         Parse a SINGLE gdb-mi response, returning a GDBMIResponse object
         '''
+        self.__parser.gdbmi_error = None
         stream = antlr3.ANTLRStringStream(unicode(string))
         self.__lexer.setCharStream(stream)
         tokens = antlr3.CommonTokenStream(self.__lexer)
         self.__parser.setTokenStream(tokens)
         output = self.__parser.output().response
+        if self.__parser.gdbmi_error:
+            msg = self.__parser.gdbmi_error.strip() + " : '" + string.strip() + "'\n"
+            logging.getLogger('errors').error(msg)
+            
         return output
 
     @property

@@ -46,6 +46,10 @@ class GDBMIResponse(object):
 
 }
 
+@members {
+def emitErrorMessage(self, message):
+	self.gdbmi_error = message
+}
 
 result_record returns [val]
 	@init {
@@ -117,7 +121,7 @@ async_output returns [val]
 	@init {
 		$val = GDBMIResultRecord()
 	}
-	: ASYNC_CLASS {$val.cls = $ASYNC_CLASS.text } (COMMA result {$val[$result.key] = $result.val})* NL;
+	: RESULT_CLASS {$val.cls = $RESULT_CLASS.text } (COMMA result {$val[$result.key] = $result.val})* NL;
 	
 
 var	returns [txt] 
@@ -172,15 +176,17 @@ log_stream_output returns [txt]
 C_STRING		
 	: '"' ('\\''"' | ~('"' |'\n'|'\r'))* '"';
 
-ASYNC_CLASS
-	: 'stopped' | 'thread-group-created' | 'thread-created' | 'running' | 'download' | 'thread-group-exited';
-
 RESULT_CLASS
 	: 'done'
 	| 'running'
 	| 'connected'
 	| 'error'
-	| 'exit';
+	| 'exit'
+	| 'stopped' 
+	| 'thread-group-created'
+	| 'thread-created'
+	| 'download'
+	| 'thread-group-exited';
 
 STRING
 	: ('_' | 'A'..'Z' | 'a'..'z')('-' | '_' | 'A'..'Z' | 'a'..'z'|'0'..'9')*;
