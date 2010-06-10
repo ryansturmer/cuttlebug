@@ -142,8 +142,9 @@ class EditorView(view.View):
     open_files = property(__get_open_files)
     
     def on_target_halted(self, file, line):
-        goto = self.controller.settings.debug.jump_to_exec_location
-        self.set_exec_location(file, line, goto=goto)
+        if file:
+            goto = self.controller.settings.debug.jump_to_exec_location
+            self.set_exec_location(file, line, goto=goto)
         
     def find(self):
         self.notebook.find()

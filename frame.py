@@ -242,6 +242,10 @@ class Frame(util.PersistedFrame):
             result = dialog.ShowModal()
             if result == wx.ID_OK:
                 path = dialog.GetPaths()[0]
+                if self.controller.project:
+                    for file in self.editor_view.open_files:
+                        self.editor_view.close(file)
+
                 self.controller.load_project(path)
 
         def on_close_project(self, evt):
@@ -254,8 +258,6 @@ class Frame(util.PersistedFrame):
                     else:
                         evt.Veto()
                         return
-                close_source_windows = self.confirm("Close open project source files?")
-                if close_source_windows:
                     for file in self.editor_view.open_files:
                         self.editor_view.close(file)
                 self.controller.unload_project()

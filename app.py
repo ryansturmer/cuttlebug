@@ -54,14 +54,16 @@ class Controller(wx.EvtHandler):
         g.target_log = logging.getLogger('gdb.stream')
         g.log_log = logging.getLogger('gdb.stream')
         self.error_logger = logging.getLogger('error')
+        
         g.Bind(gdb.EVT_GDB_STARTED, self.on_gdb_started)
         g.Bind(gdb.EVT_GDB_FINISHED, self.on_gdb_finished)
         g.Bind(gdb.EVT_GDB_ERROR, self.on_gdb_error)
         g.Bind(gdb.EVT_GDB_STOPPED, self.on_gdb_stopped)
         g.Bind(gdb.EVT_GDB_RUNNING, self.on_gdb_running)
+        g.Bind(gdb.EVT_GDB_UPDATE_STACK, self.on_gdb_stack_update)
         #g.Bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, self.on_update_breakpoints)
         #g.Bind(gdb.EVT_GDB_UPDATE_VARS, self.on_update_vars)
-        #g.Bind(gdb.EVT_GDB_UPDATE_STACK, self.on_update_stack)
+
         self.gdb = g
   
     def setup_logs(self):
@@ -414,20 +416,34 @@ class Controller(wx.EvtHandler):
     def on_gdb_error(self, evt):
         self.error_logger.log(logging.ERROR, evt.data)
 
+    def on_gdb_stack_update(self, evt):
+        stack = evt.data
+        frame = stack.top
+        filename = os.path.normpath(frame.fullname or frame.file)
+        line = frame.line
+        self.stopped_at(filename, line)
+        evt.Skip()
+
     def on_gdb_stopped(self, evt):
         self.change_state(ATTACHED)
         result = evt.data
+        filename, line = None, None
         try:
             filename = os.path.normpath(result.frame.fullname)
             line = int(result.frame.line)            
-        except Exception, e:
-            print e
-            self.frame.statusbar.set_state("Halted in the weeds.", color=wx.RED)
-            return
-        self.frame.statusbar.set_state("Halted at %s:%d" % (os.path.basename(filename), line))
-        evt = AppEvent(EVT_APP_TARGET_HALTED, self, data=(filename, line))
-        wx.PostEvent(self, evt)
+        except:
+            pass
+        self.stopped_at(filename, line)
 
+    def stopped_at(self, file=None, line=None):
+        if not file:
+            self.frame.statusbar.set_state("Halted in the weeds.", color=wx.RED)
+        else:
+            self.frame.statusbar.set_state("Halted at %s:%d" % (os.path.basename(file), line))
+            evt = AppEvent(EVT_APP_TARGET_HALTED, self, data=(file, line))
+            wx.PostEvent(self, evt)
+            
+            
     def on_gdb_running(self, evt):
         self.change_state(RUNNING)
         

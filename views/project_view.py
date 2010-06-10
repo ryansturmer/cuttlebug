@@ -93,9 +93,6 @@ class ProjectView(view.View):
 
     def show_backups(self, show):
         self.tree.show_backups(show)
-
-    def update(self):
-        self.tree.update()
     
     def on_right_click(self, evt):
         pt = evt.GetPosition()
@@ -136,6 +133,7 @@ class ProjectView(view.View):
         self.tree.load_state(state)
         
     def update(self):
+        self.tree.SetItemText(self.tree.GetRootItem(), self.project.general.project_name)
         self.tree.update_file_tree()
         
 class ProjectTree(wx.TreeCtrl):

@@ -138,7 +138,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                 wx.CallAfter(self.update_stack)
             else:
                 wx.CallAfter(self.rebuild_stack)                
-
+        evt.Skip()
     def on_gdb_finished(self, evt):
         self.clear()
         self.model = None    

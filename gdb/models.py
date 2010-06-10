@@ -203,7 +203,12 @@ class GDBStackModel(object):
     
     def __getitem__(self, item):
         return self.frames[int(item)]
-            
+    
+    @property        
+    def top(self):
+        if self.depth:
+            return self.frames[0]
+    
     @property
     def depth(self):
         return len(self.frames)
