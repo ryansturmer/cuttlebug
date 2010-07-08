@@ -152,6 +152,7 @@ class EditorView(view.View):
     def goto(self, file, line):
         widget = self.notebook.create_file_tab(file)
         if not widget:
+            print "Couldn't goto line %d in file '%s' because I couldn't create a new tab for that file." % (line, file)
             return
         widget.SetFocus()
         widget.GotoLine(line-1)
@@ -182,6 +183,7 @@ class EditorView(view.View):
         for window in self.notebook:
             window.remove_exec_marker()
         if not widget:
+            print "Couldn't set exec location to line %d in file '%s' because I couldn't create a new tab for that file." % (line, file)
             return
         widget.set_exec_marker(line)
         if goto:
@@ -231,7 +233,11 @@ class EditorView(view.View):
         self.notebook.save_all()
         
     def new(self):
-        self.notebook.create_file_tab()
+        return self.notebook.create_file_tab()
+
+    def open(self, path):
+        self.notebook.open(path)
+
 
 class EditorControl(stc.StyledTextCtrl):
     LINE_MARGIN = 0
@@ -735,6 +741,12 @@ class Notebook(aui.AuiNotebook):
                 return window
         return None
 
+    def open(self, path):
+        if os.path.exists(path):
+            return self.create_file_tab(path)
+        else:
+            return None
+        
     def create_file_tab(self, path=None):
         if path:
             if self.controller.project:

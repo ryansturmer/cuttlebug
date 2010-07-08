@@ -22,6 +22,12 @@ class Notebook(aui.AuiNotebook):
         n = self.GetPageCount()
         return [self.get_window(i) for i in range(n)]
 
+    def open(self, path):
+        if not os.path.exists(path):
+            return None
+        else:
+            return self.create_file_tab(path)
+            
     def create_file_tab(self, path=None):
         if path:
             path = os.path.abspath(path)
@@ -36,8 +42,6 @@ class Notebook(aui.AuiNotebook):
             if not os.path.exists(path):
                 return
         self.Freeze()
-        #if path:
-        #    self.close_untitled_tab()
         
         widget = controls.EditorControl(self, -1, style=wx.BORDER_NONE)
         
@@ -46,3 +50,5 @@ class Notebook(aui.AuiNotebook):
         self.AddPage(widget, widget.get_name(), True)
         widget.SetFocus()
         self.Thaw()
+        
+        return widget

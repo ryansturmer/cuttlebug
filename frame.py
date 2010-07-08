@@ -219,7 +219,7 @@ class Frame(util.PersistedFrame):
             self.SetStatusBar(self.statusbar)        
         
         def open_file(self, path):
-            self.editor_view.notebook.create_file_tab(path)
+            self.editor_view.notebook.open(path)
 
         def on_project_dclick_file(self, evt):
             self.open_file(evt.data)
