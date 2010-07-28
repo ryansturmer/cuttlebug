@@ -1,6 +1,6 @@
 import wx
-import view, project, util, icons , menu
-import os, shutil
+import view, util, icons , menu, file_tree
+import os, shutil, pickle
 #TODO selectable hiding of certain file extensions (from project settings)
 #TODO renaming of files
 #TODO close all project files when closing a project
@@ -13,9 +13,13 @@ EVT_PROJECT_DCLICK_FILE = wx.PyEventBinder(wx.NewEventType())
 MNU_PROJECT = 0
 MNU_FILE = 1
 MNU_FILES = 2
+MNU_FOLDER = 4
 
 ITEM_ROOT = 0
 ITEM_FILES = 1
+
+SORT_ALPHA = 0
+SORT_EXTENSION = 1
 
 class ProjectView(view.View):
 
@@ -35,7 +39,6 @@ class ProjectView(view.View):
         
     def on_key(self, evt):
         item = self.tree.GetSelection()
-        print item
         evt.Skip()
         
     def on_left_dclick(self, evt):
@@ -59,11 +62,24 @@ class ProjectView(view.View):
         pmenu.item("Rename...", show=(MNU_FILE, MNU_PROJECT), hide=(MNU_FILES), func=self.on_rename, icon='textfield_rename.png')
         pmenu.item("Delete", show=(MNU_FILE), hide=(MNU_FILES, MNU_PROJECT), func=self.on_remove_file, icon='delete.png')
         pmenu.separator()
-        pmenu.item("Create File...", show=MNU_FILES, hide=(MNU_FILE, MNU_PROJECT), func=self.on_new_file, icon='page_white_text.png')
-        pmenu.item("Create Folder...", show=MNU_FILES, hide=(MNU_FILE, MNU_PROJECT), func=self.on_new_folder, icon='folder_add.png')
-        pmenu.item("Refresh", show=MNU_FILES, hide=(MNU_FILE, MNU_PROJECT), func=self.on_refresh, icon='arrow_refresh.png')
+        pmenu.item("Create File...", show=(MNU_FILES, MNU_FOLDER), hide=(MNU_FILE, MNU_PROJECT), func=self.on_new_file, icon='page_white_text.png')
+        pmenu.item("Create Folder...", show=(MNU_FILES,MNU_FOLDER), hide=(MNU_FILE, MNU_PROJECT), func=self.on_new_folder, icon='folder_add.png')
+        pmenu.item("Import File...", show=(MNU_FILES, MNU_FOLDER), hide=(MNU_FILE, MNU_PROJECT), func=self.on_import_file)
+        pmenu.item("Refresh", show=(MNU_FILES, MNU_FOLDER), hide=(MNU_FILE, MNU_PROJECT), func=self.on_refresh, icon='arrow_refresh.png')
+        sm = pmenu.submenu("Sort By...", show=(MNU_FILES, MNU_FOLDER), hide=(MNU_FILE, MNU_PROJECT))
+        sm.item("Name", func=self.on_sort_alpha)
+        sm.item("Extension", func=self.on_sort_extension)
+
         self.menu_manager = manager
         self.context_menu = pmenu
+        
+    def on_import_file(self, evt):
+        pass
+    
+    def on_sort_extension(self, evt):
+        self.tree.set_sort_method(SORT_EXTENSION)
+    def on_sort_alpha(self, evt):
+        self.tree.set_sort_method(SORT_ALPHA)
         
     def on_new_file(self, evt):
         filename = util.get_text(self.controller.frame, "Enter new filename:", title="New File...")
@@ -75,17 +91,18 @@ class ProjectView(view.View):
     def on_new_folder(self, evt):
         foldername = util.get_text(self.controller.frame, "Enter new folder name:", title="New Folder...")
         if foldername:
-            import shutil
             os.mkdir(os.path.join(self.project.directory, foldername))
             self.tree.update_file_tree()
             
     def on_remove_file(self, evt):
-        if self.selected_file:
-            try:
-                shutil.rmtree(self.selected_file)
-            except OSError:
-                os.remove(self.selected_file)
-        self.update()
+        base, fn = os.path.split(self.selected_file)
+        if self.tree.confirm("Are you sure you want to remove the file '%s'?" % fn):
+            if self.selected_file:
+                try:
+                    shutil.rmtree(self.selected_file)
+                except OSError:
+                    os.remove(self.selected_file)
+            self.update()
     
     def set_project(self, project):
         self.project = project
@@ -106,10 +123,15 @@ class ProjectView(view.View):
             elif item == self.tree.root_item:
                 self.menu_manager.publish(MNU_PROJECT)
             else:
-                self.menu_manager.publish(MNU_FILE)
                 self.selected_file = self.tree.GetPyData(item)
+                if os.path.isfile(self.selected_file):
+                    self.menu_manager.publish(MNU_FILE)
+                elif os.path.isdir(self.selected_file):
+                    self.menu_manager.publish(MNU_FOLDER)
+
             self.tree.PopupMenu(self.context_menu.build(self.tree))
-            
+        evt.Skip()
+        
     def on_open_in_shell(self, evt):
         if self.selected_file:
             util.launch(self.selected_file)
@@ -136,10 +158,110 @@ class ProjectView(view.View):
         self.tree.SetItemText(self.tree.GetRootItem(), self.project.general.project_name)
         self.tree.update_file_tree()
         
+class DropData(wx.CustomDataObject):
+    def __init__(self, format, data=None):
+        wx.CustomDataObject.__init__(self, str(format))
+        self.set_object(data)
+        
+    def set_object(self, obj):
+        self.SetData(pickle.dumps(obj))
+        
+    def get_object(self):
+        return pickle.loads(self.GetData())
+    
+class ProjectDropTarget(wx.PyDropTarget):
+    def __init__(self, tree):
+        wx.PyDropTarget.__init__(self)
+        self.tree = tree
+        self.selections = []
+        self.data = DropData("FileDropData")
+        self.SetDataObject(self.data)
+        
+        
+    def save_selection(self):
+        self.selections = self.tree.GetSelections()
+    
+    def restore_selection(self):
+        self.tree.UnselectAll()
+        for item in self.selections:
+            self.tree.SelectItem(item)
+        self.selections = []
+        
+    def OnEnter(self,x,y,d):
+        self.save_selection()
+        return d
+    
+    def OnLeave(self):
+        self.restore_selection()
+
+    def OnDragOver(self,x,y,d):
+        item, flags = self.tree.HitTest((x,y))
+        selections = self.tree.GetSelections()
+        if item:
+            if selections != [item]:
+                self.tree.UnselectAll()
+                path = self.tree.GetItemPyData(item)                
+                if item == self.tree.files_item or (path in self.tree.files and os.path.isdir(path)):
+                    self.tree.SelectItem(item)
+        elif selections:
+            self.tree.UnselectAll()
+        return d    
+
+    def OnData(self, x, y, d):
+        if self.GetData():
+            path_source =  self.data.get_object()
+            path_target = self.path_target
+            try:
+                if self.move_file(path_source, path_target):
+                    return wx.DragMove 
+            except:
+                return wx.DragNone
+
+            return wx.DragNone
+
+    def move_file(self, path_source, path_target):
+            root, fn = os.path.split(path_source)
+            full_target = os.path.join(path_target, fn)
+            if full_target == path_source:
+                return False
+            target_exists = os.path.exists(full_target)
+            
+            confirm = True
+            if target_exists:
+                confirm = self.tree.confirm("Replace '%s' in the target location?" % fn)
+            if path_source and path_target and confirm:
+                try:
+                    if target_exists:
+                        if os.path.isdir(full_target):
+                            shutil.rmtree(full_target)
+                        else:
+                            os.remove(full_target)
+                    shutil.move(path_source, path_target)
+                    wx.CallAfter(self.tree.update)
+                    return True
+                except:
+                    raise
+                finally:
+                    self.path_target = None
+            return False
+    def OnDrop(self,x,y):
+        item, flags = self.tree.HitTest((x,y))
+#        selections = self.tree.GetSelections()
+        if item:
+            self.tree.UnselectAll()
+            path = self.tree.GetItemPyData(item)
+            if item == self.tree.files_item:
+                self.path_target = self.tree.project.directory
+            if path in self.tree.files and os.path.isdir(path):
+                self.path_target = path
+            return True
+        return False
+        
 class ProjectTree(wx.TreeCtrl):
 
     def __init__(self, parent, id):
-        super(ProjectTree, self).__init__(parent, id)
+        super(ProjectTree, self).__init__(parent, id, style=wx.TR_DEFAULT_STYLE)
+        self.sort_method = SORT_ALPHA
         self.files_item = None
         self.art = {}
         self.icon_bindings = {}
@@ -150,11 +272,45 @@ class ProjectTree(wx.TreeCtrl):
         self.backups_visible = False
         self.Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.on_get_tooltip)
         self.Bind(wx.EVT_MOTION, self.on_motion)
+        self.Bind(wx.EVT_TREE_ITEM_EXPANDING, self.on_item_expanding)
         self.tooltip_flag = False
+        
+        dt = ProjectDropTarget(self)
+        self.SetDropTarget(dt)
 
+        self.Bind(wx.EVT_TREE_BEGIN_DRAG, self.on_begin_drag)
+        
+    def on_begin_drag(self, evt):
+        item = evt.GetItem()
+        path = self.GetItemPyData(item)
+        if path in self.files:            
+            data = DropData("FileDropData", path)
+            source = wx.DropSource(self)
+            source.SetData(data)
+            result = source.DoDragDrop(wx.Drag_DefaultMove)
+            
+            #results = {wx.DragCopy: "DragCopy", wx.DragMove : "DragMove", wx.DragCancel : "DragCancel", wx.DragNone : "DragNone", wx.DragLink : "DragLink"}
+            #print results.get(result)
+            
+    def on_item_expanding(self, evt):
+        item = evt.GetItem()
+        path = self.GetItemPyData(item)
+        if path in self.files:
+            self.file_tree.expand_directory(path)
+            self.update_file_tree()
+
+    def on_item_collapsing(self, evt):
+        return
+        item = evt.GetItem()
+        path = self.GetItemPyData(item)
+        if path in self.files:
+            self.file_tree.collapse_directory(path)
+            self.update_file_tree()
+            
     def on_motion(self, evt):
         self.tooltip_flag = False 
         self.SetToolTipString('')
+        evt.Skip()
 
     def on_get_tooltip(self, evt):
         #print "getting tooltip"
@@ -174,6 +330,15 @@ class ProjectTree(wx.TreeCtrl):
                 evt.SetToolTip(data + "  " + util.human_size(stat.st_size))
             except:
                 pass
+
+    def confirm(self, *argc, **argv):
+        return wx.GetApp().frame.confirm(*argc, **argv)
+       
+    def set_sort_method(self, method):
+        self.sort_method = method
+        state = self.save_state() # What is expanded and what isn't, etc...
+        self.set_project(self.project)
+        self.load_state(state)
         
     def show_backups(self, show):
         self.backups_visible = bool(show)
@@ -186,6 +351,7 @@ class ProjectTree(wx.TreeCtrl):
             self.SetItemImage(self.root_item, 'package.png')
             self.files_item = self.AppendItem(self.root_item, "Files")
             self.SetItemImage(self.files_item, "folder.png")
+            self.file_tree = file_tree.FileTree(project.directory)
             self.update_file_tree()
         else:
             self.clear()
@@ -194,8 +360,8 @@ class ProjectTree(wx.TreeCtrl):
         retval = [top_item] if include_root else []
         child, cookie = self.GetFirstChild(top_item)
         while child.IsOk():
-             retval.extend(self.walk(child))
-             child, cookie = self.GetNextChild(top_item, cookie)
+            retval.extend(self.walk(child))
+            child, cookie = self.GetNextChild(top_item, cookie)
         return retval
     
     def get_file_icon(self, filename):
@@ -234,34 +400,61 @@ class ProjectTree(wx.TreeCtrl):
         self.files[file] = item
         self.SetItemImage(item, icon)
         self.SortChildren(parent_item)
-
+        return item
+    
+    def OnCompareItems(self, i1, i2):
+        p1 = self.GetPyData(i1)
+        p2 = self.GetPyData(i2)
+        if p1 in self.files and p2 in self.files:
+            if self.sort_method == SORT_EXTENSION:
+                return cmp(os.path.splitext(p1)[1], os.path.splitext(p2)[1])
+            else:
+                return cmp(self.GetItemText(i1), self.GetItemText(i2))
+        else:
+            return 0
+        
     def update_file_tree(self):
         #TODO sort files
         if not self.project:
             return
+
+        additions, deletions = self.file_tree.get_tree_changes()
+
         self.Freeze()
         self.files[self.project.directory] = self.files_item
 
         # Remove any file/folder items that no longer exist
-        for item in self.walk(self.files_item, False):
-            path = self.GetPyData(item)
-            try:
-                os.stat(path)
-            except:
-                del self.files[path]
-                self.Delete(item)
+        for deleted_file in deletions:
+            item = self.files[deleted_file]
+            self.Delete(item)
+            del self.files[deleted_file]
                 
+        cmp_alpha = lambda x : x
+        cmp_ext = lambda x :  os.path.splitext(x)[1]
+        
+       # methods = {SORT_ALPHA : cmp_alpha, SORT_EXTENSION : cmp_ext}
         # Add any file/folder items that aren't currently in the tree
-        for root, dirs, files in os.walk(self.project.directory):
+        for root, dirs, files in self.file_tree.walk(self.project.directory):
             if root not in self.files:
-                parent, dir = os.path.split(root)
-                if dir.startswith("."):
+                parent, d = os.path.split(root)
+                if d.startswith("."):
                     self.add_file(root, 'folder_wrench.png')
                 else:
                     self.add_file(root, 'folder.png')
             #print self.files
+
+            for d in dirs:
+                d = os.path.join(root, d)
+                if d not in self.files:
+                    if d.startswith("."):
+                        item = self.add_file(d, 'folder_wrench.png')
+                    else:
+                        item = self.add_file(d, 'folder.png')
+                    self.SetItemHasChildren(item, True)
+            
+            
             for file in files:
-                #print file
+                file = os.path.join(root, file)
                 if file not in self.files:
                     if not self.backups_visible and file.endswith("~"):
                         continue

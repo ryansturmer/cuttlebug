@@ -12,7 +12,7 @@ PLATEBTN_DEFAULT_COLOUR = wx.WHITE
 jinja_env = Environment(loader=FileSystemLoader('./templates/'))
 settings_template = None
 project_template = None
-    
+        
 def load_templates():
     global settings_template, project_template
     settings_template = jinja_env.get_template('settings.xml')
@@ -24,7 +24,7 @@ def coroutine(func):
         cr.next()
         return cr
     return start
-
+    
 class bidict(object):
     
     def __init__(self, d=None):

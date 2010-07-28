@@ -33,6 +33,7 @@ def run():
     import frame
     main_window = frame.Frame()
     app.SetTopWindow(main_window)
+    app.frame = main_window
     main_window.Show()
     app.MainLoop()
 

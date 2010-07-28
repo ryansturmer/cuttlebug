@@ -150,6 +150,7 @@ class EditorView(view.View):
         self.notebook.find()
         
     def goto(self, file, line):
+#        print "Going to %s, %s" % (file, line)
         widget = self.notebook.create_file_tab(file)
         if not widget:
             print "Couldn't goto line %d in file '%s' because I couldn't create a new tab for that file." % (line, file)
@@ -179,7 +180,8 @@ class EditorView(view.View):
         
         
     def set_exec_location(self, file, line, goto = False):
-        widget = self.notebook.create_file_tab(file)
+        #print "Setting exec loc %s, %s"  % (file, line)
+        widget = self.notebook.open(file)
         for window in self.notebook:
             window.remove_exec_marker()
         if not widget:
@@ -586,6 +588,8 @@ class EditorControl(stc.StyledTextCtrl):
 
     def open_file(self, path):
         path = os.path.normpath(path)
+        self.file_path = path
+
         file = None
         try:
             file = open(path, 'r')
@@ -598,7 +602,6 @@ class EditorControl(stc.StyledTextCtrl):
                 
             self.EmptyUndoBuffer()
             self.SetSavePoint()
-            self.file_path = path
         except IOError:
             self.SetText('')
         finally:
@@ -638,7 +641,29 @@ class Notebook(aui.AuiNotebook):
         self.Bind(aui.EVT_AUINOTEBOOK_PAGE_CLOSE, self.on_page_close)
         self.Bind(aui.EVT_AUINOTEBOOK_PAGE_CHANGED, self.on_page_changed)
         self.controller = parent.controller
+        self.create_popup_menu()
+        self._tab_controls = {}
+        self._right_up_position = (0,0)
+        self._current_index = 0
+      
+    def create_popup_menu(self):
+        m = menu.manager.menu()
+        m.item('Close', icon='ex.png', func=self.on_close_tab)
+        m.item('Close Others', func=self.on_close_other_tabs)
+        self.popup_menu = m
         
+    def on_close_tab(self, evt):
+        self.close_tab(self._current_index)
+    
+    def on_close_other_tabs(self, evt):
+        for i in range(self._current_index):
+            self.close_tab(i)
+        i+=1
+        while self.PageCount > 1:
+            self.close_tab(1)
+        # TODO FINISH
+        pass
+    
     def on_page_close(self, event):
         event.Veto()
         index = event.GetSelection()
@@ -652,6 +677,49 @@ class Notebook(aui.AuiNotebook):
         if window:
             self.controller.frame.statusbar.line = window.current_line()+1
 
+    def on_tab_right_down(self, evt):
+        order = self._tab_controls[evt.GetEventObject()]
+        index = order[evt.GetSelection()]
+        self._current_index = index
+        self.SetSelection(index)
+
+    def on_right_up(self, evt):
+        evt.Skip()
+        self._right_up_position = evt.GetPosition()
+    
+    def on_tab_right_up(self, evt):
+        order = self._tab_controls[evt.GetEventObject()]
+        index = order[evt.GetSelection()]
+        if index == self.GetSelection():
+            frame = self.GetParent()
+            evt.GetEventObject().PopupMenu(self.popup_menu.build(frame), self._right_up_position)
+
+    def check_tabs(self):
+        result = []
+        for control in self._tab_controls.keys():
+            if not control:
+                del self._tab_controls[control]
+                continue
+            tab_order = []
+            count = control.GetPageCount()
+            for i in range(count):
+                window = control.GetPage(i).window
+                index = self.GetPageIndex(window)
+                tab_order.append(index)
+            self._tab_controls[control] = tab_order
+            result.extend(tab_order)
+        self._tab_order = result
+
+    def bind_tab_events(self):
+        for child in self.GetChildren():
+            if child in self._tab_controls:
+                continue
+            if isinstance(child, aui.AuiTabCtrl):
+                child.Bind(wx.EVT_RIGHT_UP, self.on_right_up)
+                child.Bind(aui.EVT_AUINOTEBOOK_TAB_RIGHT_UP, self.on_tab_right_up)
+                child.Bind(aui.EVT_AUINOTEBOOK_TAB_RIGHT_DOWN, self.on_tab_right_down)
+                self._tab_controls[child] = []
+                
 #    def update_names(self):
 #        self.Freeze()
 #        for window in self:
@@ -732,7 +800,10 @@ class Notebook(aui.AuiNotebook):
         
         
     def get_file_tab(self, path):
-        path = os.path.abspath(path)
+        try:
+            path = self.project.absolute_path(path)
+        except:
+            path = os.path.abspath(path)
         for window in self:
             if not window.file_path: continue
             p1 = os.path.normcase(path)
@@ -757,33 +828,38 @@ class Notebook(aui.AuiNotebook):
                 window.SetFocus()
                 self.controller.frame.statusbar.line = window.current_line()+1
                 return window
-
-            if not os.path.exists(path):
+#            else:
+#                print "No window for file %s" % repr(path)
+                
+            if not os.path.isfile(path): 
                 return None
         
         self.Freeze()
         panel = wx.Panel(self)
         edit_widget = EditorControl(panel, -1, style=wx.BORDER_NONE, controller=self.controller)
-        panel.editor = edit_widget
         quick_find_bar = QuickFindBar(panel, edit_widget)
-        quick_find_bar.hide()
         panel.editor = edit_widget
         panel.find_bar = quick_find_bar
+        quick_find_bar.hide()
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(edit_widget, 1, wx.EXPAND)
         sizer.Add(quick_find_bar, 0)
         panel.SetSizer(sizer)
-        
         if path:
             edit_widget.open_file(path)
+        
         self.AddPage(panel, edit_widget.name, True)
         idx = self.GetPageIndex(panel)
         if idx >= 0:
             self.SetPageBitmap(idx, util.get_icon(icons.get_file_icon(path)))
+
+
         edit_widget.SetFocus()
         self.controller.frame.statusbar.line = edit_widget.current_line()+1
         edit_widget.Bind(stc.EVT_STC_MODIFIED, self.on_modified)
+        self.check_tabs()
+        self.bind_tab_events()
         self.Thaw()
         return edit_widget
 

@@ -23,7 +23,7 @@ class MenuItemProxy(object):
         
         self._label = label
         self._func = func
-        self.separator = bool(separator)
+        self.is_separator = bool(separator)
         self.kind = kind
         self.visible = True
         self.enabled = True
@@ -36,7 +36,7 @@ class MenuItemProxy(object):
     def __get_icon(self):
         return self._icon
     def __set_icon(self, icon):
-        if self.separator:
+        if self.is_separator:
             return
 
         if isinstance(icon, str):
@@ -72,7 +72,7 @@ class MenuItemProxy(object):
         self.update()
 
     def build(self, menu, window):
-        if self.separator:
+        if self.is_separator:
             return wx.MenuItem(menu, id=wx.ID_SEPARATOR)
         else:
             menuitem = wx.MenuItem(menu, id=-1, text=self._label, kind=self.kind)
@@ -87,19 +87,37 @@ class MenuItemProxy(object):
     
     def update(self):
         self.parent.update()
-
+        
 class MenuProxy(object):
     def __init__(self, manager, parent, label):
         self.manager = manager
         self.parent = parent
         self.label = label
+        self.visible = True
+        self.enabled = True
+        self.is_separator = False
         self._items = []
 
+    @property
+    def is_submenu(self):
+        if self.parent and isinstance(self.parent, MenuProxy):
+            return True
+        return False
+
+    @property
+    def is_popup_menu(self):
+        return not self.parent
+     
+    def __repr__(self):
+        return "<MenuProxy '%s'>" % self.label
+    def __str__(self):
+        return repr(self)
     def __iter__(self):
         return iter(self._items)
 
     def build(self, window=None):
-        items = []
+
+        #items = []
         retval = wx.Menu()
         
         # Trim out everything that's invisible
@@ -110,23 +128,28 @@ class MenuProxy(object):
             for i in range(len(visible_items)-1):
                 item = visible_items[i]
                 next_item = visible_items[i+1]
-                if not (item.separator and next_item.separator):
+                if not (item.is_separator and next_item.is_separator):
                     trimmed_items.append(item)
             trimmed_items.append(visible_items[-1])
 
         if trimmed_items:
-            while trimmed_items[-1].separator:
+            while trimmed_items[-1].is_separator:
                 trimmed_items.pop(-1)
         
         for item in trimmed_items:
-            menuitem = item.build(retval, window)    
-            retval.AppendItem(menuitem)
-            if item.enabled:
-                menuitem.Enable()
-            else:
-                menuitem.Enable(False)            
-
+            #   menuitem = item.build(retval, window)
+            if isinstance(item, MenuItemProxy):    
+                menuitem = item.build(retval, window)
+                retval.AppendItem(menuitem)
+                if item.enabled:
+                    menuitem.Enable()
+                else:
+                    menuitem.Enable(False)            
+            elif isinstance(item, MenuProxy):
+                menuitem = item.build(window)                
+                retval.AppendMenu(wx.ID_ANY, item.label, menuitem)
         return retval
+    
     def item(self, label, func=None, icon=None, kind=wx.ITEM_NORMAL, disable=None, enable=None, show=None, hide=None):
         item = MenuItemProxy(self, label=label, func=func, icon=icon, kind=kind)
         self.manager.subscribe(item, enable=enable, disable=disable, show=show, hide=hide)
@@ -134,17 +157,38 @@ class MenuProxy(object):
         self.update()
         return item
 
-    def enable(self): pass
-    def disable(self): pass
-    def show(self): pass
-    def hide(self): pass
+    def submenu(self, label, icon=None, disable=None, enable=None, show=None, hide=None):
+#        sm = SubMenuProxy(self, self.manager, self.parent, label, icon)
+        sm = self.manager.menu(label, enable, disable, show, hide)
+        sm.parent = self
+        sm.icon = icon
+        self._items.append(sm)
+        self.update(sm)
+        return sm
+
+    def show(self):
+        self.visible = True
+        self.update()
+
+    def hide(self):
+        self.visible = False
+        self.update()
+
+    def enable(self):
+        self.enabled = True
+        self.update()
+
+    def disable(self):
+        self.enabled = False
+        self.update()
+
     
     def separator(self):
         item = MenuItemProxy(self.manager, self, separator=True)
         self._items.append(item)
         return item
 
-    def update(self):
+    def update(self, child=None):
         if self.parent:
             self.parent.update(self)
 
@@ -258,11 +302,15 @@ if __name__ == "__main__":
     new = file.item("New", hide="SAVE", show="CLOSE")
     open = file.item("Open", disable="SAVE")
     close = file.item("Close", func=close_func)
-    close = file.item("Save", icon="disk.png", func=save_func)
-
-    print file
-    print edit
-    print view
+    save = file.item("Save", icon="disk.png", func=save_func)
     
+    cut = edit.item("Cut")
+    copy = edit.item("Copy")
+    
+    sub = edit.submenu("Paste")
+    sub.item("Subitem 1", disable="CLOSE")
+    sub.item("Subitem 2")
+    sub.update()
+    print manager.pretty()
     frame.Show()
     app.MainLoop()

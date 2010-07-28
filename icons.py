@@ -32,10 +32,12 @@ bindings = {
 def get_file_icon(filename):
     ext = ""
     try:
-        fn, ext = os.path.splitext(filename)
+        file = os.path.split(filename)[1]
+        if file.strip().lower() == "makefile":
+            return "file_gear.png"
+        fn, ext = os.path.splitext(file)
+        return bindings.get(ext.lower(), 'file_white.png')
     except:
-        pass
-    finally:
-        return  bindings.get(ext.lower(), 'file_white.png')
+        return 'file_white.png'
 
 
