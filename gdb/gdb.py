@@ -375,7 +375,8 @@ class GDB(wx.EvtHandler):
         self.__cmd('-exec-continue\n', callback)
     def exec_step(self, callback=None):
         self.__cmd('-exec-step\n', callback)
-
+    def exec_next(self, callback=None):
+        self.__cmd('-exec-next\n', callback)
     def exec_jump(self, address, callback=None):
         self.__cmd('-exec-jump %s\n' % address, callback)
    

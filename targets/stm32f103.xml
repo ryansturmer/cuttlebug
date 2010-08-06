@@ -14,6 +14,32 @@
 	<reg name="CNT" fullname="Counter" offset="0x24" as="short" />
 </peripheral>
 
+<peripheral name="gpio">
+    <reg name="CRL" fullname="Configuration Register (Low)" offset="0x0" as="int" />
+    <reg name="CRH" fullname="Configuration Register (Hi)" offset="0x4" as="int" />
+    <reg name="IDR" fullname="Input Data Register" offset="0x8" as="short" />
+    <reg name="ODR" fullname="Output Data Register" offset="0xc" as="short" />
+    <reg name="BSRR" fullname="Port Bit Set/Reset Register" offset="0x10" as="int" />
+    <reg name="BRR" fullname="Port Bit Reset Register" offset="0x14" as="short" />
+    <reg name="LCKR" fullname="Port Config Lock Register" offset="0x18" as="int" />
+</peripheral>
+
+<peripheral name="rcc">
+    <reg name="CR" fullname="Control Register" offset="0x00" as="int" />
+    <reg name="CFGR" fullname="Configuration Register" offset="0x04" as="int" />
+    <reg name="CIR" fullname="Interrupt Register" offset="0x08" as="int" />
+    <reg name="APB2RSTR" fullname="APB2 Peripheral Reset Register" offset="0x0c" as="int" />
+    <reg name="APB1RSTR" fullname="APB1 Peripheral Reset Register" offset="0x10" as="int" />
+    <reg name="AHBENR" fullname="AHB Peripheral Clock Enable Register" offset="0x14" as="int" />
+    <reg name="APB2ENR" fullname="APB2 Peripheral Clock Enable Register" offset="0x18" as="int" />
+    <reg name="APB1ENR" fullname="APB1 Peripheral Clock Enable Register" offset="0x1C" as="int" />
+    <reg name="BDCR" fullname="Backup Domain Control Register" offset="0x20" as="int" />
+    <reg name="CSR" fullname="Control/Status Register" offset="0x24" as="int" />
+    <reg name="AHBRSTR" fullname="AHB Peripheral Clock Reset Register" offset="0x28" as="int" />
+    <reg name="CFGR2" fullname="Configuration Register 2" offset="0x2c" as="int" />
+
+</peripheral>
+
 <peripheral name="timer">
 	<reg name="CR1" fullname="Control Register 1" offset="0x0" as="int" />
 	<reg name="CR2" fullname="Control Register 2" offset="0x4" as="int" />
@@ -59,7 +85,24 @@
     <reg name="DMA_IFCR" fullname="Interrupt Flag Clear Register" offset="0x4" as="int" />
 </peripheral>
 
+<peripheral name="usb">
+	<reg name="CNTR" fullname="Control Register" offset="0x40" as="short" />
+	<reg name="ISTR" fullname="Interrupt Status Register" offset="0x44" as="short" />
+	<reg name="FNR" fullname="Frame Number Register" offset="0x48" as="short" />
+	<reg name="DADDR" fullname="Device Address " offset="0x4c" as="short" />
+	<reg name="BTABLE" fullname="Buffer Table Address" offset="0x50" as="short" />
+	<reg name="EP0R" fullname="Endpoint 0 Register" offset="0x00" as="short" />
+	<reg name="EP1R" fullname="Endpoint 1 Register" offset="0x04" as="short" />
+	<reg name="EP2R" fullname="Endpoint 2 Register" offset="0x08" as="short" />
+	<reg name="EP3R" fullname="Endpoint 3 Register" offset="0x0c" as="short" />
+	<reg name="EP4R" fullname="Endpoint 4 Register" offset="0x10" as="short" />
+	<reg name="EP5R" fullname="Endpoint 5 Register" offset="0x14" as="short" />
+	<reg name="EP6R" fullname="Endpoint 6 Register" offset="0x18" as="short" />
+	<reg name="EP7R" fullname="Endpoint 7 Register" offset="0x1c" as="short" />	
+</peripheral>
+
 <target name="STM32F103">
+    <invoke peripheral="rcc" name="RCC" fullname="RCC" base="0x40021000" />
 	<group fullname="Timers">
 		<invoke peripheral="timer" name="TIM2" fullname="Timer 2" base="0x40000000" />	
 		<invoke peripheral="timer" name="TIM3" fullname="Timer 3" base="0x40000400" />	
@@ -73,5 +116,15 @@
 		<invoke peripheral="timer" name="TIM8" fullname="Timer 8 (Advanced Timer)" base="0x40013400" />	
 	</group>
     <invoke peripheral="dac" name="DAC" fullname="DAC" base="0x40007400" />
+    <group fullname="GPIO">
+        <invoke peripheral="gpio" name="GPIOA" base="0x40010800" />
+        <invoke peripheral="gpio" name="GPIOB" base="0x40010C00" />
+        <invoke peripheral="gpio" name="GPIOC" base="0x40011000" />
+        <invoke peripheral="gpio" name="GPIOD" base="0x40011400" />
+        <invoke peripheral="gpio" name="GPIOE" base="0x40011800" />
+        <invoke peripheral="gpio" name="GPIOF" base="0x40011C00" />
+        <invoke peripheral="gpio" name="GPIOG" base="0x40012000" />
+    </group>
+    <invoke peripheral="usb" name="USB" fullname="USB" base="0x40005c00" />
 </target>
 </document>

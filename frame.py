@@ -83,8 +83,10 @@ class Frame(util.PersistedFrame):
             debug = menubar.menu("&Debug")
             debug.item('&Run\tF5', self.on_run, icon="run.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
             debug.item('&Step\tF6', self.on_step, icon="step.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
-            debug.item('&Step Instruction\tCtrl+F6', self.on_step_instruction, icon="step-instruction.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
+            debug.item('&Step Over\tCtrl+F6', self.on_step_over, icon="step.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
             debug.item('&Step Out\tShift+F6', self.on_step_out, icon="step-out.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
+
+            debug.item('&Step Instruction\tCtrl+F6', self.on_step_instruction, icon="step-instruction.png", enable=menu.TARGET_ATTACHED, disable=[menu.TARGET_RUNNING, menu.TARGET_DETACHED])
             debug.item('&Halt\tShift+F5', self.on_halt, icon="halt.png", enable=menu.TARGET_RUNNING, disable=[menu.TARGET_HALTED, menu.TARGET_DETACHED])
             debug.separator()
             debug.item('&Attach', self.on_attach, icon="connect.png", show=[menu.PROJECT_OPEN, menu.TARGET_DETACHED], hide=[menu.TARGET_ATTACHED], disable=menu.PROJECT_CLOSE, enable=[menu.PROJECT_OPEN, menu.TARGET_DETACHED])
@@ -368,6 +370,9 @@ class Frame(util.PersistedFrame):
             
         def on_step_out(self, evt):
             self.controller.step_out()
+
+        def on_step_over(self, evt):
+            self.controller.step_over()
 
         def on_halt(self, evt):
             self.controller.halt()

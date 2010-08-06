@@ -534,8 +534,13 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
     
     def update_sfr_value(self, item, value, colorize=True):
         current_value = self.get_item_text(item, 1)
-        self.set_item_text(item, value, 1)
-        if current_value != value and colorize:
+        try:
+            text = "0x%08x" % int(value)
+        except:
+            text = value
+            
+        self.set_item_text(item, text, 1)
+        if current_value != text and colorize:
             self.set_item_text_colour(item, wx.RED)
         else:
             self.set_item_text_colour(item, wx.BLACK)

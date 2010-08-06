@@ -92,7 +92,7 @@ class SpecialFunctionRegister(object):
 
     @property
     def expression(self):
-        size = {1:"char",2:"short",4:"int"}[self.size]
+        size = {1:"unsigned char",2:"unsigned short",4:"unsigned int"}[self.size]
         return "*((%s*)0x%x)" % (size, self.address)
     
     def __str__(self):

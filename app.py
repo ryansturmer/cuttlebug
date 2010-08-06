@@ -254,6 +254,10 @@ class Controller(wx.EvtHandler):
         if self.state == ATTACHED:
             self.gdb.exec_step()
 
+    def step_over(self):
+        if self.state == ATTACHED:
+            self.gdb.exec_next()
+
     def step_instruction(self):
         if self.state == ATTACHED:
             self.gdb.exec_step_instruction()

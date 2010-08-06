@@ -212,8 +212,12 @@ class ProjectDropTarget(wx.PyDropTarget):
             path_source =  self.data.get_object()
             path_target = self.path_target
             try:
-                if self.move_file(path_source, path_target):
-                    return wx.DragMove 
+                if d == wx.DragMove:
+                    if self.move_file(path_source, path_target):
+                        return wx.DragMove
+                elif d == wx.DragCopy:
+                    if self.copy_file(path_source, path_target):
+                        return wx.DragCopy
             except:
                 return wx.DragNone
 
@@ -244,6 +248,34 @@ class ProjectDropTarget(wx.PyDropTarget):
                 finally:
                     self.path_target = None
             return False
+        
+
+    def copy_file(self, path_source, path_target):
+            root, fn = os.path.split(path_source)
+            full_target = os.path.join(path_target, fn)
+            if full_target == path_source:
+                return False
+            target_exists = os.path.exists(full_target)
+            
+            confirm = True
+            if target_exists:
+                confirm = self.tree.confirm("Replace '%s' in the target location?" % fn)
+            if path_source and path_target and confirm:
+                try:
+                    if target_exists:
+                        if os.path.isdir(full_target):
+                            shutil.rmtree(full_target)
+                        else:
+                            os.remove(full_target)
+                    shutil.move(path_source, path_target)
+                    wx.CallAfter(self.tree.update)
+                    return True
+                except:
+                    raise
+                finally:
+                    self.path_target = None
+            return False
+        
     def OnDrop(self,x,y):
         item, flags = self.tree.HitTest((x,y))
 #        selections = self.tree.GetSelections()
