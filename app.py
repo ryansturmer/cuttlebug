@@ -164,6 +164,7 @@ class Controller(wx.EvtHandler):
             #self.frame.debug_view.set_model(self.gdb)
             self.frame.runtime_view.set_model(self.gdb)
             self.frame.editor_view.set_model(self.gdb)
+            self.project.load_target() # Do this to reload the SFRs for the runtime tree, in case we edited the target file
             self.frame.disassembly_view.set_model(self.gdb)
             self.exit_current_state()
             self.frame.statusbar.icon = "connect.png"

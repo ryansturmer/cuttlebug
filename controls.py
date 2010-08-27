@@ -1,7 +1,5 @@
 import wx
-import wx.stc as stc
 import util
-import os
 import wx.lib.mixins.listctrl as listmix
 from odict import OrderedDict
 
@@ -239,3 +237,151 @@ class ListControl(wx.ListCtrl):
             width = max(s1, s2)
             if i < n-1: width += 20
             self.SetColumnWidth(i, width)
+
+        
+class BitField(object):
+    
+    def __init__(self, width):
+        self.width = width
+        self.fields = []
+        
+    def set_bit(self, name, bit):
+        self.set_field(name, bit)
+        
+    def set_field(self, name, start, length=1):
+        if start < 0 or (start+length) > self.width:
+            raise ValueError("Cannot set bit %d of a %d bit field.") % (start+length, self.width)
+        self.fields.append((name, start, length))
+    @property             
+    def empty_slots(self):
+        full_slots = set()
+        for name, start, length in self.fields:
+            for i in range(start, start+length):
+                full_slots.add(i)
+        return set(range(self.width)) - full_slots
+    
+import wx.lib.buttons as buttons  
+def button(parent, label, style):
+    pnl = wx.Panel(parent)
+    txt = wx.StaticText(pnl, label=label, style=wx.ALIGN_CENTER)
+    txt.SetBackgroundColour(wx.RED)
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+    pnl.SetBackgroundColour(wx.WHITE)
+    sizer.Add(txt, 1, flag=wx.EXPAND)
+    pnl.SetSizer(sizer)
+    return pnl
+    #btn =  buttons.GenButton(parent, -1, label=label, style=style)      
+    #btn.SetBackgroundColour(wx.WHITE)
+    #btn.SetMinSize((10,10))
+    #return btn
+
+class Cell(wx.Panel):
+    def __init__(self, parent, type=wx.ALL, child=None):
+        self.dc = None
+        wx.Panel.__init__(self, parent, -1)
+        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
+        #self.inner_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        #self.sizer.Add(self.inner_sizer, flag=wx.EXPAND | wx.ALL, border=1, proportion=1)
+        
+        child = wx.Panel(self)
+        child.SetBackgroundColour(wx.BLUE)
+
+        if child:
+            self.sizer.Add(child, proportion=1, flag=wx.EXPAND | wx.ALL, border=3)
+        self.SetSizerAndFit(self.sizer)
+        self.SetAutoLayout(True)
+        self.Layout()
+        self.Bind(wx.EVT_SIZE, self.on_size)
+        self.Bind(wx.EVT_PAINT, self.on_paint)
+        #self.Bind(wx.EVT_ERASE_BACKGROUND, self.on_erase)
+        
+    def on_size(self, evt):
+        w,h = self.GetClientSize()
+        bitmap = wx.EmptyBitmap(w,h)
+        dc = wx.MemoryDC(bitmap)
+        dc.SetBackground(wx.WHITE_BRUSH)
+        dc.Clear()
+        self.dc = dc
+        self.draw()
+        
+    def on_paint(self, evt):
+        dc = wx.PaintDC(self)
+        if self.dc:
+            w, h = self.dc.GetSize()
+            dc.Blit(0,0,w,h, self.dc, 0,0)
+                    
+    def draw(self):
+        if self.dc:
+            self.dc.Clear()
+            w,h = self.dc.GetSize()
+            self.dc.SetPen(wx.RED_PEN)
+            self.dc.DrawRectangle(0,0,w,h)
+        self.Refresh()
+                
+class BitFieldControl(wx.Panel):
+    
+    def __init__(self, parent, value=None, show_bit_numbers=True):
+        super(BitFieldControl, self).__init__(parent, -1)
+        
+        self.set_value(value)
+        self.SetBackgroundColour(wx.BLACK)
+
+    def set_value(self, value):
+        outer_panel_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.value = value
+        
+        inner_panel = wx.Panel(self)        
+        inner_panel.SetBackgroundColour(wx.BLACK)
+        sizer = wx.GridBagSizer(1,1)
+        sizer.AddGrowableRow(0)        
+        for i in range(value.width):
+            cell = button(inner_panel, label="%d" % i, style=wx.NO_BORDER)
+            sizer.Add(cell, pos=(0,value.width-i-1), flag=wx.EXPAND)
+            if i != 0:
+                sizer.AddGrowableCol(value.width-i-1)
+            
+        sizer.AddGrowableRow(1)                    
+        for name, start, length in value.fields:
+            cell = button(inner_panel, label=name, style=wx.NO_BORDER)
+            sizer.Add(cell, pos=(1, (value.width-start-length)), span=(1, length), flag=wx.EXPAND)
+            
+        for bit in self.value.empty_slots:
+            cell = button(self, label=' ', style=wx.NO_BORDER)            
+            sizer.Add(cell, pos=(1, value.width-bit-1), flag=wx.EXPAND)
+        
+        outer_panel_sizer.Add(inner_panel, 1, flag=wx.EXPAND)
+        s = wx.BoxSizer(wx.HORIZONTAL)
+        p1 = wx.Panel(self)
+        p2 = wx.Panel(self)
+        p1.SetBackgroundColour(wx.RED)
+        p2.SetBackgroundColour(wx.BLUE)
+
+        inner_panel.SetSizer(sizer)
+        
+        #s.Add(p1, proportion=0, flag=wx.EXPAND)
+        s.Add(inner_panel, proportion=1, flag=wx.EXPAND)
+        s.Add(p2, proportion=0, flag=wx.EXPAND)
+
+        self.SetSizerAndFit(s)
+        
+if __name__ == "__main__":
+    bitfield = BitField(16)
+    bit_names = []
+    bitfield.set_bit("EN1",0)
+    bitfield.set_bit("BOFF1",1)
+    bitfield.set_bit("TEN1",2)
+    #bitfield.set_field(3,3, "TSEL")
+    bitfield.set_field("WAVE1",6,2)
+    bitfield.set_field("MAMP1",8,2)
+    bitfield.set_bit( "DMAEN1",12)
+    
+    app = wx.PySimpleApp()
+    frame = wx.Frame(None)
+    frame.SetBackgroundColour(wx.RED)
+    cell = Cell(frame)
+    frame.Show()
+    frame.Fit()
+    frame.SetSize((800,800))
+    app.MainLoop()
+    

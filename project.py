@@ -161,12 +161,16 @@ class Project(util.Category):
                     pass # We could log an error here or something
         walk(project, tree.getroot())
         project.modified = False
-        try:
-            project.target = Target.load(project.general.target)
-        except:
-            project.target = Target("target")
+        project.load_target()
         return project
     
+    def load_target(self):
+        try:
+            self.target = Target.load(self.general.target)
+        except:
+            print "Couldn't load target %s" % self.general.target
+            self.target = Target("target")
+
     @staticmethod
     def create(filename):
         project = Project()

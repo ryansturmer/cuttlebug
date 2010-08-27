@@ -101,6 +101,15 @@
 	<reg name="EP7R" fullname="Endpoint 7 Register" offset="0x1c" as="short" />	
 </peripheral>
 
+<peripheral name="exti">
+    <reg name="IMR" fullname="Interrupt Mask Register" offset="0x00" as="int" />
+    <reg name="EMR" fullname="Event Mask Register" offset="0x04" as="int" />
+    <reg name="RTSR" fullname="Rising Trigger Selection Register" offset="0x08" as="int" />
+    <reg name="FTSR" fullname="Falling Trigger Selection Register" offset="0x0c" as="int" />
+    <reg name="SWIER" fullname="Software Interrupt Event Register" offset="0x10" as="int" />
+    <reg name="PR" fullname="Pending Register" offset="0x14" as="int" />
+</peripheral>
+
 <target name="STM32F103">
     <invoke peripheral="rcc" name="RCC" fullname="RCC" base="0x40021000" />
 	<group fullname="Timers">
@@ -110,7 +119,8 @@
 		<invoke peripheral="timer" name="TIM5" fullname="Timer 5" base="0x40000fff" />	
 		<invoke peripheral="timer" name="TIM6" fullname="Timer 6" base="0x400013ff" />	
 		<invoke peripheral="timer" name="TIM7" fullname="Timer 7" base="0x400017ff" />	
-	</group>
+	
+</group>
 	<group fullname="Advanced Timers">
 		<invoke peripheral="advanced_timer" name="TIM1" fullname="Timer 1 (Advanced Timer)" base="0x40012c00" />
 		<invoke peripheral="timer" name="TIM8" fullname="Timer 8 (Advanced Timer)" base="0x40013400" />	
@@ -126,5 +136,6 @@
         <invoke peripheral="gpio" name="GPIOG" base="0x40012000" />
     </group>
     <invoke peripheral="usb" name="USB" fullname="USB" base="0x40005c00" />
+    <invoke peripheral="exti" name="EXTI" fullname="External Interrupt/Event Controller" base="0x40010400" />
 </target>
 </document>
