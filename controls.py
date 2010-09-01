@@ -1,5 +1,5 @@
 import wx
-import util
+#import util
 import wx.lib.mixins.listctrl as listmix
 from odict import OrderedDict
 
@@ -241,15 +241,16 @@ class ListControl(wx.ListCtrl):
         
 class BitField(object):
     
-    def __init__(self, width):
+    def __init__(self, width, start=0):
         self.width = width
+	self.start = start
         self.fields = []
         
     def set_bit(self, name, bit):
         self.set_field(name, bit)
         
     def set_field(self, name, start, length=1):
-        if start < 0 or (start+length) > self.width:
+        if start < self.start or (start+length) > self.width:
             raise ValueError("Cannot set bit %d of a %d bit field.") % (start+length, self.width)
         self.fields.append((name, start, length))
     @property             
@@ -277,25 +278,21 @@ def button(parent, label, style):
     #return btn
 
 class Cell(wx.Panel):
-    def __init__(self, parent, type=wx.ALL, child=None):
+    def __init__(self, parent, type=wx.ALL, padding=0):
         self.dc = None
+        self.padding = padding
+        self.type = type
         wx.Panel.__init__(self, parent, -1)
-        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
-        #self.inner_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        #self.sizer.Add(self.inner_sizer, flag=wx.EXPAND | wx.ALL, border=1, proportion=1)
-        
-        child = wx.Panel(self)
-        child.SetBackgroundColour(wx.BLUE)
-
-        if child:
-            self.sizer.Add(child, proportion=1, flag=wx.EXPAND | wx.ALL, border=3)
-        self.SetSizerAndFit(self.sizer)
-        self.SetAutoLayout(True)
-        self.Layout()
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_PAINT, self.on_paint)
         #self.Bind(wx.EVT_ERASE_BACKGROUND, self.on_erase)
         
+    def set_child(self, child):
+        self.child = child
+	self.sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer.Add(child, proportion=1, flag=wx.EXPAND | self.type, border=1+self.padding)
+        self.SetSizerAndFit(self.sizer)
+
     def on_size(self, evt):
         w,h = self.GetClientSize()
         bitmap = wx.EmptyBitmap(w,h)
@@ -304,6 +301,7 @@ class Cell(wx.Panel):
         dc.Clear()
         self.dc = dc
         self.draw()
+	evt.Skip()
         
     def on_paint(self, evt):
         dc = wx.PaintDC(self)
@@ -316,57 +314,58 @@ class Cell(wx.Panel):
             self.dc.Clear()
             w,h = self.dc.GetSize()
             self.dc.SetPen(wx.RED_PEN)
-            self.dc.DrawRectangle(0,0,w,h)
+            if self.type & wx.TOP:
+            	self.dc.DrawLine(0,0,w-1,0)
+            if self.type & wx.BOTTOM:
+                self.dc.DrawLine(0,h-1,w,h-1)
+            if self.type & wx.LEFT:
+                self.dc.DrawLine(0,0,0,h-1)
+            if self.type & wx.RIGHT:
+                self.dc.DrawLine(w-1,0,w-1,h-1)
         self.Refresh()
-                
+               
+def text_cell(parent, label, sides=wx.ALL):
+    cell = Cell(parent, type=sides)
+    cell.set_child(wx.StaticText(cell, label=label))
+    return cell 
 class BitFieldControl(wx.Panel):
     
     def __init__(self, parent, value=None, show_bit_numbers=True):
         super(BitFieldControl, self).__init__(parent, -1)
-        
         self.set_value(value)
-        self.SetBackgroundColour(wx.BLACK)
 
     def set_value(self, value):
-        outer_panel_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.value = value
-        
-        inner_panel = wx.Panel(self)        
-        inner_panel.SetBackgroundColour(wx.BLACK)
-        sizer = wx.GridBagSizer(1,1)
-        sizer.AddGrowableRow(0)        
+        sizer = wx.GridBagSizer()
+        #sizer.AddGrowableRow(0)        
         for i in range(value.width):
-            cell = button(inner_panel, label="%d" % i, style=wx.NO_BORDER)
+            cell = text_cell(self, str(i), sides=0) 
             sizer.Add(cell, pos=(0,value.width-i-1), flag=wx.EXPAND)
             if i != 0:
                 sizer.AddGrowableCol(value.width-i-1)
             
         sizer.AddGrowableRow(1)                    
         for name, start, length in value.fields:
-            cell = button(inner_panel, label=name, style=wx.NO_BORDER)
-            sizer.Add(cell, pos=(1, (value.width-start-length)), span=(1, length), flag=wx.EXPAND)
-            
+            pos = value.width-start-length
+            span = length
+            sides = wx.TOP | wx.BOTTOM | wx.RIGHT
+            if pos == 0:
+               sides |= wx.LEFT
+            cell = text_cell(self, name, sides=sides) 
+            sizer.Add(cell, pos=(1, pos), span=(1, length), flag=wx.EXPAND)
+        
         for bit in self.value.empty_slots:
-            cell = button(self, label=' ', style=wx.NO_BORDER)            
+            pos = value.width-bit-1
+            sides = wx.TOP | wx.BOTTOM | wx.RIGHT
+            if pos == 0:
+               sides |= wx.LEFT
+            cell = text_cell(self, ' ', sides=sides)
             sizer.Add(cell, pos=(1, value.width-bit-1), flag=wx.EXPAND)
         
-        outer_panel_sizer.Add(inner_panel, 1, flag=wx.EXPAND)
-        s = wx.BoxSizer(wx.HORIZONTAL)
-        p1 = wx.Panel(self)
-        p2 = wx.Panel(self)
-        p1.SetBackgroundColour(wx.RED)
-        p2.SetBackgroundColour(wx.BLUE)
-
-        inner_panel.SetSizer(sizer)
-        
-        #s.Add(p1, proportion=0, flag=wx.EXPAND)
-        s.Add(inner_panel, proportion=1, flag=wx.EXPAND)
-        s.Add(p2, proportion=0, flag=wx.EXPAND)
-
-        self.SetSizerAndFit(s)
+        self.SetSizerAndFit(sizer)
         
 if __name__ == "__main__":
-    bitfield = BitField(16)
+    bitfield = BitField(32)
     bit_names = []
     bitfield.set_bit("EN1",0)
     bitfield.set_bit("BOFF1",1)
@@ -379,9 +378,11 @@ if __name__ == "__main__":
     app = wx.PySimpleApp()
     frame = wx.Frame(None)
     frame.SetBackgroundColour(wx.RED)
-    cell = Cell(frame)
+    #cell = Cell(frame, type=wx.BOTTOM)
+    cell = BitFieldControl(frame, bitfield)
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+    sizer.Add(cell, 1, wx.EXPAND)
+    frame.SetSizerAndFit(sizer)
     frame.Show()
-    frame.Fit()
-    frame.SetSize((800,800))
     app.MainLoop()
     
