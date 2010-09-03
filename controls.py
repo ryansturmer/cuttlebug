@@ -243,40 +243,35 @@ class BitField(object):
     
     def __init__(self, width, start=0):
         self.width = width
-	self.start = start
-        self.fields = []
+        self.start = start
+        self.fields = {}
         
-    def set_bit(self, name, bit):
-        self.set_field(name, bit)
+    def set_bit(self, name, bit, value=0):
+        self.set_field(name, bit, value=value)
         
-    def set_field(self, name, start, length=1):
+    def set_field(self, name, start, length=1, value=0):
         if start < self.start or (start+length) > self.width:
             raise ValueError("Cannot set bit %d of a %d bit field.") % (start+length, self.width)
-        self.fields.append((name, start, length))
+        self.fields[(start, length)] = (name, value)
+        print self.fields
+
+    def set_field_value(self, start, length, val):
+        n, v = self.fields[(start, length)]
+        self.fields[(start, length)] = (n, val)
+
+    def get_field_value(self, start, length):
+        return self.fields[(start, length)][1]
+    def get_field_name(self, start, length):
+        return self.fields[(start, length)][0]
+
     @property             
     def empty_slots(self):
         full_slots = set()
-        for name, start, length in self.fields:
+        for (start, length), (name, value) in self.fields.items():
             for i in range(start, start+length):
                 full_slots.add(i)
         return set(range(self.width)) - full_slots
     
-import wx.lib.buttons as buttons  
-def button(parent, label, style):
-    pnl = wx.Panel(parent)
-    txt = wx.StaticText(pnl, label=label, style=wx.ALIGN_CENTER)
-    txt.SetBackgroundColour(wx.RED)
-    sizer = wx.BoxSizer(wx.VERTICAL)
-
-    pnl.SetBackgroundColour(wx.WHITE)
-    sizer.Add(txt, 1, flag=wx.EXPAND)
-    pnl.SetSizer(sizer)
-    return pnl
-    #btn =  buttons.GenButton(parent, -1, label=label, style=style)      
-    #btn.SetBackgroundColour(wx.WHITE)
-    #btn.SetMinSize((10,10))
-    #return btn
-
 class Cell(wx.Panel):
     def __init__(self, parent, type=wx.ALL, padding=0):
         self.dc = None
@@ -324,14 +319,91 @@ class Cell(wx.Panel):
                 self.dc.DrawLine(w-1,0,w-1,h-1)
         self.Refresh()
                
-def text_cell(parent, label, sides=wx.ALL):
+class BitFieldCell(Cell):
+    def __init__(self, parent, model, start, length, label=None, sides=wx.ALL, bgcolor=wx.WHITE):
+        Cell.__init__(self, parent, type=sides)
+        self.label = label
+        self.bgcolor = bgcolor
+        p = wx.Panel(self)
+        if bgcolor:
+            p.SetBackgroundColour(bgcolor)
+        self.panel = p
+        st = wx.StaticText(p, label=label if not model else '')
+        tc = wx.TextCtrl(p, style=wx.TE_PROCESS_ENTER | wx.TE_CENTRE | wx.BORDER_NONE)
+        self._edit_mode = False
+        if model:
+            p.Bind(wx.EVT_LEFT_DOWN, self.on_click)
+            st.Bind(wx.EVT_LEFT_DOWN, self.on_click)
+            tc.Bind(wx.EVT_TEXT_ENTER, self.on_enter)
+
+        self.text = st
+        self.ctrl = tc
+        tc.Hide()
+        s = wx.BoxSizer(wx.HORIZONTAL)
+        s.AddStretchSpacer(1)
+        s.Add(st, 0, wx.CENTER | wx.ALIGN_CENTRE_VERTICAL)
+        s.Add(tc, 0, wx.CENTER | wx.ALIGN_CENTRE_VERTICAL)
+        s.AddStretchSpacer(1)
+        p.SetSizerAndFit(s)
+        
+        self.model = model
+        self.start = start
+        self.length = length
+        
+        self.max_height = tc.GetSize()[1] if model else st.GetSize()[1] 
+        self.set_child(p)
+        self.update()
+    
+    def edit(self):
+        self.Freeze()
+        self.text.Hide()
+        self.ctrl.Show()
+        self.ctrl.SetFocus()
+        self.ctrl.SetValue(self.text.GetLabel())
+        self.ctrl.SelectAll()
+        self.Layout()
+        self.Thaw()
+
+    def unedit(self):
+        self.Freeze()
+        self.ctrl.Hide()
+        self.text.Show()
+        self.Layout()
+        self.Thaw()
+
+    def update(self):
+        if self.model:
+            value = self.model.get_field_value(self.start, self.length)
+            self.text.SetLabel(str(value))
+        else:
+            self.text.SetLabel(self.label)
+        self.Layout()
+
+    def get_value(self):
+        return self.model.get_field_value(self.start, self.length)
+
+    def set_value(self, x):
+        return self.model.set_field_value(self.start, self.length, x)
+
+    def on_click(self, evt):
+        if self.length == 1:
+            self.set_value(0 if self.get_value() else 1)
+            self.update()
+        else:
+            self.edit()
+
+    def on_enter(self, evt):
+        print "woooo"
+        self.unedit()
+def text_cell(parent, label, sides=wx.ALL, bgcolor=None, model=None):
     cell = Cell(parent, type=sides)
     p = wx.Panel(cell)
+    if bgcolor:
+        p.SetBackgroundColour(bgcolor)
     st = wx.StaticText(p, label=label)
-    st.SetBackgroundColour(wx.RED)
     s = wx.BoxSizer(wx.HORIZONTAL)
     s.AddStretchSpacer(1)
-    s.Add(st, 0, wx.CENTER)
+    s.Add(st, 0, wx.CENTER | wx.EXPAND)
     s.AddStretchSpacer(1)
     p.SetSizerAndFit(s)
     cell.set_child(p)
@@ -341,15 +413,15 @@ class BitFieldControl(wx.Panel):
     
     def __init__(self, parent, value=None, show_bit_numbers=True):
         super(BitFieldControl, self).__init__(parent, -1)
-        self.set_value(value)
+        self.__set_value(value)
 
-    def set_value(self, value):
+    def __set_value(self, value):
         self.value = value
         sizer = wx.GridBagSizer()
         #sizer.AddGrowableRow(0)        
         nums = []
         for i in range(value.width):
-            cell = text_cell(self, str(i), sides=0) 
+            cell = BitFieldCell(self, None, 0, 0, label=str(i), sides=0, bgcolor=None) 
             sizer.Add(cell, pos=(0,value.width-i-1), flag=wx.EXPAND)
             if i != 0:
                 sizer.AddGrowableCol(value.width-i-1)
@@ -357,38 +429,42 @@ class BitFieldControl(wx.Panel):
 
         sizer.AddGrowableRow(1)                    
         sizer.AddGrowableRow(2)                    
-
+        field_cells = []
         mw = 0
-        for name, start, length in value.fields:
+        for (start, length),(name,v) in value.fields.items():
             pos = value.width-start-length
             span = length
             sides = wx.TOP | wx.BOTTOM | wx.RIGHT
             if pos == 0:
                 sides |= wx.LEFT
-            cell = text_cell(self, name, sides=sides) 
+            print name
+            cell = BitFieldCell(self, None, 0, 0, label=name, sides=sides, bgcolor=wx.WHITE) 
+            #cell = text_cell(self, label=name, sides=sides, bgcolor=wx.WHITE)
             sizer.Add(cell, pos=(1, pos), span=(1, span), flag=wx.EXPAND)
-            sides = wx.BOTTOM  | wx.RIGHT            
-            if pos == 0:
-                sides |= wx.LEFT
-            cell = text_cell(self, name, sides=sides) 
             w, h = cell.GetSize()
             if w > mw:
                 mw = w
+            print mw
+            sides &= ~wx.TOP
+            cell = BitFieldCell(self, value, start, length, sides=sides, bgcolor=wx.WHITE) 
+            field_cells.append(cell)
+            mh = cell.max_height
             sizer.Add(cell, pos=(2, pos), span=(1, span), flag=wx.EXPAND)
+
         for cell in nums:
-            sizer.SetItemMinSize(cell, (mw, h))
-            
+            sizer.SetItemMinSize(cell, (mw+10, mh))
+        for cell in field_cells:
+            sizer.SetItemMinSize(cell, (mw+10, mh))
+
         for bit in self.value.empty_slots:
             pos = value.width-bit-1
             sides = wx.TOP | wx.BOTTOM | wx.RIGHT
             if pos == 0:
                 sides |= wx.LEFT
-            cell = text_cell(self, ' ', sides=sides)
+            cell = BitFieldCell(self, None, 0, 0, label=' ', sides=sides, bgcolor=wx.WHITE)
             sizer.Add(cell, pos=(1, value.width-bit-1), flag=wx.EXPAND)
-            sides = wx.BOTTOM  | wx.RIGHT
-            if pos == 0:
-                sides |= wx.LEFT
-            cell = text_cell(self, ' ', sides=sides)
+            sides &= ~wx.TOP
+            cell = BitFieldCell(self, None, 0, 0, label='X', sides=sides, bgcolor=wx.WHITE)
             sizer.Add(cell, pos=(2, value.width-bit-1), flag=wx.EXPAND)
         
         self.SetSizerAndFit(sizer)
@@ -399,6 +475,7 @@ class RegisterEditDialog(wx.Dialog):
         self.model = model
         self.name = name
         self.fullname = fullname
+        self.SetTitle(fullname if fullname else name)
         self.setup()
         
     def setup(self):
@@ -406,7 +483,7 @@ class RegisterEditDialog(wx.Dialog):
         if self.name:
             txt_name = wx.StaticText(self, label=self.name)
             f = txt_name.GetFont()
-            f.SetPointSize(f.GetPointSize()*2)
+            f.SetPointSize(f.GetPointSize()*1.5)
             f.SetWeight(wx.FONTWEIGHT_BOLD)
             txt_name.SetFont(f)
             
@@ -416,8 +493,18 @@ class RegisterEditDialog(wx.Dialog):
             sizer.Add(txt_fullname, border=5, flag=wx.ALL)
         if self.model.width <= 16:
             ctrl = BitFieldControl(self, self.model)
-            sizer.Add(ctrl, border=5, flag=wx.ALL)
-            
+            sizer.Add(ctrl, border=10, flag=wx.ALL)
+           
+        p = wx.Panel(self)
+        ps = wx.BoxSizer(wx.HORIZONTAL)
+        ps.AddStretchSpacer(1)
+        cancel = wx.Button(p, label="Cancel")
+        ps.Add(cancel, 0, border=5, flag=wx.ALL)
+        ok = wx.Button(p, label="Ok")
+        ps.Add(ok, 0, border=5, flag=wx.ALL)
+        p.SetSizer(ps)
+        sizer.Add(p, flag=wx.EXPAND)
+
         self.SetSizerAndFit(sizer)
         
     @staticmethod
@@ -441,7 +528,6 @@ if __name__ == "__main__":
     
     app = wx.PySimpleApp()
     frame = wx.Frame(None)
-    frame.Show()
     RegisterEditDialog.show(frame, bitfield, "DAC_CR", "DAC Control Register")
     app.MainLoop()
     
