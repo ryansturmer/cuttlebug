@@ -359,6 +359,12 @@ class Process(subprocess.Popen):
         import win32api, win32con
         win32api.GenerateConsoleCtrlEvent(win32con.CTRL_C_EVENT, self.pid)
 
+class Event(wx.PyEvent):
+    def __init__(self, event_object, type):
+        super(Event, self).__init__()
+        self.SetEventType(type.typeId)
+        self.SetEventObject(event_object)
+       
 class Category(object):
 
     def __init__(self, name='', parent=None):

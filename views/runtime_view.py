@@ -6,9 +6,7 @@ from util import ArtListMixin, has_icon, bidict, KeyTree
 from functools import partial
 import gdb
 import os, threading
-import menu
-import settings
-import project
+import menu, settings, project, controls
 
 MNU_ENABLE_BKPT = 0
 MNU_DISABLE_BKPT = 1
@@ -27,6 +25,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_select_item)
         #self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.Bind(wx.EVT_LEFT_DCLICK, self.on_dclick)
+        self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.on_dclick) 
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.on_item_right_click)
         self.Bind(wx.EVT_LIST_COL_END_DRAG, self.on_col_resize)
 
@@ -86,7 +85,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         m = self.menu_manager.menu()
         m.item("Remove Watch", func=self.on_remove_watch, icon='ex.png')
         self.menu_watch_item = m
-        
+                
     def set_model(self, model):
         self.model = model
         self.model.Bind(gdb.EVT_GDB_UPDATE_VARS, self.on_var_update)
@@ -173,7 +172,6 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         evt.Skip()
         
     def on_dclick(self, evt):
-        #print "Got a dclick!"
         id = self.__get_evt_item(evt)
         if self.model and self.is_descendent(id, self.breakpoints_item):
             bkpt = self.get_item_data(id)
@@ -181,7 +179,22 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                 self.model.break_disable(bkpt)
             else:
                 self.model.break_enable(bkpt)
-                            
+        elif self.model and self.is_descendent(id, self.sfr_item):
+            reg = self.get_item_data(id)
+            print reg
+            if reg:
+                old_value = reg.value    
+                print "bout to show the dialog"
+                try:
+                    response = controls.RegisterEditDialog.show(self, reg)
+                except Exception, e:
+                    print e
+                print "done showing"
+                if response == wx.ID_OK:
+                    self.model.data_evaluate_expression("%s=%s" % (reg.expression, reg.value), callback=partial(self.on_sfr_data, id,True))
+                else:
+                    reg.value = old_value
+        evt.Skip()                 
     def on_begin_label_edit(self, evt):
         item = self.get_event_item(evt)
         name = self.get_item_data(item)
@@ -210,6 +223,8 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
             if hasattr(reg, 'expression'):
                 self.model.data_evaluate_expression('%s=%s' % (reg.expression, evt.GetLabel()), callback=partial(self.on_sfr_data, item,True))
         evt.Veto()
+    
+
     def on_get_tooltip(self, evt):
         item = self.get_event_item(evt)
         if self.model and item:
@@ -239,7 +254,8 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                 self.model.var_list_children(item_data, callback=partial(self.__on_listed_children, item))
             else:
                 evt.Veto()
-                
+        evt.Skip()
+        
     def __on_listed_children(self, parent, result):
         if hasattr(result, 'children'):
             for child in result.children:
@@ -535,6 +551,8 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
     def update_sfr_value(self, item, value, colorize=True):
         current_value = self.get_item_text(item, 1)
         try:
+            reg = self.get_item_data(item)
+            reg.value = int(value)
             text = "0x%08x" % int(value)
         except:
             text = value

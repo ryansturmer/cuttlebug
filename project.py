@@ -1,4 +1,4 @@
-import os 
+import os, copy
 import util
 from options import *
 from jinja2 import Environment, PackageLoader
@@ -9,6 +9,24 @@ SIZES = {'byte':1, 'short':2, 'int':4, '1':1,'2':2,'4':4}
 def str2int(s):
     return int(s, 16) if 'x' in s else int(s)
 
+class Field(object):
+    def __init__(self, start, length, name, fullname=None, description=None):
+        self.start = int(start)
+        self.length = int(length)
+        self.name = name
+        self.fullname = fullname
+        self.description = description
+        self._value = 0
+        
+    def pretty(self):
+        return "<Field name='%s' fullname='%s', start=%d, length=%d>" % (self.name, self.fullname if self.fullname else self.name, self.start, self.length)
+    
+    def set_value(self, value):
+        self._value = int(value) & ((1 << self.length)-1)
+        
+    def get_value(self):
+        return self._value
+    
 class Group(object):
     def __init__(self, name, items=None):
         self.name=name
@@ -16,6 +34,19 @@ class Group(object):
         self.items = items or []
     def add_item(self, item):
         self.items.append(item)
+    def __iter__(self):
+        return iter(self.items)
+    
+    def find_by_name(self, name):
+        for item in self:
+            if hasattr(item, 'name') and item.name == name:
+                return item
+            else:
+                if isinstance(item, Group):
+                    i = item.find_by_name(name)
+                    if i: 
+                        return i
+                    
                     
 class Target(Group):
     @staticmethod
@@ -35,8 +66,14 @@ class Target(Group):
             for reg in item.iter('reg'):
                 name, fullname, offset, size = reg.get('name'), reg.get('fullname'), str2int(reg.get('offset')), reg.get('as')
                 size = SIZES.get(size.strip().lower(), 4)
+                
                 register = SpecialFunctionRegister(name, fullname, offset, size, 'rw')
+                for f in reg.iter('field'):
+                    name, fullname, start, length = f.get('name'), f.get('fullname'), str2int(f.get('start')), str2int(f.get('length'))
+                    field = Field(start, length, name, fullname)
+                    register.add_field(field)
                 peripheral.add_register(register)
+                
             peripherals[peripheral_name] = peripheral
         return peripherals
     
@@ -86,10 +123,34 @@ class SpecialFunctionRegister(object):
         self.address = address
         self.size = size
         self.permissions = permissions
+        self.fields = []
         
-    def instantiate(self, base_address):
-        return SpecialFunctionRegister(self.name, self.fullname, base_address+self.address, self.size, self.permissions)
 
+    @property
+    def width(self):
+        return self.size*8
+    
+    def _get_value(self):
+        v = 0
+        for field in self.fields:
+            v |= field.get_value() << field.start
+        return v
+    
+    def _set_value(self, v):
+        for field in self.fields:
+            field.set_value(v >> field.start)
+
+    value = property(_get_value, _set_value)
+    
+    def add_field(self, field):
+        self.fields.append(field)
+     
+    def instantiate(self, base_address):
+        sfr = SpecialFunctionRegister(self.name, self.fullname, base_address+self.address, self.size, self.permissions)
+        for field in self.fields:
+            sfr.add_field(copy.deepcopy(field))
+        return sfr
+    
     @property
     def expression(self):
         size = {1:"unsigned char",2:"unsigned short",4:"unsigned int"}[self.size]
@@ -167,9 +228,10 @@ class Project(util.Category):
     def load_target(self):
         try:
             self.target = Target.load(self.general.target)
-        except:
+        except Exception, e:
             print "Couldn't load target %s" % self.general.target
             self.target = Target("target")
+            print e
 
     @staticmethod
     def create(filename):

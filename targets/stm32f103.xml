@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-
 <document>
 <peripheral name="advanced_timer">
 	<reg name="CR1" fullname="Control Register 1" offset="0x0" as="short" />
@@ -15,10 +14,82 @@
 </peripheral>
 
 <peripheral name="gpio">
-    <reg name="CRL" fullname="Configuration Register (Low)" offset="0x0" as="int" />
-    <reg name="CRH" fullname="Configuration Register (Hi)" offset="0x4" as="int" />
-    <reg name="IDR" fullname="Input Data Register" offset="0x8" as="short" />
-    <reg name="ODR" fullname="Output Data Register" offset="0xc" as="short" />
+    <reg name="CRL" fullname="Configuration Register (Low)" offset="0x0" as="int">
+    	<field name="CNF7[1:0]" fullname="Port 7 Configuration Bits" start="30" length="2" />
+    	<field name="MODE7[1:0]" fullname="Port 7 Mode Bits" start="28" length="2" />
+    	<field name="CNF6[1:0]" fullname="Port 6 Configuration Bits" start="26" length="2" />
+    	<field name="MODE6[1:0]" fullname="Port 6 Mode Bits" start="24" length="2" />
+    	<field name="CNF5[1:0]" fullname="Port 5 Configuration Bits" start="22" length="2" />
+    	<field name="MODE5[1:0]" fullname="Port 5 Mode Bits" start="20" length="2" />
+    	<field name="CNF4[1:0]" fullname="Port 4 Configuration Bits" start="18" length="2" />
+    	<field name="MODE4[1:0]" fullname="Port 4 Mode Bits" start="16" length="2" />
+    	<field name="CNF3[1:0]" fullname="Port 3 Configuration Bits" start="14" length="2" />
+    	<field name="MODE3[1:0]" fullname="Port 3 Mode Bits" start="12" length="2" />
+    	<field name="CNF2[1:0]" fullname="Port 2 Configuration Bits" start="10" length="2" />
+    	<field name="MODE2[1:0]" fullname="Port 2 Mode Bits" start="8" length="2" />
+    	<field name="CNF1[1:0]" fullname="Port 1 Configuration Bits" start="6" length="2" />
+    	<field name="MODE1[1:0]" fullname="Port 1 Mode Bits" start="4" length="2" />
+    	<field name="CNF0[1:0]" fullname="Port 0 Configuration Bits" start="2" length="2" />
+    	<field name="MODE0[1:0]" fullname="Port 0 Mode Bits" start="0" length="2" />
+    </reg>
+    
+    <reg name="CRH" fullname="Configuration Register (Hi)" offset="0x4" as="int">
+        <field name="CNF15[1:0]" fullname="Port 15 Configuration Bits" start="30" length="2" />
+    	<field name="MODE15[1:0]" fullname="Port 15 Mode Bits" start="28" length="2" />
+    	<field name="CNF14[1:0]" fullname="Port 14 Configuration Bits" start="26" length="2" />
+    	<field name="MODE14[1:0]" fullname="Port 14 Mode Bits" start="24" length="2" />
+    	<field name="CNF13[1:0]" fullname="Port 13 Configuration Bits" start="22" length="2" />
+    	<field name="MODE13[1:0]" fullname="Port 13 Mode Bits" start="20" length="2" />
+    	<field name="CNF12[1:0]" fullname="Port 12 Configuration Bits" start="18" length="2" />
+    	<field name="MODE12[1:0]" fullname="Port 12 Mode Bits" start="16" length="2" />
+    	<field name="CNF11[1:0]" fullname="Port 11 Configuration Bits" start="14" length="2" />
+    	<field name="MODE11[1:0]" fullname="Port 11 Mode Bits" start="12" length="2" />
+    	<field name="CNF10[1:0]" fullname="Port 10 Configuration Bits" start="10" length="2" />
+    	<field name="MODE10[1:0]" fullname="Port 10 Mode Bits" start="8" length="2" />
+    	<field name="CNF9[1:0]" fullname="Port 9 Configuration Bits" start="6" length="2" />
+    	<field name="MODE9[1:0]" fullname="Port 9 Mode Bits" start="4" length="2" />
+    	<field name="CNF8[1:0]" fullname="Port 8 Configuration Bits" start="2" length="2" />
+    	<field name="MODE8[1:0]" fullname="Port 8 Mode Bits" start="0" length="2" />
+    </reg>
+    
+    <reg name="IDR" fullname="Input Data Register" offset="0x8" as="short" >
+    	<field name="IDR15" start="15" length="1" />
+    	<field name="IDR14" start="14" length="1" />
+    	<field name="IDR13" start="13" length="1" />
+    	<field name="IDR12" start="12" length="1" />
+    	<field name="IDR11" start="11" length="1" />
+    	<field name="IDR10" start="10" length="1" />
+    	<field name="IDR9" start="9" length="1" />
+    	<field name="IDR8" start="8" length="1" />
+    	<field name="IDR7" start="7" length="1" />
+    	<field name="IDR6" start="6" length="1" />
+    	<field name="IDR5" start="5" length="1" />
+    	<field name="IDR4" start="4" length="1" />
+    	<field name="IDR3" start="3" length="1" />
+    	<field name="IDR2" start="2" length="1" />
+    	<field name="IDR1" start="1" length="1" />
+    	<field name="IDR0" start="0" length="1" />
+	</reg>
+	
+    <reg name="ODR" fullname="Output Data Register" offset="0xc" as="short">
+        <field name="ODR15" start="15" length="1" />
+    	<field name="ODR14" start="14" length="1" />
+    	<field name="ODR13" start="13" length="1" />
+    	<field name="ODR12" start="12" length="1" />
+    	<field name="ODR11" start="11" length="1" />
+    	<field name="ODR10" start="10" length="1" />
+    	<field name="ODR9" start="9" length="1" />
+    	<field name="ODR8" start="8" length="1" />
+    	<field name="ODR7" start="7" length="1" />
+    	<field name="ODR6" start="6" length="1" />
+    	<field name="ODR5" start="5" length="1" />
+    	<field name="ODR4" start="4" length="1" />
+    	<field name="ODR3" start="3" length="1" />
+    	<field name="ODR2" start="2" length="1" />
+    	<field name="ODR1" start="1" length="1" />
+    	<field name="ODR0" start="0" length="1" />
+    </reg>
+    
     <reg name="BSRR" fullname="Port Bit Set/Reset Register" offset="0x10" as="int" />
     <reg name="BRR" fullname="Port Bit Reset Register" offset="0x14" as="short" />
     <reg name="LCKR" fullname="Port Config Lock Register" offset="0x18" as="int" />
@@ -88,7 +159,13 @@
 <peripheral name="usb">
 	<reg name="CNTR" fullname="Control Register" offset="0x40" as="short" />
 	<reg name="ISTR" fullname="Interrupt Status Register" offset="0x44" as="short" />
-	<reg name="FNR" fullname="Frame Number Register" offset="0x48" as="short" />
+	<reg name="FNR" fullname="Frame Number Register" offset="0x48" as="short">
+		<field name="RXDP" fullname="Receive Data + Line Status" start="15" length="1" />
+		<field name="RXDM" fullname="Receive Data + Line Status" start="14" length="1" />
+		<field name="LCK" fullname="Locked" start="13" length="1" />
+		<field name="LSOF[1:0]" fullname="Lost SOF" start="11" length="2" />
+		<field name="FN[10:0]" fullname="Frame Number" start="0" length="11" />
+	</reg>
 	<reg name="DADDR" fullname="Device Address " offset="0x4c" as="short" />
 	<reg name="BTABLE" fullname="Buffer Table Address" offset="0x50" as="short" />
 	<reg name="EP0R" fullname="Endpoint 0 Register" offset="0x00" as="short" />
@@ -119,8 +196,7 @@
 		<invoke peripheral="timer" name="TIM5" fullname="Timer 5" base="0x40000fff" />	
 		<invoke peripheral="timer" name="TIM6" fullname="Timer 6" base="0x400013ff" />	
 		<invoke peripheral="timer" name="TIM7" fullname="Timer 7" base="0x400017ff" />	
-	
-</group>
+	</group>
 	<group fullname="Advanced Timers">
 		<invoke peripheral="advanced_timer" name="TIM1" fullname="Timer 1 (Advanced Timer)" base="0x40012c00" />
 		<invoke peripheral="timer" name="TIM8" fullname="Timer 8 (Advanced Timer)" base="0x40013400" />	
