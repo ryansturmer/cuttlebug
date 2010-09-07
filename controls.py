@@ -437,7 +437,7 @@ class BitFieldControl(wx.Panel):
         for cell in self.entry_cells:
             cell.update()
     
-    def __field_positions(self):
+    def __compute_field_positions(self):
         value = self.value
         retval = {}
         bits = set(range(self.start, self.start+self.width))
@@ -457,50 +457,47 @@ class BitFieldControl(wx.Panel):
         return retval
     
     def __compute_field_sizes(self):
-        pass
+        mw,mh = 0,0
+        for cell in self.number_cells + self.field_cells + self.entry_cells:
+            w,h = cell.GetSize()
+            mw = (w+PADDING) if (w+PADDING) > mw else mw
+            mh = h if h > mh else mh
+        return mw, mh
+    
     def __setup(self, value):
         self.value = value
         sizer = wx.GridBagSizer()
+        sizer.AddGrowableRow(1)                    
+        sizer.AddGrowableRow(2)                    
 
         mh = 0
         mw = 0
-        number_cells = []
         for i in range(self.start, self.start+self.width):
             cell = BitFieldCell(self, None, label=str(i), sides=0, bgcolor=None) 
             sizer.Add(cell, pos=(0,self.bit2cell(i)), flag=wx.EXPAND)
-            w, h = cell.GetSize()
-            w = (w + PADDING)
-            if w > mw:
-                mw = w
             if i != 0:
                 sizer.AddGrowableCol(self.bit2cell(i))
-            number_cells.append(cell)
+            self.number_cells.append(cell)
 
-        sizer.AddGrowableRow(1)                    
-        sizer.AddGrowableRow(2)                    
-        field_cells = []
-        self.entry_cells = []
-        for field, (pos, span) in self.__field_positions().items():
-            name = field.name
+        for field, (pos, span) in self.__compute_field_positions().items():
             sides = wx.TOP | wx.BOTTOM | wx.RIGHT
             if pos == 0:
                 sides |= wx.LEFT
-            cell = BitFieldCell(self, None,label=name, sides=sides, bgcolor=wx.WHITE) 
+            cell = BitFieldCell(self, None,label=field.name, sides=sides, bgcolor=wx.WHITE) 
             sizer.Add(cell, pos=(1, pos), span=(1, span), flag=wx.EXPAND)
-            w, h = cell.GetSize()
-            w = (w + PADDING)/span
-            if w > mw:
-                mw = w
+            self.field_cells.append(cell)
+
             sides &= ~wx.TOP
             cell = BitFieldCell(self, field,sides=sides, bgcolor=wx.WHITE) 
-            self.entry_cells.append(cell)
-            field_cells.append(cell)
-            mh = cell.max_height
             sizer.Add(cell, pos=(2, pos), span=(1, span), flag=wx.EXPAND)
-        self.field_cells = field_cells
-        for cell in number_cells:
+            self.entry_cells.append(cell)
+            mh = cell.max_height
+
+        mw, xx = self.__compute_field_sizes()
+        
+        for cell in self.number_cells:
             sizer.SetItemMinSize(cell, (mw, -1))
-        for cell in field_cells:
+        for cell in self.field_cells + self.entry_cells:
             sizer.SetItemMinSize(cell, (mw, mh))
 
         def empty_slots(reg, start, width):
@@ -517,6 +514,7 @@ class BitFieldControl(wx.Panel):
                 sides |= wx.LEFT
             cell = BitFieldCell(self, None, label=' ', sides=sides, bgcolor=wx.WHITE)
             sizer.Add(cell, pos=(1, self.bit2cell(bit)), flag=wx.EXPAND)
+            
             sides &= ~wx.TOP
             cell = BitFieldCell(self, None, label='X', sides=sides, bgcolor=wx.WHITE)
             sizer.Add(cell, pos=(2, self.bit2cell(bit)), flag=wx.EXPAND)
