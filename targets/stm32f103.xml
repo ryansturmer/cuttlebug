@@ -1,7 +1,16 @@
 <?xml version="1.0"?>
 <document>
 <peripheral name="advanced_timer">
-	<reg name="CR1" fullname="Control Register 1" offset="0x0" as="short" />
+	<reg name="CR1" fullname="Control Register 1" offset="0x0" as="short">
+		<field name="CKD[1:0]" fullname="Clock Division" start="8" length="2" />
+		<field name="ARPE" fullname="Auto-reload preload enable" start="7" length="1" />
+		<field name="CMS[1:0]" fullname="Center-aligned mode selection" start="5" length="2" />
+		<field name="DIR" fullname="Direction" start="4" length="1" />
+		<field name="OPM" fullname="One pulse mode" start="3" length="1" />
+		<field name="URS" fullname="Update request source" start="2" length="1" />
+		<field name="UDIS" fullname="Update disable" start="1" length="1" />
+		<field name="CEN" fullname="Counter enable" start="0" length="1" />
+	</reg>
 	<reg name="CR2" fullname="Control Register 2" offset="0x4" as="short" />
 	<reg name="SMCR" fullname="Slave Mode Control Register" offset="0x8" as="short" />
 	<reg name="DIER" fullname="DMA Interrupt Enable Register" offset="0xc" as="short" />

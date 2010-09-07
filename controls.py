@@ -2,6 +2,7 @@ import wx
 import util
 import wx.lib.mixins.listctrl as listmix
 from odict import OrderedDict
+import functools
 
 EVT_BITFIELD_CHANGED = wx.PyEventBinder(wx.NewEventType())
 
@@ -239,51 +240,6 @@ class ListControl(wx.ListCtrl):
             width = max(s1, s2)
             if i < n-1: width += 20
             self.SetColumnWidth(i, width)
-
-        
-class BitField(object):
-    
-    def __init__(self, width, start=0, value=0):
-        self.width = width
-        self.start = start
-        value=value
-        self.fields = {}
-        
-    def set_bit(self, name, bit, value=0):
-        self.set_field(name, bit, value=value)
-        
-    def set_field(self, name, start, length=1, value=0):
-        if start < self.start or (start+length) > self.width:
-            raise ValueError("Cannot set bit %d of a %d bit field.") % (start+length, self.width)
-        self.fields[(start, length)] = (name, 0)
-        self.set_field_value(start, length, value)
-
-    def set_field_value(self, start, length, val):
-        n, v = self.fields[(start, length)]
-        val = ((1 << length) -1) & val 
-        self.fields[(start, length)] = (n, val)
-
-    def get_field_value(self, start, length):
-        return self.fields[(start, length)][1]
-    def get_field_name(self, start, length):
-        return self.fields[(start, length)][0]
-
-    @property             
-    def empty_slots(self):
-        full_slots = set()
-        for (start, length), (name, value) in self.fields.items():
-            for i in range(start, start+length):
-                full_slots.add(i)
-        return set(range(self.width)) - full_slots
-    
-        
-    @property
-    def value(self):
-        v = 0
-        for (start, length), (name, value) in self.fields.items():
-            v |= int(value) << start
-        return v
-    
     
 class Cell(wx.Panel):
     def __init__(self, parent, type=wx.ALL, padding=0):
@@ -379,20 +335,12 @@ class BitFieldCell(Cell):
     
     def make_menu(self):
         self.menu = wx.Menu()
-        util.menu_item(self, self.menu, "Decimal", self.on_dec)
-        util.menu_item(self, self.menu, "Hex", self.on_hex)
-        util.menu_item(self, self.menu, "Bin", self.on_bin)
+        util.menu_item(self, self.menu, "Decimal", functools.partial(self.on_change_display_type, type=DEC))
+        util.menu_item(self, self.menu, "Hex", functools.partial(self.on_change_display_type, type=HEX))
+        util.menu_item(self, self.menu, "Bin", functools.partial(self.on_change_display_type, type=BIN))
     
-    def on_dec(self, evt):
-        self.display_type = DEC
-        self.update()
-
-    def on_hex(self, evt):
-        self.display_type = HEX
-        self.update()
-
-    def on_bin(self, evt):
-        self.display_type = BIN
+    def on_change_display_type(self, evt, type=DEC):
+        self.display_type = type
         self.update()
         
     def edit(self):
@@ -414,18 +362,22 @@ class BitFieldCell(Cell):
         self.Layout()
         self.Thaw()
 
+    def render_value(self):
+        v = self.model.get_value()
+        if self.display_type == HEX:
+            return ("0x%x" % v) if v else '0'
+        elif self.display_type == BIN:
+            s = ''
+            while v:
+                s = ('1' if v & 1 else '0') + s
+                v >>= 1
+            return '0b%s' % s if s else '0'
+        else:
+            return str(v)
+
     def update(self):
         if self.model:
-            value = self.model.get_value()
-            
-            if self.display_type == HEX:
-                s = "0x%x" % value
-            elif self.display_type == BIN:
-                s = self.bin(value)
-            else:
-                s = str(value)
-                
-            self.text.SetLabel(s)
+            self.text.SetLabel(self.render_value())
         else:
             self.text.SetLabel(self.label)
         self.Layout()
@@ -441,6 +393,7 @@ class BitFieldCell(Cell):
         self.model.set_value(x)
     def on_click(self, evt):
         if self.model.length == 1:
+            self.SetFocus()
             self.set_value(0 if self.get_value() else 1)
             self.update()
         else:
@@ -448,126 +401,148 @@ class BitFieldCell(Cell):
 
     def on_enter(self, evt):
         try:
-            self.set_value(self.convert_int(self.ctrl.GetValue()))
+            self.set_value(util.str2int(self.ctrl.GetValue()))
         except:
             pass
         self.unedit()
 
-    def convert_int(self, s):
-        if 'x' in s:
-            return int(s, 16)
-        elif 'b' in s:
-            return int(s, 2)
-        else:
-            return int(s)
-        
-    def bin(self, x):
-        s = ''
-        while x:
-            s = ('1' if x & 1 else '0') + s
-            x >>= 1
-        if not s:
-            return '0b0'
-        else:
-            return '0b%s' % s
-        
     def on_lost_focus(self, evt):
         self.unedit()
         
     def on_right_click(self, evt):
         self.PopupMenu(self.menu)
-        
+   
+PADDING = 10     
 class BitFieldControl(wx.Panel):
     
-    def __init__(self, parent, value=None, show_bit_numbers=True):
+    def __init__(self, parent, value, start=0, width=None, show_bit_numbers=True):
         super(BitFieldControl, self).__init__(parent, -1)
-        self.__set_value(value)
-
+        self.number_cells = []
+        self.field_cells = []
+        self.entry_cells = []
+        self.default_min_cell_width = 0
+        self.width = value.width if width == None else width
+        self.start = start
+        self.__setup(value)
+        
     def cell_changed(self, cell):
         event = util.Event(self, EVT_BITFIELD_CHANGED)
         wx.PostEvent(self, event)
 
-    def __set_value(self, value):
+    def bit2cell(self, x):
+        r = self.width-(x-self.start)-1
+        return r
+    
+    def update(self):
+        for cell in self.entry_cells:
+            cell.update()
+    
+    def __field_positions(self):
+        value = self.value
+        retval = {}
+        bits = set(range(self.start, self.start+self.width))
+        for field in value.fields:
+            start = field.start
+            length = field.length
+            # Adjust the length of the field if part of it is outside the range we're displaying
+            field_bits = set(range(start, start+length))
+            field_bits_in_this_reg = field_bits.intersection(bits)
+            if len(field_bits_in_this_reg) != len(field_bits): 
+                if not field_bits_in_this_reg: continue   
+                start, end = min(field_bits_in_this_reg), max(field_bits_in_this_reg)
+                length = len(field_bits_in_this_reg)
+            pos = self.width-(start-self.start)-length
+            span = length
+            retval[field] = (pos, span)
+        return retval
+    
+    def __compute_field_sizes(self):
+        pass
+    def __setup(self, value):
         self.value = value
         sizer = wx.GridBagSizer()
-        #sizer.AddGrowableRow(0)        
-        nums = []
-        for i in range(value.width):
+
+        mh = 0
+        mw = 0
+        number_cells = []
+        for i in range(self.start, self.start+self.width):
             cell = BitFieldCell(self, None, label=str(i), sides=0, bgcolor=None) 
-            sizer.Add(cell, pos=(0,value.width-i-1), flag=wx.EXPAND)
+            sizer.Add(cell, pos=(0,self.bit2cell(i)), flag=wx.EXPAND)
+            w, h = cell.GetSize()
+            w = (w + PADDING)
+            if w > mw:
+                mw = w
             if i != 0:
-                sizer.AddGrowableCol(value.width-i-1)
-            nums.append(cell)
+                sizer.AddGrowableCol(self.bit2cell(i))
+            number_cells.append(cell)
 
         sizer.AddGrowableRow(1)                    
         sizer.AddGrowableRow(2)                    
         field_cells = []
-        mh = 0
-        mw = 0
-        for field in value.fields:
-            start = field.start
-            length = field.length
+        self.entry_cells = []
+        for field, (pos, span) in self.__field_positions().items():
             name = field.name
-            pos = value.width-start-length
-            span = length
             sides = wx.TOP | wx.BOTTOM | wx.RIGHT
             if pos == 0:
                 sides |= wx.LEFT
             cell = BitFieldCell(self, None,label=name, sides=sides, bgcolor=wx.WHITE) 
-            #cell = text_cell(self, label=name, sides=sides, bgcolor=wx.WHITE)
             sizer.Add(cell, pos=(1, pos), span=(1, span), flag=wx.EXPAND)
             w, h = cell.GetSize()
+            w = (w + PADDING)/span
             if w > mw:
                 mw = w
             sides &= ~wx.TOP
             cell = BitFieldCell(self, field,sides=sides, bgcolor=wx.WHITE) 
+            self.entry_cells.append(cell)
             field_cells.append(cell)
             mh = cell.max_height
             sizer.Add(cell, pos=(2, pos), span=(1, span), flag=wx.EXPAND)
-
-        for cell in nums:
-            sizer.SetItemMinSize(cell, (mw+10, mh))
+        self.field_cells = field_cells
+        for cell in number_cells:
+            sizer.SetItemMinSize(cell, (mw, -1))
         for cell in field_cells:
-            sizer.SetItemMinSize(cell, (mw+10, mh))
+            sizer.SetItemMinSize(cell, (mw, mh))
 
-        def empty_slots(reg):
+        def empty_slots(reg, start, width):
             full_slots = set()
             for field in reg.fields:
                 for i in range(field.start, field.start+field.length):
                     full_slots.add(i)
-            return set(range(reg.width)) - full_slots
+            return set(range(start, start+width)) - full_slots
 
-        for bit in empty_slots(self.value):
-            pos = value.width-bit-1
+        for bit in empty_slots(self.value, self.start, self.width):
+            pos = self.bit2cell(bit)
             sides = wx.TOP | wx.BOTTOM | wx.RIGHT
             if pos == 0:
                 sides |= wx.LEFT
             cell = BitFieldCell(self, None, label=' ', sides=sides, bgcolor=wx.WHITE)
-            sizer.Add(cell, pos=(1, value.width-bit-1), flag=wx.EXPAND)
+            sizer.Add(cell, pos=(1, self.bit2cell(bit)), flag=wx.EXPAND)
             sides &= ~wx.TOP
             cell = BitFieldCell(self, None, label='X', sides=sides, bgcolor=wx.WHITE)
-            sizer.Add(cell, pos=(2, value.width-bit-1), flag=wx.EXPAND)
+            sizer.Add(cell, pos=(2, self.bit2cell(bit)), flag=wx.EXPAND)
         
         self.SetSizerAndFit(sizer)
         
 class RegisterEditDialog(wx.Dialog):
-    def __init__(self, parent, model):
+    def __init__(self, parent, model, max_width=16):
         wx.Dialog.__init__(self, parent)
         self.model = model
         self.name = model.name
         self.fullname = model.fullname
-        self.SetTitle(self.fullname if self.fullname else name)
+        self.max_width = max_width
+        self.SetTitle(self.fullname if self.fullname else self.name)
         self.setup()
         
     def setup(self):
         sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Text
         if self.name:
             txt_name = wx.StaticText(self, label=self.name)
             f = txt_name.GetFont()
             f.SetPointSize(f.GetPointSize()*1.5)
             f.SetWeight(wx.FONTWEIGHT_BOLD)
             txt_name.SetFont(f)
-            
             sizer.Add(txt_name, border=5, flag=wx.ALL)
         self.txt_value = wx.StaticText(self)
         self.set_value()
@@ -575,14 +550,24 @@ class RegisterEditDialog(wx.Dialog):
         f.SetWeight(wx.FONTWEIGHT_BOLD)
         self.txt_value.SetFont(f)
         sizer.Add(self.txt_value, border=5, flag=wx.ALL)
-
         if self.fullname:
             txt_fullname = wx.StaticText(self, label=self.fullname)
             sizer.Add(txt_fullname, border=5, flag=wx.ALL)
-            
-        ctrl = BitFieldControl(self, self.model)
-        sizer.Add(ctrl, border=10, flag=wx.ALL)
-           
+        
+        # Bit Fields
+        if self.max_width:
+            fields = self.model.width/self.max_width or 1
+        else:
+            fields = 1
+        ctrls = []
+        for i in reversed(range(fields)):
+            ctrl = BitFieldControl(self, self.model, start=i*self.max_width, width=self.model.width/fields)
+            sizer.Add(ctrl, border=10, flag=wx.ALL | wx.CENTER | wx.EXPAND)
+            ctrl.Bind(EVT_BITFIELD_CHANGED, self.on_bitfield_changed)
+            ctrls.append(ctrl)
+        self.ctrls = ctrls
+        
+        # Buttons
         p = wx.Panel(self)
         ps = wx.BoxSizer(wx.HORIZONTAL)
         ps.AddStretchSpacer(1)
@@ -593,12 +578,11 @@ class RegisterEditDialog(wx.Dialog):
         ps.Add(ok, 0, border=5, flag=wx.ALL)
         p.SetSizer(ps)
         sizer.Add(p, flag=wx.EXPAND)
-        ctrl.Bind(EVT_BITFIELD_CHANGED, self.on_bitfield_changed)
         self.SetSizerAndFit(sizer)
         
     @staticmethod
-    def show(parent, model, name=None, fullname=None):
-        dlg = RegisterEditDialog(parent, model)
+    def show(parent, model, max_width=16):
+        dlg = RegisterEditDialog(parent, model, max_width)
         return dlg.ShowModal()
 
     def set_value(self):
@@ -606,27 +590,38 @@ class RegisterEditDialog(wx.Dialog):
         self.txt_value.SetLabel(fmt % self.model.value)
         
     def on_bitfield_changed(self, evt):
+        for ctrl in self.ctrls:
+            ctrl.update()
         self.set_value()
         
         
 if __name__ == "__main__":
     
     import project
+    '''
     print "Loading target file to test register editor:" 
+    
     target = project.Target.load('targets/stm32f103.xml')
     
-    usb_peripheral = target.find_by_name('USB')
+    usb_peripheral = target.find_by_name('GPIOA')
     for register in usb_peripheral.registers:
         if register.name == 'FNR':
             break
     print register
     for field in register.fields:
         print field
-
+    '''
+    register = project.SpecialFunctionRegister("SMPR", "Sample Register", 0x1000, 4, 'rw')
+    
+    register.add_field(project.Field(0, 3, "FA", "Field A"))
+    register.add_field(project.Field(3, 10, "FB", "Field B"))
+    register.add_field(project.Field(13, 1, "FC", "Field C"))
+    register.add_field(project.Field(14, 8, "FD", "Field D"))
+    
     print "Initial Register Value: 0x%x" % register.value
     app = wx.PySimpleApp()
     frame = wx.Frame(None)
     RegisterEditDialog.show(frame, register)
-    print "0x%x" % register.value
-    app.Exit()
+    print "Final Register Value 0x%x" % register.value
+    frame.Close()
     app.MainLoop()

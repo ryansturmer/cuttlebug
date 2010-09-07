@@ -12,7 +12,15 @@ PLATEBTN_DEFAULT_COLOUR = wx.WHITE
 jinja_env = Environment(loader=FileSystemLoader('./templates/'))
 settings_template = None
 project_template = None
-        
+
+def str2int(s):
+    if 'x' in s:
+        return int(s, 16)
+    elif 'b' in s:
+        return int(s, 2)
+    else:
+        return int(s)        
+
 def load_templates():
     global settings_template, project_template
     settings_template = jinja_env.get_template('settings.xml')

@@ -158,7 +158,7 @@ class SpecialFunctionRegister(object):
     
     def __str__(self):
         return '<SFR name="%s" %s0x%x %d %s>' % (self.name, '' if self.fullname == self.name else 'fullname="%s" ' % self.fullname, self.address, self.size, self.permissions)
-    
+            
 class Project(util.Category):
 
     def __init__(self, *args, **kwargs):
