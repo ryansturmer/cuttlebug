@@ -54,9 +54,26 @@ class Target(Group):
         path = os.path.abspath(filename)
         fp = open(path, 'r')
         tree = etree.parse(fp)
-        peripherals = Target.__get_peripherals(tree.getroot())
-        return Target.__get_target(tree.getroot(), peripherals)
+        items = Target.__get_peripherals(tree.getroot())
+        return Target.__get_target(tree.getroot(), items)
+        
+    @staticmethod
+    def __make_a_field(f):
+        name, fullname, start, length = f.get('name'), f.get('fullname'), str2int(f.get('start')), str2int(f.get('length') or '1')
+        field = Field(start, length, name, fullname)
+        return field
     
+    @staticmethod
+    def __get_cpu_register(reg):
+        reg_name = reg.get('name')
+        name, fullname, size = reg.get('name'), reg.get('fullname'),reg.get('as')    
+        size = SIZES.get(size.strip().lower(), 4)         
+        register = CPURegister(name, fullname, size)
+        for f in reg.iter('field'):
+            field = Target.__make_a_field(f)
+            register.add_field(field)
+        return register
+        
     @staticmethod
     def __get_peripherals(root):
         peripherals = {}
@@ -69,14 +86,13 @@ class Target(Group):
                 
                 register = SpecialFunctionRegister(name, fullname, offset, size, 'rw')
                 for f in reg.iter('field'):
-                    name, fullname, start, length = f.get('name'), f.get('fullname'), str2int(f.get('start')), str2int(f.get('length'))
-                    field = Field(start, length, name, fullname)
+                    field = Target.__make_a_field(f)
                     register.add_field(field)
                 peripheral.add_register(register)
                 
             peripherals[peripheral_name] = peripheral
         return peripherals
-    
+            
     @staticmethod
     def __get_target(root, peripherals):
         for target_item in root.iter('target'):
@@ -96,7 +112,8 @@ class Target(Group):
             peripheral = peripherals.get(item.get('peripheral'), None)
             if peripheral:
                 retval = peripheral.instantiate(item.get('name'), str2int(item.get('base')))
-        
+        elif item.tag == 'cpu_register':
+            retval = Target.__get_cpu_register(item)
         return retval
             
 class Peripheral(object):
@@ -116,45 +133,53 @@ class Peripheral(object):
             retval += "%s\n" % register
         return retval
 
-class SpecialFunctionRegister(object):
-    def __init__(self, name, fullname, address, size, permissions):
+class Register(object):
+    def __init__(self, name, fullname, size):
         self.name = name
-        self.fullname = fullname or name
-        self.address = address
         self.size = size
-        self.permissions = permissions
+        self.fullname = fullname or name
         self.fields = []
-        
 
-    @property
-    def width(self):
-        return self.size*8
-    
     def _get_value(self):
         v = 0
         for field in self.fields:
             v |= field.get_value() << field.start
         return v
-    
     def _set_value(self, v):
         for field in self.fields:
             field.set_value(v >> field.start)
-
     value = property(_get_value, _set_value)
     
     def add_field(self, field):
         self.fields.append(field)
-     
+    
+    @property
+    def width(self):
+        return self.size*8
+
+    @property
+    def expression(self):
+        return "$%s" % self.name
+
+        
+class CPURegister(Register): pass
+
+class SpecialFunctionRegister(Register):
+    def __init__(self, name, fullname, address, size, permissions):
+        Register.__init__(self, name, fullname, size)
+        self.address = address
+        self.permissions = permissions
+
+    @property
+    def expression(self):
+        size = {1:"unsigned char",2:"unsigned short",4:"unsigned int"}[self.size]
+        return "*((%s*)0x%x)" % (size, self.address)
+             
     def instantiate(self, base_address):
         sfr = SpecialFunctionRegister(self.name, self.fullname, base_address+self.address, self.size, self.permissions)
         for field in self.fields:
             sfr.add_field(copy.deepcopy(field))
         return sfr
-    
-    @property
-    def expression(self):
-        size = {1:"unsigned char",2:"unsigned short",4:"unsigned int"}[self.size]
-        return "*((%s*)0x%x)" % (size, self.address)
     
     def __str__(self):
         return '<SFR name="%s" %s0x%x %d %s>' % (self.name, '' if self.fullname == self.name else 'fullname="%s" ' % self.fullname, self.address, self.size, self.permissions)
@@ -187,6 +212,8 @@ class Project(util.Category):
         debug.add_item("detach_cmd", "")
         debug.add_item("post_attach_cmd", "monitor_halt")
         debug.add_item("pre_detach_cmd", "")
+        debug.add_item("pre_download_cmd", "")
+        
         debug.add_item("reset_cmd", "monitor reset")
         
         # Program
@@ -229,7 +256,9 @@ class Project(util.Category):
         try:
             self.target = Target.load(self.general.target)
         except Exception, e:
+            print e
             print "Couldn't load target %s" % self.general.target
+            raise e
             self.target = Target("target")
             print e
 
@@ -289,6 +318,7 @@ class ProjectOptionsDialog(OptionsDialog):
         panel.add("Commands", "Detach", TextWidget, key="debug.detach_cmd")
         panel.add("Commands", "Post-Attach", TextWidget, key="debug.post_attach_cmd")
         panel.add("Commands", "Pre-Detach", TextWidget, key="debug.pre_detach_cmd")
+        panel.add("Commands", "Pre-Download", TextWidget, key="debug.pre_download_cmd")
         self.add_panel(panel, icon='bug.png')
 
     def create_program_panel(self):
@@ -310,4 +340,4 @@ class Session(object):
 
 if __name__ == "__main__":
     target = Target.load('targets/stm32f103.xml')
-    print target.items[0].items
+    print target

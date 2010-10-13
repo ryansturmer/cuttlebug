@@ -25,6 +25,9 @@ class GDBEvent(wx.PyEvent):
         self.SetEventType(type.typeId)
         self.SetEventObject(object)
         self.data = data
+        
+    def __str__(self):
+        return "<GDBEvent type=%s>" % (event_types.get(self.GetEventType(), "???"))
 
 
 EVT_GDB_STARTED = wx.PyEventBinder(wx.NewEventType())
@@ -41,6 +44,17 @@ EVT_GDB_UPDATE_REGISTERS = wx.PyEventBinder(wx.NewEventType())
 
 EVT_GDB_RUNNING = wx.PyEventBinder(wx.NewEventType())
 EVT_GDB_STOPPED = wx.PyEventBinder(wx.NewEventType())
+
+event_types = {EVT_GDB_STARTED._getEvtType() : "EVT_GDB_STARTED",
+               EVT_GDB_FINISHED._getEvtType() : "EVT_GDB_FINISHED",
+               EVT_GDB_ERROR._getEvtType() : "EVT_GDB_ERROR",
+               EVT_GDB_UPDATE._getEvtType() : "EVT_GDB_UPDATE",
+               EVT_GDB_UPDATE_BREAKPOINTS._getEvtType(): "EVT_GDB_UPDATE_BREAKPOINTS",
+               EVT_GDB_UPDATE_VARS._getEvtType() : "EVT_GDB_UPDATE_VARS",
+               EVT_GDB_UPDATE_STACK._getEvtType() : "EVT_GDB_UPDATE_STACK",
+               EVT_GDB_UPDATE_REGISTERS._getEvtType() : "EVT_GDB_UPDATE_REGISTERS",
+               EVT_GDB_RUNNING._getEvtType() : "EVT_GDB_RUNNING",
+               EVT_GDB_STOPPED._getEvtType() : "EVT_GDB_STOPPED"}
 
 class GDB(wx.EvtHandler):
 
@@ -155,8 +169,12 @@ class GDB(wx.EvtHandler):
         # We make some corrections to the debugger state based on feedback from error messages
         if "while target is running" in record.msg: 
             self.__on_running(record)
-        elif "while target is stopped" in record.msg or "not executing" or "not running" in record.msg:
+        elif "while target is stopped" in record.msg or "not executing" in record.msg or "not running" in record.msg:
+            print "stopping due to ", record.msg
             self.__on_stopped(record)
+        elif "connection closed" in record.msg:
+            print "The GDB connection was closed unexpectedly"
+            self.on_end()
         self.post_event(GDBEvent(EVT_GDB_ERROR, self, data=record.msg))
    
     
@@ -190,7 +208,8 @@ class GDB(wx.EvtHandler):
                 elif result.cls == 'running':
                     self.__on_running(result)
                 else:
-                    self.post_event(GDBEvent(EVT_GDB_UPDATE, self, data=result))
+                    pass
+                    #self.post_event(GDBEvent(EVT_GDB_UPDATE, self, data=result))
         
     def __update_breakpoints(self, data=None):
         self.__cmd('-break-list\n', self.__process_breakpoint_update)
@@ -211,6 +230,7 @@ class GDB(wx.EvtHandler):
         wx.PostEvent(self, GDBEvent(EVT_GDB_UPDATE_BREAKPOINTS, self, data=self.breakpoints))
                         
     def post_event(self, evt):
+        print "Posting %s" % evt
         wx.PostEvent(self, evt)
     
     def __send(self, data):

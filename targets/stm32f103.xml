@@ -1,5 +1,188 @@
 <?xml version="1.0"?>
 <document>
+
+<peripheral name="nvic">
+	<reg name="ISER0" fullname="Interrupt Set-enable 0" offset="0x0" as="int" > 
+		<field name="SE0" fullname="Interrupt 0 set-enable" start="0" length="1" />
+		<field name="SE1" fullname="Interrupt 1 set-enable" start="1" length="1" />
+		<field name="SE2" fullname="Interrupt 2 set-enable" start="2" length="1" />
+		<field name="SE3" fullname="Interrupt 3 set-enable" start="3" length="1" />
+		<field name="SE4" fullname="Interrupt 4 set-enable" start="4" length="1" />
+		<field name="SE5" fullname="Interrupt 5 set-enable" start="5" length="1" />
+		<field name="SE6" fullname="Interrupt 6 set-enable" start="6" length="1" />
+		<field name="SE7" fullname="Interrupt 7 set-enable" start="7" length="1" />
+		<field name="SE8" fullname="Interrupt 8 set-enable" start="8" length="1" />
+		<field name="SE9" fullname="Interrupt 9 set-enable" start="9" length="1" />
+		<field name="SE10" fullname="Interrupt 10 set-enable" start="10" length="1" />
+		<field name="SE11" fullname="Interrupt 11 set-enable" start="11" length="1" />
+		<field name="SE12" fullname="Interrupt 12 set-enable" start="12" length="1" />
+		<field name="SE13" fullname="Interrupt 13 set-enable" start="13" length="1" />
+		<field name="SE14" fullname="Interrupt 14 set-enable" start="14" length="1" />
+		<field name="SE15" fullname="Interrupt 15 set-enable" start="15" length="1" />
+		<field name="SE16" fullname="Interrupt 16 set-enable" start="16" length="1" />
+		<field name="SE17" fullname="Interrupt 17 set-enable" start="17" length="1" />
+		<field name="SE18" fullname="Interrupt 18 set-enable" start="18" length="1" />
+		<field name="SE19" fullname="Interrupt 19 set-enable" start="19" length="1" />
+		<field name="SE20" fullname="Interrupt 20 set-enable" start="20" length="1" />
+		<field name="SE21" fullname="Interrupt 21 set-enable" start="21" length="1" />
+		<field name="SE22" fullname="Interrupt 22 set-enable" start="22" length="1" />
+		<field name="SE23" fullname="Interrupt 23 set-enable" start="23" length="1" />
+		<field name="SE24" fullname="Interrupt 24 set-enable" start="24" length="1" />
+		<field name="SE25" fullname="Interrupt 25 set-enable" start="25" length="1" />
+		<field name="SE26" fullname="Interrupt 26 set-enable" start="26" length="1" />
+		<field name="SE27" fullname="Interrupt 27 set-enable" start="27" length="1" />
+		<field name="SE28" fullname="Interrupt 28 set-enable" start="28" length="1" />
+		<field name="SE29" fullname="Interrupt 29 set-enable" start="29" length="1" />
+		<field name="SE30" fullname="Interrupt 30 set-enable" start="30" length="1" />
+		<field name="SE31" fullname="Interrupt 31 set-enable" start="31" length="1" />
+	</reg>
+	
+	<reg name="ISER1" fullname="Interrupt Set-enable 1" offset="0x4" as="int"> 
+		<field name="SE32" fullname="Interrupt 32 set-enable" start="0" length="1" />
+		<field name="SE33" fullname="Interrupt 33 set-enable" start="1" length="1" />
+		<field name="SE34" fullname="Interrupt 34 set-enable" start="2" length="1" />
+		<field name="SE35" fullname="Interrupt 35 set-enable" start="3" length="1" />
+		<field name="SE36" fullname="Interrupt 36 set-enable" start="4" length="1" />
+		<field name="SE37" fullname="Interrupt 37 set-enable" start="5" length="1" />
+		<field name="SE38" fullname="Interrupt 38 set-enable" start="6" length="1" />
+		<field name="SE39" fullname="Interrupt 39 set-enable" start="7" length="1" />
+		<field name="SE40" fullname="Interrupt 40 set-enable" start="8" length="1" />
+		<field name="SE41" fullname="Interrupt 41 set-enable" start="9" length="1" />
+		<field name="SE42" fullname="Interrupt 42 set-enable" start="10" length="1" />
+		<field name="SE43" fullname="Interrupt 43 set-enable" start="11" length="1" />
+		<field name="SE44" fullname="Interrupt 44 set-enable" start="12" length="1" />
+		<field name="SE45" fullname="Interrupt 45 set-enable" start="13" length="1" />
+		<field name="SE46" fullname="Interrupt 46 set-enable" start="14" length="1" />
+		<field name="SE47" fullname="Interrupt 47 set-enable" start="15" length="1" />
+		<field name="SE48" fullname="Interrupt 48 set-enable" start="16" length="1" />
+		<field name="SE49" fullname="Interrupt 49 set-enable" start="17" length="1" />
+		<field name="SE50" fullname="Interrupt 50 set-enable" start="18" length="1" />
+		<field name="SE51" fullname="Interrupt 51 set-enable" start="19" length="1" />
+		<field name="SE52" fullname="Interrupt 52 set-enable" start="20" length="1" />
+		<field name="SE53" fullname="Interrupt 53 set-enable" start="21" length="1" />
+		<field name="SE54" fullname="Interrupt 54 set-enable" start="22" length="1" />
+		<field name="SE55" fullname="Interrupt 55 set-enable" start="23" length="1" />
+		<field name="SE56" fullname="Interrupt 56 set-enable" start="24" length="1" />
+		<field name="SE57" fullname="Interrupt 57 set-enable" start="25" length="1" />
+		<field name="SE58" fullname="Interrupt 58 set-enable" start="26" length="1" />
+		<field name="SE59" fullname="Interrupt 59 set-enable" start="27" length="1" />
+		<field name="SE60" fullname="Interrupt 60 set-enable" start="28" length="1" />
+		<field name="SE61" fullname="Interrupt 61 set-enable" start="29" length="1" />
+		<field name="SE62" fullname="Interrupt 62 set-enable" start="30" length="1" />
+		<field name="SE63" fullname="Interrupt 63 set-enable" start="31" length="1" />
+	</reg>
+	
+	<reg name="ISER2" fullname="Interrupt Set-enable 2" offset="0x8" as="int"> 
+		<field name="SE64" fullname="Interrupt 64 set-enable" start="0" length="1" />
+		<field name="SE65" fullname="Interrupt 65 set-enable" start="1" length="1" />
+		<field name="SE66" fullname="Interrupt 66 set-enable" start="2" length="1" />
+		<field name="SE67" fullname="Interrupt 67 set-enable" start="3" length="1" />
+		<field name="SE68" fullname="Interrupt 68 set-enable" start="4" length="1" />
+		<field name="SE69" fullname="Interrupt 69 set-enable" start="5" length="1" />
+		<field name="SE70" fullname="Interrupt 70 set-enable" start="6" length="1" />
+		<field name="SE71" fullname="Interrupt 71 set-enable" start="7" length="1" />
+		<field name="SE72" fullname="Interrupt 72 set-enable" start="8" length="1" />
+		<field name="SE73" fullname="Interrupt 73 set-enable" start="9" length="1" />
+		<field name="SE74" fullname="Interrupt 74 set-enable" start="10" length="1" />
+		<field name="SE75" fullname="Interrupt 75 set-enable" start="11" length="1" />
+		<field name="SE76" fullname="Interrupt 76 set-enable" start="12" length="1" />
+		<field name="SE77" fullname="Interrupt 77 set-enable" start="13" length="1" />
+		<field name="SE78" fullname="Interrupt 78 set-enable" start="14" length="1" />
+		<field name="SE79" fullname="Interrupt 79 set-enable" start="15" length="1" />
+		<field name="SE80" fullname="Interrupt 80 set-enable" start="16" length="1" />
+	</reg>
+	
+	<reg name="ICER0" fullname="Interrupt clear-enable 0" offset="0x80" as="int" > 
+		<field name="CE0" fullname="Interrupt 0 clear-enable" start="0" length="1" />
+		<field name="CE1" fullname="Interrupt 1 clear-enable" start="1" length="1" />
+		<field name="CE2" fullname="Interrupt 2 clear-enable" start="2" length="1" />
+		<field name="CE3" fullname="Interrupt 3 clear-enable" start="3" length="1" />
+		<field name="CE4" fullname="Interrupt 4 clear-enable" start="4" length="1" />
+		<field name="CE5" fullname="Interrupt 5 clear-enable" start="5" length="1" />
+		<field name="CE6" fullname="Interrupt 6 clear-enable" start="6" length="1" />
+		<field name="CE7" fullname="Interrupt 7 clear-enable" start="7" length="1" />
+		<field name="CE8" fullname="Interrupt 8 clear-enable" start="8" length="1" />
+		<field name="CE9" fullname="Interrupt 9 clear-enable" start="9" length="1" />
+		<field name="CE10" fullname="Interrupt 10 clear-enable" start="10" length="1" />
+		<field name="CE11" fullname="Interrupt 11 clear-enable" start="11" length="1" />
+		<field name="CE12" fullname="Interrupt 12 clear-enable" start="12" length="1" />
+		<field name="CE13" fullname="Interrupt 13 clear-enable" start="13" length="1" />
+		<field name="CE14" fullname="Interrupt 14 clear-enable" start="14" length="1" />
+		<field name="CE15" fullname="Interrupt 15 clear-enable" start="15" length="1" />
+		<field name="CE16" fullname="Interrupt 16 clear-enable" start="16" length="1" />
+		<field name="CE17" fullname="Interrupt 17 clear-enable" start="17" length="1" />
+		<field name="CE18" fullname="Interrupt 18 clear-enable" start="18" length="1" />
+		<field name="CE19" fullname="Interrupt 19 clear-enable" start="19" length="1" />
+		<field name="CE20" fullname="Interrupt 20 clear-enable" start="20" length="1" />
+		<field name="CE21" fullname="Interrupt 21 clear-enable" start="21" length="1" />
+		<field name="CE22" fullname="Interrupt 22 clear-enable" start="22" length="1" />
+		<field name="CE23" fullname="Interrupt 23 clear-enable" start="23" length="1" />
+		<field name="CE24" fullname="Interrupt 24 clear-enable" start="24" length="1" />
+		<field name="CE25" fullname="Interrupt 25 clear-enable" start="25" length="1" />
+		<field name="CE26" fullname="Interrupt 26 clear-enable" start="26" length="1" />
+		<field name="CE27" fullname="Interrupt 27 clear-enable" start="27" length="1" />
+		<field name="CE28" fullname="Interrupt 28 clear-enable" start="28" length="1" />
+		<field name="CE29" fullname="Interrupt 29 clear-enable" start="29" length="1" />
+		<field name="CE30" fullname="Interrupt 30 clear-enable" start="30" length="1" />
+		<field name="CE31" fullname="Interrupt 31 clear-enable" start="31" length="1" />
+	</reg>
+	
+	<reg name="ICER1" fullname="Interrupt clear-enable 1" offset="0x84" as="int"> 
+		<field name="CE32" fullname="Interrupt 32 clear-enable" start="0" length="1" />
+		<field name="CE33" fullname="Interrupt 33 clear-enable" start="1" length="1" />
+		<field name="CE34" fullname="Interrupt 34 clear-enable" start="2" length="1" />
+		<field name="CE35" fullname="Interrupt 35 clear-enable" start="3" length="1" />
+		<field name="CE36" fullname="Interrupt 36 clear-enable" start="4" length="1" />
+		<field name="CE37" fullname="Interrupt 37 clear-enable" start="5" length="1" />
+		<field name="CE38" fullname="Interrupt 38 clear-enable" start="6" length="1" />
+		<field name="CE39" fullname="Interrupt 39 clear-enable" start="7" length="1" />
+		<field name="CE40" fullname="Interrupt 40 clear-enable" start="8" length="1" />
+		<field name="CE41" fullname="Interrupt 41 clear-enable" start="9" length="1" />
+		<field name="CE42" fullname="Interrupt 42 clear-enable" start="10" length="1" />
+		<field name="CE43" fullname="Interrupt 43 clear-enable" start="11" length="1" />
+		<field name="CE44" fullname="Interrupt 44 clear-enable" start="12" length="1" />
+		<field name="CE45" fullname="Interrupt 45 clear-enable" start="13" length="1" />
+		<field name="CE46" fullname="Interrupt 46 clear-enable" start="14" length="1" />
+		<field name="CE47" fullname="Interrupt 47 clear-enable" start="15" length="1" />
+		<field name="CE48" fullname="Interrupt 48 clear-enable" start="16" length="1" />
+		<field name="CE49" fullname="Interrupt 49 clear-enable" start="17" length="1" />
+		<field name="CE50" fullname="Interrupt 50 clear-enable" start="18" length="1" />
+		<field name="CE51" fullname="Interrupt 51 clear-enable" start="19" length="1" />
+		<field name="CE52" fullname="Interrupt 52 clear-enable" start="20" length="1" />
+		<field name="CE53" fullname="Interrupt 53 clear-enable" start="21" length="1" />
+		<field name="CE54" fullname="Interrupt 54 clear-enable" start="22" length="1" />
+		<field name="CE55" fullname="Interrupt 55 clear-enable" start="23" length="1" />
+		<field name="CE56" fullname="Interrupt 56 clear-enable" start="24" length="1" />
+		<field name="CE57" fullname="Interrupt 57 clear-enable" start="25" length="1" />
+		<field name="CE58" fullname="Interrupt 58 clear-enable" start="26" length="1" />
+		<field name="CE59" fullname="Interrupt 59 clear-enable" start="27" length="1" />
+		<field name="CE60" fullname="Interrupt 60 clear-enable" start="28" length="1" />
+		<field name="CE61" fullname="Interrupt 61 clear-enable" start="29" length="1" />
+		<field name="CE62" fullname="Interrupt 62 clear-enable" start="30" length="1" />
+		<field name="CE63" fullname="Interrupt 63 clear-enable" start="31" length="1" />
+	</reg>
+	
+	<reg name="ICER2" fullname="Interrupt clear-enable 2" offset="0x88" as="int"> 
+		<field name="CE64" fullname="Interrupt 64 clear-enable" start="0" length="1" />
+		<field name="CE65" fullname="Interrupt 65 clear-enable" start="1" length="1" />
+		<field name="CE66" fullname="Interrupt 66 clear-enable" start="2" length="1" />
+		<field name="CE67" fullname="Interrupt 67 clear-enable" start="3" length="1" />
+		<field name="CE68" fullname="Interrupt 68 clear-enable" start="4" length="1" />
+		<field name="CE69" fullname="Interrupt 69 clear-enable" start="5" length="1" />
+		<field name="CE70" fullname="Interrupt 70 clear-enable" start="6" length="1" />
+		<field name="CE71" fullname="Interrupt 71 clear-enable" start="7" length="1" />
+		<field name="CE72" fullname="Interrupt 72 clear-enable" start="8" length="1" />
+		<field name="CE73" fullname="Interrupt 73 clear-enable" start="9" length="1" />
+		<field name="CE74" fullname="Interrupt 74 clear-enable" start="10" length="1" />
+		<field name="CE75" fullname="Interrupt 75 clear-enable" start="11" length="1" />
+		<field name="CE76" fullname="Interrupt 76 clear-enable" start="12" length="1" />
+		<field name="CE77" fullname="Interrupt 77 clear-enable" start="13" length="1" />
+		<field name="CE78" fullname="Interrupt 78 clear-enable" start="14" length="1" />
+		<field name="CE79" fullname="Interrupt 79 clear-enable" start="15" length="1" />
+		<field name="CE80" fullname="Interrupt 80 clear-enable" start="16" length="1" />
+	</reg>
+</peripheral>
+
 <peripheral name="advanced_timer">
 	<reg name="CR1" fullname="Control Register 1" offset="0x0" as="short">
 		<field name="CKD[1:0]" fullname="Clock Division" start="8" length="2" />
@@ -121,79 +304,677 @@
 </peripheral>
 
 <peripheral name="timer">
-	<reg name="CR1" fullname="Control Register 1" offset="0x0" as="int" />
-	<reg name="CR2" fullname="Control Register 2" offset="0x4" as="int" />
-	<reg name="SMCR" fullname="Slave Mode Control Register" offset="0x8" as="int" />
-	<reg name="DIER" fullname="DMA Interrupt Enable Register" offset="0xc" as="int" />
-	<reg name="SR" fullname="Status Register" offset="0x10" as="int" />
-	<reg name="EGR" fullname="Event Generation Register" offset="0x14" as="int" />
+	<reg name="CR1" fullname="Control Register 1" offset="0x0" as="short">
+		<field name="CKD" fullname="Clock division" start="8" length="2" />
+		<field name="ARPE" fullname="Auto-reload preload enable" start="7" />
+		<field name="CMS" fullname="Center-aligned mode selection" start="5" length="2" />
+		<field name="DIR" fullname="Direction" start="4" />
+		<field name="OPM" fullname="One-pulse mode" start="3" />
+		<field name="URS" fullname="Update request source" start="2" />
+		<field name="UDIS" fullname="Update disable" start="1" />
+		<field name="CEN" fullname="One-pulse Counter enable" start="0" />
+	</reg>
+	
+	<reg name="CR2" fullname="Control Register 2" offset="0x4" as="short">
+		<field name="TI1S" fullname="TI1 selection" start="7" />
+		<field name="MMS[2:0]" fullname="Master Mode Selection" start="4" length="3" />
+		<field name="CCDS" fullname="Master Mode Selection" start="3" />
+	</reg>
+	<reg name="SMCR" fullname="Slave Mode Control Register" offset="0x8" as="short">
+		<field name="ETP" fullname="External trigger polarity" start="15" />
+		<field name="ECE" fullname="External clock enable" start="14" />
+		<field name="ETPS" fullname="External trigger prescaler" start="12" length="2" />
+		<field name="MSM" fullname="Master/slave mode" start="7" />
+		<field name="TS" fullname="Trigger selection" start="4" length="3" />
+		<field name="SMS" fullname="Slave mode selection" start="0" length="3" />
+	</reg>
+	<reg name="DIER" fullname="DMA Interrupt Enable Register" offset="0xc" as="short">
+		<field name="TDE" fullname="Trigger DMA request enable" start="14" />
+		<field name="CC4DE" fullname="Capture/compare 4 DMA request enable" start="12" />
+		<field name="CC3DE" fullname="Capture/compare 3 DMA request enable" start="11" />
+		<field name="CC2DE" fullname="Capture/compare 2 DMA request enable" start="10" />
+		<field name="CC1DE" fullname="Capture/compare 1 DMA request enable" start="9" />
+		<field name="UDE" fullname="Update DMA request enable" start="8" />
+		<field name="TIE" fullname="Trigger interrupt enable" start="6" />
+		<field name="CC4IE" fullname="Capture/compare 4 interrupt enable" start="4" />
+		<field name="CC3IE" fullname="Capture/compare 3 interrupt enable" start="3" />
+		<field name="CC2IE" fullname="Capture/compare 2 interrupt enable" start="2" />
+		<field name="CC1IE" fullname="Capture/compare 1 interrupt enable" start="1" />
+	</reg>
+	
+	<reg name="SR" fullname="Status Register" offset="0x10" as="short">
+		<field name="CC4OF" fullname="Capture/compare 4 overcapture flag" start="12" />
+		<field name="CC3OF" fullname="Capture/compare 3 overcapture flag" start="11" />
+		<field name="CC2OF" fullname="Capture/compare 2 overcapture flag" start="10" />
+		<field name="CC1OF" fullname="Capture/compare 1 overcapture flag" start="9" />
+		<field name="TIF" fullname="Trigger interrupt flag" start="6" />
+		<field name="CC4OF" fullname="Capture/compare 4 interrupt flag" start="4" />
+		<field name="CC3OF" fullname="Capture/compare 3 interrupt flag" start="3" />
+		<field name="CC2OF" fullname="Capture/compare 2 interrupt flag" start="2" />
+		<field name="CC1OF" fullname="Capture/compare 1 interrupt flag" start="1" />
+		<field name="UIF" fullname="Update interrupt flag" start="0" />
+	</reg>
+	
+	<reg name="EGR" fullname="Event Generation Register" offset="0x14" as="short">
+		<field name="TG" fullname="Trigger generation" start="6" />
+		<field name="CC4G" fullname="Capture/compare 4 generation" start="4" />
+		<field name="CC3G" fullname="Capture/compare 3 generation" start="3" />
+		<field name="CC2G" fullname="Capture/compare 2 generation" start="2" />
+		<field name="CC1G" fullname="Capture/compare 1 generation" start="1" />
+		<field name="UG" fullname="Update generation" start="0" />
+	</reg>
+	
 	<reg name="CCMR1" fullname="Capture/Compare Mode Register 1" offset="0x18" as="int" />
 	<reg name="CCMR2" fullname="Capture/Compare Mode Register 2" offset="0x1c" as="int" />
+	
 	<reg name="CCER" fullname="Capture/Compare Enable Register" offset="0x20" as="int" />
-	<reg name="CNT" fullname="Counter" offset="0x24" as="int" />
-	<reg name="PSC" fullname="Prescaler" offset="0x28" as="int" />
-	<reg name="ARR" fullname="Auto Reload Register" offset="0x2c" as="int" />
-	<reg name="CCR1" fullname="Capture/Compare Register 1" offset="0x34" as="int" />
-	<reg name="CCR2" fullname="Capture/Compare Register 2" offset="0x38" as="int" />
-	<reg name="CCR3" fullname="Capture/Compare Register 3" offset="0x3c" as="int" />
-	<reg name="CCR4" fullname="Capture/Compare Register 4" offset="0x40" as="int" />
-	<reg name="DCR" fullname="DMA Control Register" offset="0x48" as="int" />
-</peripheral>
-
-<peripheral name="dac">
-    <reg name="DAC_CR" fullname="DAC Control Register" offset="0x0" as="int" />
-    <reg name="DAC_SWTRIGR" fullname="Software Trigger Register" offset="0x4" as="int" />
-    
-    <reg name="DAC_DHR12R1" fullname="Ch1 12-bit Right-Aligned Holding Register" offset="0x8" as="int" />
-    <reg name="DAC_DHR12L1" fullname="Ch1 12-bit Left-Aligned Holding Register" offset="0xc" as="int" />
-    <reg name="DAC_DHR8R1" fullname="Ch1 8-bit  Right-Aligned Holding Register" offset="0x10" as="int" />
-    
-    <reg name="DAC_DHR12R2" fullname="Ch2 12-bit Right-Aligned Holding Register" offset="0x14" as="int" />
-    <reg name="DAC_DHR12L2" fullname="Ch2 12-bit Left-Aligned Holding Register" offset="0x18" as="int" />
-    <reg name="DAC_DHR8R2" fullname="Ch2 8-bit  Right-Aligned Holding Register" offset="0x1c" as="int" />
-
-    <reg name="DAC_DHR12RD" fullname="Dual 12-bit Right-Aligned Holding Register" offset="0x20" as="int" />
-    <reg name="DAC_DHR12LD" fullname="Dual 12-bit Left-Aligned Holding Register" offset="0x24" as="int" />
-    <reg name="DAC_DHR8RD" fullname="Dual 8-bit  Right-Aligned Holding Register" offset="0x28" as="int" />
-
-    <reg name="DAC_DOR1" fullname="Ch1 Data Output Register" offset="0x2C" as="int" />
-    <reg name="DAC_DOR2" fullname="Ch2 Data Output Register" offset="0x30" as="int" />
-</peripheral>
-
-<peripheral name="dma">
-    <reg name="DMA_ISR" fullname="Interrupt Status Register" offset="0x0" as="int" />
-    <reg name="DMA_IFCR" fullname="Interrupt Flag Clear Register" offset="0x4" as="int" />
-</peripheral>
-
-<peripheral name="usb">
-	<reg name="CNTR" fullname="Control Register" offset="0x40" as="short" />
-	<reg name="ISTR" fullname="Interrupt Status Register" offset="0x44" as="short" />
-	<reg name="FNR" fullname="Frame Number Register" offset="0x48" as="short">
-		<field name="RXDP" fullname="Receive Data + Line Status" start="15" length="1" />
-		<field name="RXDM" fullname="Receive Data + Line Status" start="14" length="1" />
-		<field name="LCK" fullname="Locked" start="13" length="1" />
-		<field name="LSOF[1:0]" fullname="Lost SOF" start="11" length="2" />
-		<field name="FN[10:0]" fullname="Frame Number" start="0" length="11" />
+	<reg name="CNT" fullname="Counter" offset="0x24" as="short">
+		<field name="CNT[15:0]" fullname="Counter value" start="0" length="16" />
 	</reg>
-	<reg name="DADDR" fullname="Device Address " offset="0x4c" as="short" />
-	<reg name="BTABLE" fullname="Buffer Table Address" offset="0x50" as="short" />
-	<reg name="EP0R" fullname="Endpoint 0 Register" offset="0x00" as="short" />
-	<reg name="EP1R" fullname="Endpoint 1 Register" offset="0x04" as="short" />
-	<reg name="EP2R" fullname="Endpoint 2 Register" offset="0x08" as="short" />
-	<reg name="EP3R" fullname="Endpoint 3 Register" offset="0x0c" as="short" />
-	<reg name="EP4R" fullname="Endpoint 4 Register" offset="0x10" as="short" />
-	<reg name="EP5R" fullname="Endpoint 5 Register" offset="0x14" as="short" />
-	<reg name="EP6R" fullname="Endpoint 6 Register" offset="0x18" as="short" />
-	<reg name="EP7R" fullname="Endpoint 7 Register" offset="0x1c" as="short" />	
+	<reg name="PSC" fullname="Prescaler" offset="0x28" as="short">
+		<field name="PSC[15:0]" fullname="Prescaler value" start="0" length="16" />
+	</reg>
+	
+	<reg name="ARR" fullname="Auto Reload Register" offset="0x2c" as="short">
+		<field name="ARR[15:0]" fullname="Auto reload value" start="0" length="16" />
+	</reg>
+	<reg name="CCR1" fullname="Capture/Compare Register 1" offset="0x34" as="short">
+		<field name="CCR1[15:0]" fullname="Capture/compare 1 value" start="0" length="16" />
+	</reg>
+	<reg name="CCR2" fullname="Capture/Compare Register 2" offset="0x38" as="short">
+		<field name="CCR2[15:0]" fullname="Capture/compare 2 value" start="0" length="16" />
+	</reg>
+	<reg name="CCR3" fullname="Capture/Compare Register 3" offset="0x3c" as="short">
+		<field name="CCR3[15:0]" fullname="Capture/compare 3 value" start="0" length="16" />
+	</reg>	
+	<reg name="CCR4" fullname="Capture/Compare Register 4" offset="0x40" as="short">
+		<field name="CCR4[15:0]" fullname="Capture/compare 4 value" start="0" length="16" />
+	</reg>
+	<reg name="DCR" fullname="DMA Control Register" offset="0x48" as="short">
+		<field name="DBA[4:0]" fullname="DMA Base Address" start="0" length="5" />
+		<field name="DBL[4:0]" fullname="DMA Burst Length" start="8" length="5" />
+	</reg>
+	<reg name="DMAR" fullname="DMA address for full transfer" offset="0x4C" as="short">
+		<field name="DMAB[15:0]" fullname="DMA register for burst accesses" start="0" length="16" />
+	</reg>
+	
 </peripheral>
 
 <peripheral name="exti">
-    <reg name="IMR" fullname="Interrupt Mask Register" offset="0x00" as="int" />
-    <reg name="EMR" fullname="Event Mask Register" offset="0x04" as="int" />
-    <reg name="RTSR" fullname="Rising Trigger Selection Register" offset="0x08" as="int" />
-    <reg name="FTSR" fullname="Falling Trigger Selection Register" offset="0x0c" as="int" />
-    <reg name="SWIER" fullname="Software Interrupt Event Register" offset="0x10" as="int" />
-    <reg name="PR" fullname="Pending Register" offset="0x14" as="int" />
+	<reg name="IMR" fullname="Interrupt Mask Register" offset="0x0" as="int">
+		<field name="MR0" fullname="Interrupt mask on line 0" start="0" length="1" />
+		<field name="MR1" fullname="Interrupt mask on line 1" start="1" length="1" />
+		<field name="MR2" fullname="Interrupt mask on line 2" start="2" length="1" />
+		<field name="MR3" fullname="Interrupt mask on line 3" start="3" length="1" />
+		<field name="MR4" fullname="Interrupt mask on line 4" start="4" length="1" />
+		<field name="MR5" fullname="Interrupt mask on line 5" start="5" length="1" />
+		<field name="MR6" fullname="Interrupt mask on line 6" start="6" length="1" />
+		<field name="MR7" fullname="Interrupt mask on line 7" start="7" length="1" />
+		<field name="MR8" fullname="Interrupt mask on line 8" start="8" length="1" />
+		<field name="MR9" fullname="Interrupt mask on line 9" start="9" length="1" />
+		<field name="MR10" fullname="Interrupt mask on line 10" start="10" length="1" />
+		<field name="MR11" fullname="Interrupt mask on line 11" start="11" length="1" />
+		<field name="MR12" fullname="Interrupt mask on line 12" start="12" length="1" />
+		<field name="MR13" fullname="Interrupt mask on line 13" start="13" length="1" />
+		<field name="MR14" fullname="Interrupt mask on line 14" start="14" length="1" />
+		<field name="MR15" fullname="Interrupt mask on line 15" start="15" length="1" />
+		<field name="MR16" fullname="Interrupt mask on line 16" start="16" length="1" />
+		<field name="MR17" fullname="Interrupt mask on line 17" start="17" length="1" />
+		<field name="MR18" fullname="Interrupt mask on line 18" start="18" length="1" />
+		<field name="MR19" fullname="Interrupt mask on line 19" start="19" length="1" />
+	</reg>
+	
+	<reg name="EMR" fullname="Event Mask Register" offset="0x4" as="int">
+		<field name="MR0" fullname="Event mask on line 0" start="0" length="1" />
+		<field name="MR1" fullname="Event mask on line 1" start="1" length="1" />
+		<field name="MR2" fullname="Event mask on line 2" start="2" length="1" />
+		<field name="MR3" fullname="Event mask on line 3" start="3" length="1" />
+		<field name="MR4" fullname="Event mask on line 4" start="4" length="1" />
+		<field name="MR5" fullname="Event mask on line 5" start="5" length="1" />
+		<field name="MR6" fullname="Event mask on line 6" start="6" length="1" />
+		<field name="MR7" fullname="Event mask on line 7" start="7" length="1" />
+		<field name="MR8" fullname="Event mask on line 8" start="8" length="1" />
+		<field name="MR9" fullname="Event mask on line 9" start="9" length="1" />
+		<field name="MR10" fullname="Event mask on line 10" start="10" length="1" />
+		<field name="MR11" fullname="Event mask on line 11" start="11" length="1" />
+		<field name="MR12" fullname="Event mask on line 12" start="12" length="1" />
+		<field name="MR13" fullname="Event mask on line 13" start="13" length="1" />
+		<field name="MR14" fullname="Event mask on line 14" start="14" length="1" />
+		<field name="MR15" fullname="Event mask on line 15" start="15" length="1" />
+		<field name="MR16" fullname="Event mask on line 16" start="16" length="1" />
+		<field name="MR17" fullname="Event mask on line 17" start="17" length="1" />
+		<field name="MR18" fullname="Event mask on line 18" start="18" length="1" />
+		<field name="MR19" fullname="Event mask on line 19" start="19" length="1" />
+	</reg>
+	
+	<reg name="RTSR" fullname="Rising Trigger Selection Register" offset="0x8" as="int">
+		<field name="TR0" fullname="Rising trigger event configuration bit of line 0" start="0" length="1" />
+		<field name="TR1" fullname="Rising trigger event configuration bit of line 1" start="1" length="1" />
+		<field name="TR2" fullname="Rising trigger event configuration bit of line 2" start="2" length="1" />
+		<field name="TR3" fullname="Rising trigger event configuration bit of line 3" start="3" length="1" />
+		<field name="TR4" fullname="Rising trigger event configuration bit of line 4" start="4" length="1" />
+		<field name="TR5" fullname="Rising trigger event configuration bit of line 5" start="5" length="1" />
+		<field name="TR6" fullname="Rising trigger event configuration bit of line 6" start="6" length="1" />
+		<field name="TR7" fullname="Rising trigger event configuration bit of line 7" start="7" length="1" />
+		<field name="TR8" fullname="Rising trigger event configuration bit of line 8" start="8" length="1" />
+		<field name="TR9" fullname="Rising trigger event configuration bit of line 9" start="9" length="1" />
+		<field name="TR10" fullname="Rising trigger event configuration bit of line 10" start="10" length="1" />
+		<field name="TR11" fullname="Rising trigger event configuration bit of line 11" start="11" length="1" />
+		<field name="TR12" fullname="Rising trigger event configuration bit of line 12" start="12" length="1" />
+		<field name="TR13" fullname="Rising trigger event configuration bit of line 13" start="13" length="1" />
+		<field name="TR14" fullname="Rising trigger event configuration bit of line 14" start="14" length="1" />
+		<field name="TR15" fullname="Rising trigger event configuration bit of line 15" start="15" length="1" />
+		<field name="TR16" fullname="Rising trigger event configuration bit of line 16" start="16" length="1" />
+		<field name="TR17" fullname="Rising trigger event configuration bit of line 17" start="17" length="1" />
+		<field name="TR18" fullname="Rising trigger event configuration bit of line 18" start="18" length="1" />
+		<field name="TR19" fullname="Rising trigger event configuration bit of line 19" start="19" length="1" />
+	</reg>
+	
+	<reg name="FTSR" fullname="Falling Trigger Selection Register" offset="0xc" as="int">
+		<field name="TR0" fullname="Falling trigger event configuration bit of line 0" start="0" length="1" />
+		<field name="TR1" fullname="Falling trigger event configuration bit of line 1" start="1" length="1" />
+		<field name="TR2" fullname="Falling trigger event configuration bit of line 2" start="2" length="1" />
+		<field name="TR3" fullname="Falling trigger event configuration bit of line 3" start="3" length="1" />
+		<field name="TR4" fullname="Falling trigger event configuration bit of line 4" start="4" length="1" />
+		<field name="TR5" fullname="Falling trigger event configuration bit of line 5" start="5" length="1" />
+		<field name="TR6" fullname="Falling trigger event configuration bit of line 6" start="6" length="1" />
+		<field name="TR7" fullname="Falling trigger event configuration bit of line 7" start="7" length="1" />
+		<field name="TR8" fullname="Falling trigger event configuration bit of line 8" start="8" length="1" />
+		<field name="TR9" fullname="Falling trigger event configuration bit of line 9" start="9" length="1" />
+		<field name="TR10" fullname="Falling trigger event configuration bit of line 10" start="10" length="1" />
+		<field name="TR11" fullname="Falling trigger event configuration bit of line 11" start="11" length="1" />
+		<field name="TR12" fullname="Falling trigger event configuration bit of line 12" start="12" length="1" />
+		<field name="TR13" fullname="Falling trigger event configuration bit of line 13" start="13" length="1" />
+		<field name="TR14" fullname="Falling trigger event configuration bit of line 14" start="14" length="1" />
+		<field name="TR15" fullname="Falling trigger event configuration bit of line 15" start="15" length="1" />
+		<field name="TR16" fullname="Falling trigger event configuration bit of line 16" start="16" length="1" />
+		<field name="TR17" fullname="Falling trigger event configuration bit of line 17" start="17" length="1" />
+		<field name="TR18" fullname="Falling trigger event configuration bit of line 18" start="18" length="1" />
+		<field name="TR19" fullname="Falling trigger event configuration bit of line 19" start="19" length="1" />
+	</reg>
+	
+	<reg name="SWIER" fullname="Software Interrupt Event Register" offset="0x10" as="int">
+		<field name="SWIER0" fullname="Software interrupt on line 0" start="0" length="1" />
+		<field name="SWIER1" fullname="Software interrupt on line 1" start="1" length="1" />
+		<field name="SWIER2" fullname="Software interrupt on line 2" start="2" length="1" />
+		<field name="SWIER3" fullname="Software interrupt on line 3" start="3" length="1" />
+		<field name="SWIER4" fullname="Software interrupt on line 4" start="4" length="1" />
+		<field name="SWIER5" fullname="Software interrupt on line 5" start="5" length="1" />
+		<field name="SWIER6" fullname="Software interrupt on line 6" start="6" length="1" />
+		<field name="SWIER7" fullname="Software interrupt on line 7" start="7" length="1" />
+		<field name="SWIER8" fullname="Software interrupt on line 8" start="8" length="1" />
+		<field name="SWIER9" fullname="Software interrupt on line 9" start="9" length="1" />
+		<field name="SWIER10" fullname="Software interrupt on line 10" start="10" length="1" />
+		<field name="SWIER11" fullname="Software interrupt on line 11" start="11" length="1" />
+		<field name="SWIER12" fullname="Software interrupt on line 12" start="12" length="1" />
+		<field name="SWIER13" fullname="Software interrupt on line 13" start="13" length="1" />
+		<field name="SWIER14" fullname="Software interrupt on line 14" start="14" length="1" />
+		<field name="SWIER15" fullname="Software interrupt on line 15" start="15" length="1" />
+		<field name="SWIER16" fullname="Software interrupt on line 16" start="16" length="1" />
+		<field name="SWIER17" fullname="Software interrupt on line 17" start="17" length="1" />
+		<field name="SWIER18" fullname="Software interrupt on line 18" start="18" length="1" />
+		<field name="SWIER19" fullname="Software interrupt on line 19" start="19" length="1" />
+	</reg>
+	<reg name="PR" fullname="Pending Register" offset="0x14" as="int">
+		<field name="PR0" fullname="Pending bit 0" start="0" length="1" />
+		<field name="PR1" fullname="Pending bit 1" start="1" length="1" />
+		<field name="PR2" fullname="Pending bit 2" start="2" length="1" />
+		<field name="PR3" fullname="Pending bit 3" start="3" length="1" />
+		<field name="PR4" fullname="Pending bit 4" start="4" length="1" />
+		<field name="PR5" fullname="Pending bit 5" start="5" length="1" />
+		<field name="PR6" fullname="Pending bit 6" start="6" length="1" />
+		<field name="PR7" fullname="Pending bit 7" start="7" length="1" />
+		<field name="PR8" fullname="Pending bit 8" start="8" length="1" />
+		<field name="PR9" fullname="Pending bit 9" start="9" length="1" />
+		<field name="PR10" fullname="Pending bit 10" start="10" length="1" />
+		<field name="PR11" fullname="Pending bit 11" start="11" length="1" />
+		<field name="PR12" fullname="Pending bit 12" start="12" length="1" />
+		<field name="PR13" fullname="Pending bit 13" start="13" length="1" />
+		<field name="PR14" fullname="Pending bit 14" start="14" length="1" />
+		<field name="PR15" fullname="Pending bit 15" start="15" length="1" />
+		<field name="PR16" fullname="Pending bit 16" start="16" length="1" />
+		<field name="PR17" fullname="Pending bit 17" start="17" length="1" />
+		<field name="PR18" fullname="Pending bit 18" start="18" length="1" />
+		<field name="PR19" fullname="Pending bit 19" start="19" length="1" />
+	</reg>	
+</peripheral>
+
+<peripheral name="dac">
+    <reg name="DAC_CR" fullname="DAC Control Register" offset="0x0" as="int">
+    	<field name="EN1" fullname="DAC channel1 enable" start="0" length="1" />
+    	<field name="BOFF1" fullname="DAC channel1 output buffer disable" start="1" length="1" />
+    	<field name="TEN1" fullname="DAC channel1 trigger enable" start="2" length="1" />
+    	<field name="TSEL1[2:0]" fullname="DAC channel1 trigger selection" start="3" length="3" />
+    	<field name="WAVE1[1:0]" fullname="DAC channel1 noise/triangle wave generation enable" start="6" length="2" />
+    	<field name="MAMP1[3:0]" fullname="DAC channel1 mask/amplitude selector" start="8" length="4" />
+    	<field name="DMAEN1" fullname="DAC channel1DMA enable" start="12" length="1" />
+    	<field name="EN2" fullname="DAC channel2 enable" start="16" length="1" />
+    	<field name="BOFF2" fullname="DAC channel2 output buffer disable" start="17" length="1" />
+    	<field name="TEN2" fullname="DAC channel2 trigger enable" start="18" length="1" />
+    	<field name="TSEL2[2:0]" fullname="DAC channel2 trigger selection" start="19" length="3" />
+    	<field name="WAVE2[1:0]" fullname="DAC channel2 noise/triangle wave generation enable" start="22" length="2" />
+    	<field name="MAMP2[3:0]" fullname="DAC channel2 mask/amplitude selector" start="24" length="4" />
+    	<field name="DMAEN2" fullname="DAC channel2 DMA enable" start="28" length="1" />
+    </reg>
+    <reg name="DAC_SWTRIGR" fullname="Software Trigger Register" offset="0x4" as="int">
+    	<field name="SWTRIG2" fullname="DAC channel2 software trigger" start="1" />
+    	<field name="SWTRIG1" fullname="DAC channel1 software trigger" start="0" />
+    </reg>
+    
+    <reg name="DAC_DHR12R1" fullname="Ch1 12-bit Right-Aligned Holding Register" offset="0x8" as="short">
+    	<field name="DACC1DHR[11:0]" fullname="DAC channel1 12-bit right-aligned data" start="0" length="12" />
+    </reg>
+    <reg name="DAC_DHR12L1" fullname="Ch1 12-bit Left-Aligned Holding Register" offset="0xc" as="short">
+    	<field name="DACC1DHR[11:0]" fullname="DAC channel1 12-bit right-aligned data" start="4" length="12" />
+	</reg>
+    <reg name="DAC_DHR8R1" fullname="Ch1 8-bit  Right-Aligned Holding Register" offset="0x10" as="int">
+    	<field name="DACC1DHR[7:0]" fullname="DAC channel1 12-bit right-aligned data" start="0" length="8" />    
+    </reg>
+    
+    <reg name="DAC_DHR12R2" fullname="Ch2 12-bit Right-Aligned Holding Register" offset="0x14" as="int" >
+    	<field name="DACC1DHR[11:0]" fullname="DAC channel2 12-bit right-aligned data" start="0" length="12" />
+	</reg>
+    <reg name="DAC_DHR12L2" fullname="Ch2 12-bit Left-Aligned Holding Register" offset="0x18" as="int">
+        	<field name="DACC1DHR[11:0]" fullname="DAC channel2 12-bit right-aligned data" start="4" length="12" />
+    </reg>
+    <reg name="DAC_DHR8R2" fullname="Ch2 8-bit  Right-Aligned Holding Register" offset="0x1c" as="int">
+    	<field name="DACC1DHR[7:0]" fullname="DAC channel2 12-bit right-aligned data" start="0" length="8" />    
+    </reg>
+
+    <reg name="DAC_DHR12RD" fullname="Dual 12-bit Right-Aligned Holding Register" offset="0x20" as="int">
+        	<field name="DACC2DHR[11:0]" fullname="DAC channel2 12-bit right-aligned data" start="16" length="12" />
+        	<field name="DACC1DHR[11:0]" fullname="DAC channel1 12-bit right-aligned data" start="0" length="12" />
+    </reg>
+    
+    <reg name="DAC_DHR12LD" fullname="Dual 12-bit Left-Aligned Holding Register" offset="0x24" as="int">
+    	<field name="DACC2DHR[11:0]" fullname="DAC channel2 12-bit right-aligned data" start="20" length="12" />
+        <field name="DACC1DHR[11:0]" fullname="DAC channel1 12-bit right-aligned data" start="4" length="12" />
+    </reg>
+
+    <reg name="DAC_DHR8RD" fullname="Dual 8-bit  Right-Aligned Holding Register" offset="0x28" as="int">
+    	<field name="DACC2DHR[7:0]" fullname="DAC channel2 12-bit right-aligned data" start="8" length="8" />
+        <field name="DACC1DHR[7:0]" fullname="DAC channel1 12-bit right-aligned data" start="0" length="8" />
+    </reg>
+
+    <reg name="DAC_DOR1" fullname="Ch1 Data Output Register" offset="0x2C" as="int">
+        	<field name="DACC1DOR[11:0]" fullname="DAC channe11 data output register" start="0" length="12" />
+    </reg>
+    <reg name="DAC_DOR2" fullname="Ch2 Data Output Register" offset="0x30" as="int">
+    	<field name="DACC1DOR[11:0]" fullname="DAC channe11 data output register" start="0" length="12" />
+    </reg>
+
+</peripheral>
+
+<peripheral name="dma">
+    <reg name="ISR" fullname="Interrupt Status Register" offset="0x0" as="int">
+    	<field name="TEIF7" fullname="Channel 7 Transfer Error Flag" start="27" />
+    	<field name="HTIF7" fullname="Channel 7 Half Transfer Flag" start="26" />
+    	<field name="TCIF7" fullname="Channel 7 Transfer Complete Flag" start="25" />
+    	<field name="GIF7" fullname="Channel 7 Global Interrupt Flag" start="24" />
+
+    	<field name="TEIF6" fullname="Channel 6 Transfer Error Flag" start="23" />
+    	<field name="HTIF6" fullname="Channel 6 Half Transfer Flag" start="22" />
+    	<field name="TCIF6" fullname="Channel 6 Transfer Complete Flag" start="21" />
+    	<field name="GIF6" fullname="Channel 6 Global Interrupt Flag" start="20" />
+
+    	<field name="TEIF5" fullname="Channel 5 Transfer Error Flag" start="19" />
+    	<field name="HTIF5" fullname="Channel 5 Half Transfer Flag" start="18" />
+    	<field name="TCIF5" fullname="Channel 5 Transfer Complete Flag" start="17" />
+    	<field name="GIF5" fullname="Channel 5 Global Interrupt Flag" start="16" />
+
+    	<field name="TEIF4" fullname="Channel 4 Transfer Error Flag" start="15" />
+    	<field name="HTIF4" fullname="Channel 4 Half Transfer Flag" start="14" />
+    	<field name="TCIF4" fullname="Channel 4 Transfer Complete Flag" start="13" />
+    	<field name="GIF4" fullname="Channel 4 Global Interrupt Flag" start="12" />
+
+    	<field name="TEIF3" fullname="Channel 3 Transfer Error Flag" start="11" />
+    	<field name="HTIF3" fullname="Channel 3 Half Transfer Flag" start="10" />
+    	<field name="TCIF3" fullname="Channel 3 Transfer Complete Flag" start="9" />
+    	<field name="GIF3" fullname="Channel 3 Global Interrupt Flag" start="8" />
+
+    	<field name="TEIF2" fullname="Channel 2 Transfer Error Flag" start="7" />
+    	<field name="HTIF2" fullname="Channel 2 Half Transfer Flag" start="6" />
+    	<field name="TCIF2" fullname="Channel 2 Transfer Complete Flag" start="5" />
+    	<field name="GIF2" fullname="Channel 2 Global Interrupt Flag" start="4" />
+
+    	<field name="TEIF1" fullname="Channel 1 Transfer Error Flag" start="3" />
+    	<field name="HTIF1" fullname="Channel 1 Half Transfer Flag" start="2" />
+    	<field name="TCIF1" fullname="Channel 1 Transfer Complete Flag" start="1" />
+    	<field name="GIF1" fullname="Channel 1 Global Interrupt Flag" start="0" />    
+    </reg>
+    
+    <reg name="IFCR" fullname="Interrupt Flag Clear Register" offset="0x4" as="int" />
+
+	<reg name="CCR1" fullname="Channel 1 configuration register" offset="0x8" as="int">
+		<field name="MEM2MEM" fullname="Memory to memory mode" start="14" />
+		<field name="PL[1:0]" fullname="Channel priority level" start="12" length="2" />
+		<field name="MSIZE[1:0]" fullname="Memory size" start="10" length="2" />
+		<field name="PSIZE[1:0]" fullname="Peripheral size" start="8" length="2" />
+		<field name="MINC" fullname="Memory increment mode" start="7" />
+		<field name="PINC" fullname="Peripheral increment Mode" start="6" />
+		<field name="CIRC" fullname="Circular mode" start="5" />
+		<field name="DIR" fullname="Data transfer direction" start="4" />
+		<field name="TEIE" fullname="Transfer error interrupt enable" start="3" />
+		<field name="HTIE" fullname="Half transfer interrupt enable" start="2" />
+		<field name="TCIE" fullname="Transfer complete interrupt enable" start="1" />
+		<field name="EN" fullname="Channel Enable" start="0" />
+	</reg>
+	<reg name="NDT1" fullname="Channel 1 number of data register" offset="0xc" as="int">
+		<field name="NDT[15:0]" fullname="Number of data to transfer" start="0" length="16" />
+	</reg>
+	<reg name="CPAR1" fullname="Channel 1 peripheral data address" offset="0x10" as="int">
+		<field name="PA[31:0]" fullname="Peripheral address" start="0" length="32" />
+	</reg>
+	<reg name="CMAR1" fullname="Channel 1 MEMORY data address" offset="0x14" as="int">
+		<field name="MA[31:0]" fullname="Memory address" start="0" length="32" />
+	</reg>
+
+	<reg name="CCR2" fullname="Channel 2 configuration register" offset="0x1c" as="int">
+		<field name="MEM2MEM" fullname="Memory to memory mode" start="14" />
+		<field name="PL[1:0]" fullname="Channel priority level" start="12" length="2" />
+		<field name="MSIZE[1:0]" fullname="Memory size" start="10" length="2" />
+		<field name="PSIZE[1:0]" fullname="Peripheral size" start="8" length="2" />
+		<field name="MINC" fullname="Memory increment mode" start="7" />
+		<field name="PINC" fullname="Peripheral increment Mode" start="6" />
+		<field name="CIRC" fullname="Circular mode" start="5" />
+		<field name="DIR" fullname="Data transfer direction" start="4" />
+		<field name="TEIE" fullname="Transfer error interrupt enable" start="3" />
+		<field name="HTIE" fullname="Half transfer interrupt enable" start="2" />
+		<field name="TCIE" fullname="Transfer complete interrupt enable" start="1" />
+		<field name="EN" fullname="Channel Enable" start="0" />
+	</reg>
+	<reg name="NDT2" fullname="Channel 2 number of data register" offset="0x20" as="int">
+		<field name="NDT[15:0]" fullname="Number of data to transfer" start="0" length="16" />
+	</reg>
+	<reg name="CPAR2" fullname="Channel 2 peripheral data address" offset="0x24" as="int">
+		<field name="PA[31:0]" fullname="Peripheral address" start="0" length="32" />
+	</reg>
+	<reg name="CMAR2" fullname="Channel 2 MEMORY data address" offset="0x28" as="int">
+		<field name="MA[31:0]" fullname="Memory address" start="0" length="32" />
+	</reg>
+
+	<reg name="CCR3" fullname="Channel 3 configuration register" offset="0x30" as="int">
+		<field name="MEM2MEM" fullname="Memory to memory mode" start="14" />
+		<field name="PL[1:0]" fullname="Channel priority level" start="12" length="2" />
+		<field name="MSIZE[1:0]" fullname="Memory size" start="10" length="2" />
+		<field name="PSIZE[1:0]" fullname="Peripheral size" start="8" length="2" />
+		<field name="MINC" fullname="Memory increment mode" start="7" />
+		<field name="PINC" fullname="Peripheral increment Mode" start="6" />
+		<field name="CIRC" fullname="Circular mode" start="5" />
+		<field name="DIR" fullname="Data transfer direction" start="4" />
+		<field name="TEIE" fullname="Transfer error interrupt enable" start="3" />
+		<field name="HTIE" fullname="Half transfer interrupt enable" start="2" />
+		<field name="TCIE" fullname="Transfer complete interrupt enable" start="1" />
+		<field name="EN" fullname="Channel Enable" start="0" />
+	</reg>
+	<reg name="NDT3" fullname="Channel 3 number of data register" offset="0x34" as="int">
+		<field name="NDT[15:0]" fullname="Number of data to transfer" start="0" length="16" />
+	</reg>
+	<reg name="CPAR3" fullname="Channel 3 peripheral data address" offset="0x38" as="int">
+		<field name="PA[31:0]" fullname="Peripheral address" start="0" length="32" />
+	</reg>
+	<reg name="CMAR3" fullname="Channel 3 MEMORY data address" offset="0x3c" as="int">
+		<field name="MA[31:0]" fullname="Memory address" start="0" length="32" />
+	</reg>
+
+	<reg name="CCR4" fullname="Channel 4 configuration register" offset="0x44" as="int">
+		<field name="MEM2MEM" fullname="Memory to memory mode" start="14" />
+		<field name="PL[1:0]" fullname="Channel priority level" start="12" length="2" />
+		<field name="MSIZE[1:0]" fullname="Memory size" start="10" length="2" />
+		<field name="PSIZE[1:0]" fullname="Peripheral size" start="8" length="2" />
+		<field name="MINC" fullname="Memory increment mode" start="7" />
+		<field name="PINC" fullname="Peripheral increment Mode" start="6" />
+		<field name="CIRC" fullname="Circular mode" start="5" />
+		<field name="DIR" fullname="Data transfer direction" start="4" />
+		<field name="TEIE" fullname="Transfer error interrupt enable" start="3" />
+		<field name="HTIE" fullname="Half transfer interrupt enable" start="2" />
+		<field name="TCIE" fullname="Transfer complete interrupt enable" start="1" />
+		<field name="EN" fullname="Channel Enable" start="0" />
+	</reg>
+	<reg name="NDT4" fullname="Channel 4 number of data register" offset="0x48" as="int">
+		<field name="NDT[15:0]" fullname="Number of data to transfer" start="0" length="16" />
+	</reg>
+	<reg name="CPAR4" fullname="Channel 4 peripheral data address" offset="0x4c" as="int">
+		<field name="PA[31:0]" fullname="Peripheral address" start="0" length="32" />
+	</reg>
+	<reg name="CMAR4" fullname="Channel 4 MEMORY data address" offset="0x50" as="int">
+		<field name="MA[31:0]" fullname="Memory address" start="0" length="32" />
+	</reg>
+
+	<reg name="CCR5" fullname="Channel 5 configuration register" offset="0x58" as="int">
+		<field name="MEM2MEM" fullname="Memory to memory mode" start="14" />
+		<field name="PL[1:0]" fullname="Channel priority level" start="12" length="2" />
+		<field name="MSIZE[1:0]" fullname="Memory size" start="10" length="2" />
+		<field name="PSIZE[1:0]" fullname="Peripheral size" start="8" length="2" />
+		<field name="MINC" fullname="Memory increment mode" start="7" />
+		<field name="PINC" fullname="Peripheral increment Mode" start="6" />
+		<field name="CIRC" fullname="Circular mode" start="5" />
+		<field name="DIR" fullname="Data transfer direction" start="4" />
+		<field name="TEIE" fullname="Transfer error interrupt enable" start="3" />
+		<field name="HTIE" fullname="Half transfer interrupt enable" start="2" />
+		<field name="TCIE" fullname="Transfer complete interrupt enable" start="1" />
+		<field name="EN" fullname="Channel Enable" start="0" />
+	</reg>
+	<reg name="NDT5" fullname="Channel 5 number of data register" offset="0x5c" as="int">
+		<field name="NDT[15:0]" fullname="Number of data to transfer" start="0" length="16" />
+	</reg>
+	<reg name="CPAR5" fullname="Channel 5 peripheral data address" offset="0x60" as="int">
+		<field name="PA[31:0]" fullname="Peripheral address" start="0" length="32" />
+	</reg>
+	<reg name="CMAR5" fullname="Channel 5 MEMORY data address" offset="0x64" as="int">
+		<field name="MA[31:0]" fullname="Memory address" start="0" length="32" />
+	</reg>
+
+	<reg name="CCR6" fullname="Channel 6 configuration register" offset="0x6c" as="int">
+		<field name="MEM2MEM" fullname="Memory to memory mode" start="14" />
+		<field name="PL[1:0]" fullname="Channel priority level" start="12" length="2" />
+		<field name="MSIZE[1:0]" fullname="Memory size" start="10" length="2" />
+		<field name="PSIZE[1:0]" fullname="Peripheral size" start="8" length="2" />
+		<field name="MINC" fullname="Memory increment mode" start="7" />
+		<field name="PINC" fullname="Peripheral increment Mode" start="6" />
+		<field name="CIRC" fullname="Circular mode" start="5" />
+		<field name="DIR" fullname="Data transfer direction" start="4" />
+		<field name="TEIE" fullname="Transfer error interrupt enable" start="3" />
+		<field name="HTIE" fullname="Half transfer interrupt enable" start="2" />
+		<field name="TCIE" fullname="Transfer complete interrupt enable" start="1" />
+		<field name="EN" fullname="Channel Enable" start="0" />
+	</reg>
+	<reg name="NDT6" fullname="Channel 6 number of data register" offset="0x70" as="int">
+		<field name="NDT[15:0]" fullname="Number of data to transfer" start="0" length="16" />
+	</reg>
+	<reg name="CPAR6" fullname="Channel 6 peripheral data address" offset="0x74" as="int">
+		<field name="PA[31:0]" fullname="Peripheral address" start="0" length="32" />
+	</reg>
+	<reg name="CMAR6" fullname="Channel 6 MEMORY data address" offset="0x78" as="int">
+		<field name="MA[31:0]" fullname="Memory address" start="0" length="32" />
+	</reg>
+
+	<reg name="CCR7" fullname="Channel 7 configuration register" offset="0x80" as="int">
+		<field name="MEM2MEM" fullname="Memory to memory mode" start="14" />
+		<field name="PL[1:0]" fullname="Channel priority level" start="12" length="2" />
+		<field name="MSIZE[1:0]" fullname="Memory size" start="10" length="2" />
+		<field name="PSIZE[1:0]" fullname="Peripheral size" start="8" length="2" />
+		<field name="MINC" fullname="Memory increment mode" start="7" />
+		<field name="PINC" fullname="Peripheral increment Mode" start="6" />
+		<field name="CIRC" fullname="Circular mode" start="5" />
+		<field name="DIR" fullname="Data transfer direction" start="4" />
+		<field name="TEIE" fullname="Transfer error interrupt enable" start="3" />
+		<field name="HTIE" fullname="Half transfer interrupt enable" start="2" />
+		<field name="TCIE" fullname="Transfer complete interrupt enable" start="1" />
+		<field name="EN" fullname="Channel Enable" start="0" />
+	</reg>
+	<reg name="NDT7" fullname="Channel 7 number of data register" offset="0x84" as="int">
+		<field name="NDT[15:0]" fullname="Number of data to transfer" start="0" length="16" />
+	</reg>
+	<reg name="CPAR7" fullname="Channel 7 peripheral data address" offset="0x88" as="int">
+		<field name="PA[31:0]" fullname="Peripheral address" start="0" length="32" />
+	</reg>
+	<reg name="CMAR7" fullname="Channel 7 MEMORY data address" offset="0x8c" as="int">
+		<field name="MA[31:0]" fullname="Memory address" start="0" length="32" />
+	</reg>
+
+
+	
+</peripheral>
+
+<peripheral name="usb">
+	<reg name="CNTR" fullname="Control Register" offset="0x40" as="short">
+		<field name="CTRM" fullname="Correct transfer interrupt mask" start="15" length="1" />
+		<field name="PMAOVRM" fullname="Packet memory area over/underrun interrupt mask" start="14" length="1" />
+		<field name="ERRM" fullname="Error interrupt mask" start="13" length="1" />
+		<field name="WKUPM" fullname="Wakeup interrupt mask" start="12" length="1" />
+		<field name="SUSPM" fullname="Suspend mode interrupt mask" start="11" length="1" />
+		<field name="RESETM" fullname="USB reset interrupt mask" start="10" length="1" />
+		<field name="SOFM" fullname="Start of frame interrupt mask" start="9" length="1" />
+		<field name="ESOFM" fullname="Expected start of frame interrupt mask" start="8" length="1" />
+		<field name="RESUME" fullname="Resume request" start="4" length="1" />
+		<field name="FSUSP" fullname="Force suspend" start="3" length="1" />
+		<field name="LP_MODE" fullname="Low-power mode" start="2" length="1" />
+		<field name="PWDN" fullname="Power down" start="1" length="1" />
+		<field name="FRES" fullname="Force USB reset" start="0" length="1" />
+	</reg>
+	
+	<reg name="ISTR" fullname="Interrupt Status Register" offset="0x44" as="short" >
+		<field name="CTR" fullname="Correct transfer " start="15" length="1" />
+		<field name="PMAOVR" fullname="Packet memory area over/underrun " start="14" length="1" />
+		<field name="ERR" fullname="Error " start="13" length="1" />
+		<field name="WKUP" fullname="Wakeup " start="12" length="1" />
+		<field name="SUSP" fullname="Suspend mode " start="11" length="1" />
+		<field name="RESET" fullname="USB reset " start="10" length="1" />
+		<field name="SOF" fullname="Start of frame " start="9" length="1" />
+		<field name="ESOF" fullname="Expected start of frame " start="8" length="1" />
+		<field name="DIR" fullname="Direction of transaction" start="4" length="1" />
+		<field name="EP_ID[3:0]" fullname="Endpoint identifier" start="0" length="4" />
+	</reg>
+	
+	<reg name="FNR" fullname="Frame number register" offset="0x48" as="short">
+		<field name="RXDP" fullname="Receive data + line status" start="15" length="1" />
+		<field name="RXDM" fullname="Receive data + line status" start="14" length="1" />
+		<field name="LCK" fullname="Locked" start="13" length="1" />
+		<field name="LSOF[1:0]" fullname="Lost SOF" start="11" length="2" />
+		<field name="FN[10:0]" fullname="Frame number" start="0" length="11" />
+	</reg>
+	
+	<reg name="DADDR" fullname="Device Address " offset="0x4c" as="short">
+		<field name="EF" fullname="Enable function" start="7" length="1" />
+		<field name="ADD[6:0]" fullname="Device address" start="0" length="7" />
+	</reg>
+		
+	<reg name="BTABLE" fullname="Buffer Table Address" offset="0x50" as="short">
+		<field name="BTABLE[15:3]" fullname="Buffer table" start="3" length="12" />
+	</reg>
+	
+	<reg name="EP0R" fullname="Endpoint 0 Register" offset="0x00" as="short">
+		<field name="CTR_RX" fullname="Correct transfer for reception" start="15" length="1" />
+		<field name="DTOG_RX" fullname="Data toggle, for reception transfers" start="14" length="1" />
+		<field name="STAT_RX[1:0]" fullname="Status bits, for reception transfers" start="12" length="2" />
+		<field name="SETUP" fullname="Setup transaction completed" start="11" length="1" />
+		<field name="EP_TYPE[1:0]" fullname="Endpoint type" start="9" length="2" />
+		<field name="EP_KIND" fullname="Endpoint kind" start="8" length="1" />
+		<field name="CTR_TX" fullname="Correct transfer for transmission" start="7" length="1" />
+		<field name="DTOG_TX" fullname="Data toggle, for transmission transfers" start="6" length="1" />
+		<field name="STAT_TX[1:0]" fullname="Status bits, for transmission transfers" start="4" length="2" />
+		<field name="EA[3:0]" fullname="Endpoint address" start="0" length="4" />
+	</reg>
+		
+	<reg name="EP1R" fullname="Endpoint 1 Register" offset="0x04" as="short">
+		<field name="CTR_RX" fullname="Correct transfer for reception" start="15" length="1" />
+		<field name="DTOG_RX" fullname="Data toggle, for reception transfers" start="14" length="1" />
+		<field name="STAT_RX[1:0]" fullname="Status bits, for reception transfers" start="12" length="2" />
+		<field name="SETUP" fullname="Setup transaction completed" start="11" length="1" />
+		<field name="EP_TYPE[1:0]" fullname="Endpoint type" start="9" length="2" />
+		<field name="EP_KIND" fullname="Endpoint kind" start="8" length="1" />
+		<field name="CTR_TX" fullname="Correct transfer for transmission" start="7" length="1" />
+		<field name="DTOG_TX" fullname="Data toggle, for transmission transfers" start="6" length="1" />
+		<field name="STAT_TX[1:0]" fullname="Status bits, for transmission transfers" start="4" length="2" />
+		<field name="EA[3:0]" fullname="Endpoint address" start="0" length="4" />
+	</reg>
+	<reg name="EP2R" fullname="Endpoint 2 Register" offset="0x08" as="short">
+		<field name="CTR_RX" fullname="Correct transfer for reception" start="15" length="1" />
+		<field name="DTOG_RX" fullname="Data toggle, for reception transfers" start="14" length="1" />
+		<field name="STAT_RX[1:0]" fullname="Status bits, for reception transfers" start="12" length="2" />
+		<field name="SETUP" fullname="Setup transaction completed" start="11" length="1" />
+		<field name="EP_TYPE[1:0]" fullname="Endpoint type" start="9" length="2" />
+		<field name="EP_KIND" fullname="Endpoint kind" start="8" length="1" />
+		<field name="CTR_TX" fullname="Correct transfer for transmission" start="7" length="1" />
+		<field name="DTOG_TX" fullname="Data toggle, for transmission transfers" start="6" length="1" />
+		<field name="STAT_TX[1:0]" fullname="Status bits, for transmission transfers" start="4" length="2" />
+		<field name="EA[3:0]" fullname="Endpoint address" start="0" length="4" />
+	</reg>
+	<reg name="EP3R" fullname="Endpoint 3 Register" offset="0x0c" as="short">
+		<field name="CTR_RX" fullname="Correct transfer for reception" start="15" length="1" />
+		<field name="DTOG_RX" fullname="Data toggle, for reception transfers" start="14" length="1" />
+		<field name="STAT_RX[1:0]" fullname="Status bits, for reception transfers" start="12" length="2" />
+		<field name="SETUP" fullname="Setup transaction completed" start="11" length="1" />
+		<field name="EP_TYPE[1:0]" fullname="Endpoint type" start="9" length="2" />
+		<field name="EP_KIND" fullname="Endpoint kind" start="8" length="1" />
+		<field name="CTR_TX" fullname="Correct transfer for transmission" start="7" length="1" />
+		<field name="DTOG_TX" fullname="Data toggle, for transmission transfers" start="6" length="1" />
+		<field name="STAT_TX[1:0]" fullname="Status bits, for transmission transfers" start="4" length="2" />
+		<field name="EA[3:0]" fullname="Endpoint address" start="0" length="4" />
+	</reg>
+	<reg name="EP4R" fullname="Endpoint 4 Register" offset="0x10" as="short">
+		<field name="CTR_RX" fullname="Correct transfer for reception" start="15" length="1" />
+		<field name="DTOG_RX" fullname="Data toggle, for reception transfers" start="14" length="1" />
+		<field name="STAT_RX[1:0]" fullname="Status bits, for reception transfers" start="12" length="2" />
+		<field name="SETUP" fullname="Setup transaction completed" start="11" length="1" />
+		<field name="EP_TYPE[1:0]" fullname="Endpoint type" start="9" length="2" />
+		<field name="EP_KIND" fullname="Endpoint kind" start="8" length="1" />
+		<field name="CTR_TX" fullname="Correct transfer for transmission" start="7" length="1" />
+		<field name="DTOG_TX" fullname="Data toggle, for transmission transfers" start="6" length="1" />
+		<field name="STAT_TX[1:0]" fullname="Status bits, for transmission transfers" start="4" length="2" />
+		<field name="EA[3:0]" fullname="Endpoint address" start="0" length="4" />
+	</reg>
+	<reg name="EP5R" fullname="Endpoint 5 Register" offset="0x14" as="short">
+		<field name="CTR_RX" fullname="Correct transfer for reception" start="15" length="1" />
+		<field name="DTOG_RX" fullname="Data toggle, for reception transfers" start="14" length="1" />
+		<field name="STAT_RX[1:0]" fullname="Status bits, for reception transfers" start="12" length="2" />
+		<field name="SETUP" fullname="Setup transaction completed" start="11" length="1" />
+		<field name="EP_TYPE[1:0]" fullname="Endpoint type" start="9" length="2" />
+		<field name="EP_KIND" fullname="Endpoint kind" start="8" length="1" />
+		<field name="CTR_TX" fullname="Correct transfer for transmission" start="7" length="1" />
+		<field name="DTOG_TX" fullname="Data toggle, for transmission transfers" start="6" length="1" />
+		<field name="STAT_TX[1:0]" fullname="Status bits, for transmission transfers" start="4" length="2" />
+		<field name="EA[3:0]" fullname="Endpoint address" start="0" length="4" />
+	</reg>
+	<reg name="EP6R" fullname="Endpoint 6 Register" offset="0x18" as="short">
+		<field name="CTR_RX" fullname="Correct transfer for reception" start="15" length="1" />
+		<field name="DTOG_RX" fullname="Data toggle, for reception transfers" start="14" length="1" />
+		<field name="STAT_RX[1:0]" fullname="Status bits, for reception transfers" start="12" length="2" />
+		<field name="SETUP" fullname="Setup transaction completed" start="11" length="1" />
+		<field name="EP_TYPE[1:0]" fullname="Endpoint type" start="9" length="2" />
+		<field name="EP_KIND" fullname="Endpoint kind" start="8" length="1" />
+		<field name="CTR_TX" fullname="Correct transfer for transmission" start="7" length="1" />
+		<field name="DTOG_TX" fullname="Data toggle, for transmission transfers" start="6" length="1" />
+		<field name="STAT_TX[1:0]" fullname="Status bits, for transmission transfers" start="4" length="2" />
+		<field name="EA[3:0]" fullname="Endpoint address" start="0" length="4" />
+	</reg>
+	<reg name="EP7R" fullname="Endpoint 7 Register" offset="0x1c" as="short">
+		<field name="CTR_RX" fullname="Correct transfer for reception" start="15" length="1" />
+		<field name="DTOG_RX" fullname="Data toggle, for reception transfers" start="14" length="1" />
+		<field name="STAT_RX[1:0]" fullname="Status bits, for reception transfers" start="12" length="2" />
+		<field name="SETUP" fullname="Setup transaction completed" start="11" length="1" />
+		<field name="EP_TYPE[1:0]" fullname="Endpoint type" start="9" length="2" />
+		<field name="EP_KIND" fullname="Endpoint kind" start="8" length="1" />
+		<field name="CTR_TX" fullname="Correct transfer for transmission" start="7" length="1" />
+		<field name="DTOG_TX" fullname="Data toggle, for transmission transfers" start="6" length="1" />
+		<field name="STAT_TX[1:0]" fullname="Status bits, for transmission transfers" start="4" length="2" />
+		<field name="EA[3:0]" fullname="Endpoint address" start="0" length="4" />
+	</reg>	
+</peripheral>
+
+<peripheral name="scb">
+	<reg name="CPUID" fullname="CPU ID Base Register" offset="0" as="int">
+		<field name="Implementer" fullname="Implementer code" start="24" length="8" />
+		<field name="Variant" fullname="Variant number" start="20" length="4" />
+		<field name="Constant" fullname="Reads as 0xf" start="16" length="4" />
+		<field name="PartNo" fullname="Part number of the processor" start="4" length="12" />
+		<field name="Revision" fullname="Revision number" start="0" length="4" />
+	</reg>
+	
+	<reg name="VTOR" fullname="Vector table offset register" offset="0x8" as="int">
+		<field name="TBLOFF[29:9]" start="9" length="21" />
+	</reg>
 </peripheral>
 
 <target name="STM32F103">
@@ -202,9 +983,9 @@
 		<invoke peripheral="timer" name="TIM2" fullname="Timer 2" base="0x40000000" />	
 		<invoke peripheral="timer" name="TIM3" fullname="Timer 3" base="0x40000400" />	
 		<invoke peripheral="timer" name="TIM4" fullname="Timer 4" base="0x40000800" />	
-		<invoke peripheral="timer" name="TIM5" fullname="Timer 5" base="0x40000fff" />	
-		<invoke peripheral="timer" name="TIM6" fullname="Timer 6" base="0x400013ff" />	
-		<invoke peripheral="timer" name="TIM7" fullname="Timer 7" base="0x400017ff" />	
+		<invoke peripheral="timer" name="TIM5" fullname="Timer 5" base="0x40000c00" />	
+		<invoke peripheral="timer" name="TIM6" fullname="Timer 6" base="0x40001000" />	
+		<invoke peripheral="timer" name="TIM7" fullname="Timer 7" base="0x40001400" />	
 	</group>
 	<group fullname="Advanced Timers">
 		<invoke peripheral="advanced_timer" name="TIM1" fullname="Timer 1 (Advanced Timer)" base="0x40012c00" />
@@ -222,5 +1003,28 @@
     </group>
     <invoke peripheral="usb" name="USB" fullname="USB" base="0x40005c00" />
     <invoke peripheral="exti" name="EXTI" fullname="External Interrupt/Event Controller" base="0x40010400" />
+    
+    <group fullname="DMA">
+    	<invoke peripheral="dma" name="DMA1" fullname="DMA 1" base="0x40020000" />
+    	<invoke peripheral="dma" name="DMA2" fullname="DMA 2" base="0x40020400" />
+    </group>
+    
+    <group fullname="Core Peripherals">
+    	<invoke peripheral="nvic" name="NVIC" fullname="Nested Vectored Interrupt Controller" base="0xe000e100" />
+    	<invoke peripheral="scb" name="SCB" fullname="System Control Block" base="0xe000ed00" />
+    </group>
+   	
+   	<cpu_register name="cpsr" fullname="Current Program Status Register" as="int">
+   		<field name="N" fullname="Negative result from ALU flag" start="31" />
+   		<field name="Z" fullname="Zero result from ALU flag" start="30" />
+   		<field name="C" fullname="ALU operation carry out" start="29" />
+   		<field name="V" fullname="ALU operation overflow" start="28" />
+   		<field name="MODE" fullname="Processor mode" start="0" length="5" />
+   		<field name="I" fullname="IRQ Disable" start="7" />
+   		<field name="F" fullname="FIQ Disable" start="6" />
+   		<field name="T" fullname="Thumb state/ARM state flag" start="5" />
+   	</cpu_register>   		
+   	
+   	
 </target>
 </document>

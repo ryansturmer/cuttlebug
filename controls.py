@@ -331,6 +331,9 @@ class BitFieldCell(Cell):
         
         self.max_height = tc.GetSize()[1] if model else st.GetSize()[1] 
         self.set_child(p)
+        
+        if self.model and self.model.fullname and self.model.fullname != self.model.name:
+            self.SetToolTipString(self.model.fullname)
         self.update()
     
     def make_menu(self):
@@ -486,6 +489,8 @@ class BitFieldControl(wx.Panel):
             cell = BitFieldCell(self, None,label=field.name, sides=sides, bgcolor=wx.WHITE) 
             sizer.Add(cell, pos=(1, pos), span=(1, span), flag=wx.EXPAND)
             self.field_cells.append(cell)
+            if field.fullname and field.fullname != field.name:
+                cell.SetToolTipString(field.fullname)
 
             sides &= ~wx.TOP
             cell = BitFieldCell(self, field,sides=sides, bgcolor=wx.WHITE) 
@@ -548,6 +553,7 @@ class RegisterEditDialog(wx.Dialog):
         f.SetWeight(wx.FONTWEIGHT_BOLD)
         self.txt_value.SetFont(f)
         sizer.Add(self.txt_value, border=5, flag=wx.ALL)
+
         if self.fullname:
             txt_fullname = wx.StaticText(self, label=self.fullname)
             sizer.Add(txt_fullname, border=5, flag=wx.ALL)
@@ -584,8 +590,15 @@ class RegisterEditDialog(wx.Dialog):
         return dlg.ShowModal()
 
     def set_value(self):
-        fmt = "Value: 0x%%0%dx" % (self.model.width/4)
-        self.txt_value.SetLabel(fmt % self.model.value)
+        if hasattr(self.model, 'address'):
+            s = "Value: 0x%0*x (@ 0x%0*x)" % (self.model.width/4, self.model.value, 8, self.model.address)
+        else:
+            s = "Value: 0x%0*x" % (self.model.width/4, self.model.value)
+        self.txt_value.SetLabel(s)
+
+    def set_address(self):
+        fmt = "(0x%0*d)" % (8, self.model.address)
+        self.txt_address.SetLabel(fmt)
         
     def on_bitfield_changed(self, evt):
         for ctrl in self.ctrls:
@@ -611,6 +624,12 @@ if __name__ == "__main__":
     '''
     register = project.SpecialFunctionRegister("SMPR", "Sample Register", 0x1000, 4, 'rw')
     
+    register.add_field(project.Field(0, 3, "FA", "Field A"))
+    register.add_field(project.Field(3, 10, "FB", "Field B"))
+    register.add_field(project.Field(13, 1, "FC", "Field C"))
+    register.add_field(project.Field(14, 8, "FD", "Field D"))
+    
+    register = project.CPURegister("CPSR", "Current program status register", 4)
     register.add_field(project.Field(0, 3, "FA", "Field A"))
     register.add_field(project.Field(3, 10, "FB", "Field B"))
     register.add_field(project.Field(13, 1, "FC", "Field C"))

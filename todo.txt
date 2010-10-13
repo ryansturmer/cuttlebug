@@ -1,15 +1,9 @@
 GENERAL
- * GDB Wrapper that caches things like breakpoints, etc
  * Move to blocking GDB model with spinoff thread for commands (Rather than call-callback method)
- * Syntax colorization for Makefiles
  * Printing support
  * More obvious "halted in the weeds" notification
- * Proper killing of GDB process (no dangling connections)
  * Break on main
- * Jump to entry point after download
  * Handle col numbers in build errors
- * Fix background colors
- * SFR VIEW!!!
  * Add SVN number of the build to the status bar/about box?
  
  
@@ -17,7 +11,6 @@ LOGGER
  * right click menu for log tabs:
    - clear log
    - save log
- * fix newlines in log output
 
 GENERIC VIEW
  * Better way of handling AUIInfo
@@ -34,7 +27,7 @@ EDITOR VIEW
    - Save page/Save page as...
  * Check disk periodically for updated files and reload
  * Tooltips for file tabs
- 
+ *  
 PROJECT VIEW
  * right click menus
  *    Project - Project options, save, save as
@@ -46,7 +39,7 @@ PROJECT VIEW
  * Currently open files group
  * Star for modified project
  * Periodic refresh of file view
- 
+ * Create new file doesn't
 MAIN FRAME
  * Confirmation/error dialog (for program errors)
  

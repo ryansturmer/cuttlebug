@@ -2,7 +2,7 @@ import view
 import wx
 import wx.gizmos as gizmos
 from controls import DictListCtrl
-from util import ArtListMixin, has_icon, bidict, KeyTree
+from util import ArtListMixin, has_icon, bidict, KeyTree, str2int
 from functools import partial
 import gdb
 import os, threading
@@ -138,6 +138,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
             else:
                 wx.CallAfter(self.rebuild_stack)                
         evt.Skip()
+        
     def on_gdb_finished(self, evt):
         self.clear()
         self.model = None    
@@ -181,20 +182,33 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                 self.model.break_enable(bkpt)
         elif self.model and self.is_descendent(id, self.sfr_item):
             reg = self.get_item_data(id)
-            print reg
             if reg:
                 old_value = reg.value    
-                print "bout to show the dialog"
                 try:
                     response = controls.RegisterEditDialog.show(self, reg)
                 except Exception, e:
                     print e
-                print "done showing"
                 if response == wx.ID_OK:
                     self.model.data_evaluate_expression("%s=%s" % (reg.expression, reg.value), callback=partial(self.on_sfr_data, id,True))
                 else:
                     reg.value = old_value
+        elif self.model and self.is_descendent(id, self.registers_item):
+            name = self.get_item_data(id)
+            target_model = self.parent.controller.project.target
+            reg = target_model.find_by_name(name)
+            if not reg:
+                reg = project.CPURegister(name, name, 4)
+                reg.add_field(project.Field(0, 32, name))
+                
+            reg.value = str2int(self.register_registry[name])
+            response = controls.RegisterEditDialog.show(self, reg)
+            if response == wx.ID_OK:
+                self.model.data_evaluate_expression("%s=%s" % (reg.expression, reg.value),callback=self.on_register_data)
         evt.Skip()                 
+        
+    def on_register_data(self, evt):
+        self.model.update()
+        
     def on_begin_label_edit(self, evt):
         item = self.get_event_item(evt)
         name = self.get_item_data(item)
@@ -312,17 +326,18 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
             self.var_registry[name] = var_item
             self.lock.release()
             
+    def add_watch(self, s):
+        vn = self.get_var_name()
+        self.lock.acquire()
+        self.pending_var_additions[vn] = self.watch_item
+        self.lock.release()
+        self.model.var_create(s, floating=True, callback=self.__on_created_var, name=vn)
+
     def on_add_watch(self, evt):
         dlg = wx.TextEntryDialog(self, "Watch Variable", self.last_watch)
         if dlg.ShowModal() == wx.ID_OK:
             var = dlg.GetValue().strip()
-            #if ' ' in var:
-            #    return
-            vn = self.get_var_name()
-            self.lock.acquire()
-            self.pending_var_additions[vn] = self.watch_item
-            self.lock.release()
-            self.model.var_create(var, floating=True, callback=self.__on_created_var, name=vn)
+            self.add_watch(var)
             
     def on_remove_watch(self, evt):
         item = self.get_item_data(self.selected_item)
@@ -498,7 +513,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                     item = self.append_item(self.registers_item, key)
                     self.set_item_text(item, value, 1)
                     self.set_item_data(item, key)
-                    self.register_registry[key] = item
+                    self.register_registry[key] = value
             else:
                 for child in self.children(self.registers_item):
                     self.set_item_text_colour(child, wx.BLACK)
@@ -511,6 +526,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
     def build_sfr_tree(self):
         if not self.parent.controller.project:
             return
+        self.delete_children(self.sfr_item)
         target_model = self.parent.controller.project.target
         def walk(self, tree_item, item):
             if isinstance(item, project.Group):

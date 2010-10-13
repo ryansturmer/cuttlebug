@@ -106,7 +106,11 @@ class Controller(wx.EvtHandler):
             settings.session_set('project_filename', self.project.filename)
             settings.session_set('open_files', self.frame.editor_view.open_files)
             settings.session_set('project_view_state', self.frame.project_view.save_state())
-        settings.session_set('perspective', self.frame.manager.SavePerspective())
+        if self.frame.editor_maximized:
+            settings.session_set('perspective', self.frame.saved_perspective)
+        else:
+            settings.session_set('perspective', self.frame.manager.SavePerspective())
+            
         settings.save_session()
         
     def new_project(self, path):
@@ -140,6 +144,10 @@ class Controller(wx.EvtHandler):
     def goto(self, file, line):
         absolute_file = self.project.absolute_path(file)
         self.frame.editor_view.goto(absolute_file, line)
+
+    def show_error(self, file, line):
+        absolute_file = self.project.absolute_path(file)
+        self.frame.editor_view.show_error(absolute_file, line)
         
     def save_project(self):
         self.project.save()
@@ -331,6 +339,9 @@ class Controller(wx.EvtHandler):
         pass
         #self.frame.editor_view.update_breakpoints()                
         
+    def add_watch(self, s):
+        self.frame.runtime_view.add_watch(s)
+        
     def halt(self, callback=None, download=False):
         self.download_request = download
         self.gdb.exec_interrupt(callback)
@@ -360,9 +371,13 @@ class Controller(wx.EvtHandler):
         self.download_request = False
         if self.state == ATTACHED:
             wx.CallAfter(self.frame.start_busy, "Downloading to target...")
-            self.gdb.target_download(callback=self.on_downloaded)
+            if self.project.debug.pre_download_cmd:
+                self.gdb.command(self.project.debug.pre_download_cmd, callback=self.download_stage_2)
         else:
             print "Can't download from state %s" % self.state
+
+    def download_stage_2(self, result):
+        self.gdb.target_download(callback=self.on_downloaded)
 
     def on_downloaded(self, result):
         wx.CallAfter(self.frame.stop_busy)
@@ -392,12 +407,13 @@ class Controller(wx.EvtHandler):
             self.frame.error_msg(result.msg)
             self.frame.statusbar.working = False
             self.frame.statusbar.text = ""
+            self.change_state(IDLE)
         else:
             self.change_state(ATTACHED)
         
     # DETACH FROM TARGET
     def detach(self):
-        if self.gdb:
+        if self.gdb and self.gdb.attached:
             try:
                 self.gdb.quit()
             except:
@@ -416,7 +432,8 @@ class Controller(wx.EvtHandler):
             wx.CallAfter(self.frame.stop_busy)
 
     def on_gdb_finished(self, evt):
-        self.change_state(IDLE)
+        self.detach()
+#        self.change_state(IDLE)
     
     def on_gdb_error(self, evt):
         self.error_logger.log(logging.ERROR, evt.data)

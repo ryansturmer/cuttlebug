@@ -2,6 +2,8 @@ from controls import ListControl
 import view
 import wx
 import settings
+import gdb
+
 def tabify(s):
     TAB_STOP = 5
     retval = []
@@ -47,7 +49,12 @@ class DisassemblyView(view.View):
 
     def set_model(self, model):
         self.model = model
-
+        self.model.Bind(gdb.EVT_GDB_FINISHED, self.on_gdb_finished)
+    
+    def on_gdb_finished(self, evt):
+        self.clear()
+        evt.Skip()
+        
     def on_target_halted(self, a, b):
         self.save_positions()
         if self.model:
@@ -67,6 +74,9 @@ class DisassemblyView(view.View):
         if dat.cls == 'done':
             instructions = dat['asm_insns']
             wx.CallAfter(self.update_assembly, instructions)
+    
+    def clear(self):
+        self.list.clear()
             
 if __name__ == "__main__":
     print tabify('abc\tde\tf\tghijkl')

@@ -129,17 +129,22 @@ class EditorView(view.View):
     def set_model(self, model):
         self.model = model
         self.model.Bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, self.on_breakpoint_update)
-  
-    def __get_current_editor(self):
+        self.model.Bind(gdb.EVT_GDB_FINISHED, self.on_gdb_finished)
+        
+    def on_gdb_finished(self, evt):
+        self.remove_markers()
+        evt.Skip()
+        
+    @property
+    def current_editor(self):
         return self.notebook.get_window()
-    current_editor = property(__get_current_editor)
     
-    def __get_open_files(self):
+    @property
+    def open_files(self):
         retval = []
         for widget in self.notebook:
             retval.append(widget.file_path)
         return retval
-    open_files = property(__get_open_files)
     
     def on_target_halted(self, file, line):
         if file:
@@ -157,12 +162,19 @@ class EditorView(view.View):
             return
         widget.SetFocus()
         widget.GotoLine(line-1)
-
+        return widget
+    
+    def show_error(self, file, line):
+        widget = self.goto(file, line)
+        if widget:
+            widget.set_error_marker(line)
+            
     def close(self, filename=None):
         if not filename:
             self.notebook.close_tab()
         else:
             self.notebook.close_file(filename)
+            
     def cut(self):
         self.current_editor.Cut()
 
@@ -178,6 +190,9 @@ class EditorView(view.View):
     def redo(self):
         self.current_editor.Redo()
         
+    def remove_markers(self):
+        self.remove_breakpoint_markers()
+        self.remove_exec_marker()
         
     def set_exec_location(self, file, line, goto = False):
         #print "Setting exec loc %s, %s"  % (file, line)
@@ -190,7 +205,11 @@ class EditorView(view.View):
         widget.set_exec_marker(line)
         if goto:
             self.goto(file, line)
-            
+    
+    def remove_exec_marker(self):
+        for widget in self.notebook:
+            widget.remove_exec_marker()
+        
             
     def set_breakpoint_marker(self, file, line, disabled=False):
         file = os.path.normcase(file)
@@ -205,7 +224,7 @@ class EditorView(view.View):
     def remove_breakpoint_markers(self):
         for editor in self.notebook:
             editor.remove_breakpoint_markers()
-    
+            
     def on_breakpoint_update(self, evt):
         self.Freeze()
         self.remove_breakpoint_markers()
@@ -246,6 +265,7 @@ class EditorControl(stc.StyledTextCtrl):
     SYMBOL_MARGIN = 1
     FOLDING_MARGIN = 2
 
+    ERROR_BKGND_MARKER = 8
     EXECUTION_BKGND_MARKER = 4
     EXECUTION_MARKER = 3
     BREAKPOINT_MARKER = 2
@@ -272,6 +292,7 @@ class EditorControl(stc.StyledTextCtrl):
         self.Bind(stc.EVT_STC_UPDATEUI, self.on_update_ui)
         self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key)
+        self.error_redness = 0
         
     def on_key(self, evt):
         if evt.GetKeyCode() == wx.WXK_ESCAPE and evt.GetModifiers() == 0:
@@ -302,9 +323,11 @@ class EditorControl(stc.StyledTextCtrl):
         self.MarkerDefine(self.DISABLED_BREAKPOINT_MARKER, stc.STC_MARK_CIRCLE)
         self.MarkerSetBackground(self.DISABLED_BREAKPOINT_MARKER, "grey") 
         #self.MarkerSetForeground(self.DISABLED_BREAKPOINT_MARKER, "darkgrey") 
+
+        self.MarkerDefine(self.ERROR_BKGND_MARKER, stc.STC_MARK_BACKGROUND)
+        self.MarkerSetBackground(self.EXECUTION_BKGND_MARKER, wx.Colour(255,0,0))
         
-                                 
-        
+                
     def on_update_ui(self, evt):
         self.controller.frame.statusbar.line = self.current_line()+1
         self.update_line_numbers()
@@ -370,7 +393,13 @@ class EditorControl(stc.StyledTextCtrl):
 
         self.mnu_clear_bp = m.item("Clear Breakpoint", func=self.on_clear_breakpoint, icon="ex.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], 
                                                                                 show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
-
+        self.mnu_enable_bp.hide()
+        self.mnu_disable_bp.hide()
+        self.mnu_clear_bp.hide()
+        
+        self.mnu_add_watch = m.item("Add Watch", func=self.on_add_watch, icon="magnifier_zoom_in.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
+        self.mnu_add_watch.hide()
+        
         self.popup_menu = m
 
     def on_go_to_pc(self, evt):
@@ -392,6 +421,10 @@ class EditorControl(stc.StyledTextCtrl):
         line = self.line_from_point(self.click_pos)+1        
         self.controller.enable_breakpoint_byfile(self.project_rel_file_path, line)
 
+    def on_add_watch(self, evt):
+        watch_str = self.GetSelectedText().strip()        
+        wx.CallAfter(self.controller.add_watch, watch_str)
+        
     def on_disable_breakpoint(self, evt):
         line = self.line_from_point(self.click_pos)+1        
         self.controller.disable_breakpoint_byfile(self.project_rel_file_path, line)
@@ -415,6 +448,7 @@ class EditorControl(stc.StyledTextCtrl):
         if start == end:
             self.mnu_cut.hide()
             self.mnu_copy.hide()
+            self.mnu_add_watch.hide()
         else:
             self.mnu_cut.show()
             self.mnu_copy.show()
@@ -489,6 +523,21 @@ class EditorControl(stc.StyledTextCtrl):
     def remove_exec_marker(self):
         self.MarkerDeleteAll(self.EXECUTION_MARKER)
         self.MarkerDeleteAll(self.EXECUTION_BKGND_MARKER)
+
+    def remove_error_marker(self):
+        self.MarkerDeleteAll(self.ERROR_BKGND_MARKER)
+
+    def set_error_marker(self, line):
+        self.MarkerAdd(line-1, self.ERROR_BKGND_MARKER)
+        wx.CallLater(10, self.error_pulse, 128)
+        
+    def error_pulse(self, amt):
+        print "Error pulse: %s" % amt
+        if amt >= 255:
+            self.remove_error_marker()
+            return
+        self.MarkerSetBackground(self.ERROR_BKGND_MARKER, wx.Colour(255, amt, amt))
+        wx.CallLater(10, self.error_pulse, amt+10)                         
 
     def set_exec_marker(self, line):
         self.MarkerAdd(line-1, self.EXECUTION_MARKER)
@@ -649,6 +698,7 @@ class Notebook(aui.AuiNotebook):
     def create_popup_menu(self):
         m = menu.manager.menu()
         m.item('Close', icon='ex.png', func=self.on_close_tab)
+        m.item('Close All', func=self.on_close_all_tabs)        
         m.item('Close Others', func=self.on_close_other_tabs)
         self.popup_menu = m
         
@@ -664,6 +714,10 @@ class Notebook(aui.AuiNotebook):
         # TODO FINISH
         pass
     
+    def on_close_all_tabs(self, evt):
+        while self.PageCount > 0:
+            self.close_tab(0)
+            
     def on_page_close(self, event):
         event.Veto()
         index = event.GetSelection()
@@ -694,6 +748,15 @@ class Notebook(aui.AuiNotebook):
             frame = self.GetParent()
             evt.GetEventObject().PopupMenu(self.popup_menu.build(frame), self._right_up_position)
 
+    def on_tab_dclick(self, evt):
+        order = self._tab_controls[evt.GetEventObject()]
+#        index = order[evt.GetSelection()]
+#        if index == self.GetSelection():
+        frame = self.GetParent().GetParent()
+        frame.toggle_editor_maximize()
+            
+#            evt.GetEventObject().PopupMenu(self.popup_menu.build(frame), self._right_up_position)
+
     def check_tabs(self):
         result = []
         for control in self._tab_controls.keys():
@@ -716,6 +779,7 @@ class Notebook(aui.AuiNotebook):
                 continue
             if isinstance(child, aui.AuiTabCtrl):
                 child.Bind(wx.EVT_RIGHT_UP, self.on_right_up)
+                child.Bind(wx.EVT_LEFT_DCLICK, self.on_tab_dclick)
                 child.Bind(aui.EVT_AUINOTEBOOK_TAB_RIGHT_UP, self.on_tab_right_up)
                 child.Bind(aui.EVT_AUINOTEBOOK_TAB_RIGHT_DOWN, self.on_tab_right_down)
                 self._tab_controls[child] = []

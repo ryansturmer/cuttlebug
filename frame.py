@@ -3,9 +3,6 @@ import wx.aui as aui
 import wx.stc as stc
 import util, build, app, notebook, controls, views, project, settings, menu
 import styles, style_dialog
-#TODO Application icon
-#TODO saving of perspectives
-#TODO double click of editor tab to go into "large edit mode"
 #TODO implement custom build targets
 class Frame(util.PersistedFrame):
 
@@ -13,7 +10,8 @@ class Frame(util.PersistedFrame):
             super(Frame, self).__init__(parent, -1, title, size=(1024,768), style=wx.DEFAULT_FRAME_STYLE & ~wx.TAB_TRAVERSAL)
             self.SetIcon(wx.Icon('icons/cuttlebug.png', wx.BITMAP_TYPE_PNG))
             self.controller = app.Controller(self)            
-
+            self.editor_maximized = False
+            self.saved_perspective = ''
             self.Bind(wx.EVT_CLOSE, self.on_close)
 
             # Create frame UI (menus, status, etc)
@@ -106,6 +104,30 @@ class Frame(util.PersistedFrame):
             menu.manager.publish(menu.TARGET_DETACHED)
             menu.manager.publish(menu.PROJECT_CLOSE)
             
+        def save_perspective(self):
+            self.saved_perspective = self.manager.SavePerspective()
+            return self.saved_perspective
+        
+        def restore_perspective(self, perspective=None):
+            perspective = perspective or self.saved_perspective
+            self.manager.LoadPerspective(perspective)
+        
+        def maximize_editor(self):
+            self.editor_maximized = True
+            self.saved_perspective = self.manager.SavePerspective()
+            self.hide_views(*[view for view in self.views if view != self.editor_view])
+            
+        def restore_editor(self):
+            self.editor_maximized = False
+            self.manager.LoadPerspective(self.saved_perspective)
+            self.restore_perspective()
+        
+        def toggle_editor_maximize(self):
+            if self.editor_maximized:
+                self.restore_editor()
+            else:
+                self.maximize_editor()
+                
         def start_busy(self, message=''):
             self.statusbar.message = message
             self.statusbar.working = True
@@ -167,24 +189,6 @@ class Frame(util.PersistedFrame):
             if self.controller.state is app.ATTACHED:
                 self.controller.gdb.read_memory(0,100)
 
-        def on_gdb_command(self, evt):
-            if self.controller.state is app.ATTACHED or self.controller.state is app.RUNNING:
-                dlg = wx.TextEntryDialog(self, "Enter GDB Command:")
-                btn = dlg.ShowModal()
-                if btn == wx.ID_OK:
-                    self.controller.gdb.command(dlg.GetValue())
-            else:
-                print "GDB Session not attached"
-
-        def on_mi_command(self, evt):
-            if self.controller.state is app.ATTACHED or self.controller.state is app.RUNNING:
-                dlg = wx.TextEntryDialog(self, "Enter GDBMI Command:")
-                btn = dlg.ShowModal()
-                if btn == wx.ID_OK:
-                    self.controller.gdb.cmd(dlg.GetValue())
-            else:
-                print "GDB Session not attached"
-
         def add_view(self, view):
             self.manager.AddPane(view, view.info)
             
@@ -215,6 +219,8 @@ class Frame(util.PersistedFrame):
             self.disassembly_view.info = aui.AuiPaneInfo().Caption('Disassembly').Right().Name('DisassemblyView').MinSize((250,50))
             self.manager.AddPane(self.disassembly_view, self.disassembly_view.info)
     
+            self.views = [self.log_view, self.editor_view, self.project_view, self.runtime_view, self.disassembly_view]
+            
         def create_status_bar(self):
             self.statusbar = controls.StatusBar(self)
             self.statusbar.icon = "disconnect.png"
@@ -344,6 +350,12 @@ class Frame(util.PersistedFrame):
         def toggle_view(self, view):
             info = self.manager.GetPane(view)
             info.Show(not info.IsShown())
+            self.manager.Update()
+            
+        def hide_views(self, *v):
+            for view in v:
+                info = self.manager.GetPane(view)
+                info.Show(False)
             self.manager.Update()
             
         def on_settings(self, evt):
