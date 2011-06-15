@@ -210,11 +210,11 @@ class Project(util.Category):
         debug.add_item("gdb_executable","arm-elf-gdb")
         debug.add_item("attach_cmd", "target remote localhost:3333")
         debug.add_item("detach_cmd", "")
-        debug.add_item("post_attach_cmd", "monitor_halt")
+        debug.add_item("post_attach_cmd", "monitor halt")
         debug.add_item("pre_detach_cmd", "")
         debug.add_item("pre_download_cmd", "")
-        
-        debug.add_item("reset_cmd", "monitor reset")
+        debug.add_item("download_cmd","")
+        debug.add_item("reset_cmd", "monitor reset halt")
         
         # Program
         program = self.add_category('program')
@@ -319,6 +319,8 @@ class ProjectOptionsDialog(OptionsDialog):
         panel.add("Commands", "Post-Attach", TextWidget, key="debug.post_attach_cmd")
         panel.add("Commands", "Pre-Detach", TextWidget, key="debug.pre_detach_cmd")
         panel.add("Commands", "Pre-Download", TextWidget, key="debug.pre_download_cmd")
+        panel.add("Commands", "Download", TextWidget, key="debug.download_cmd")
+        panel.add("Commands", "Reset", TextWidget, key="debug.reset_cmd")
         self.add_panel(panel, icon='bug.png')
 
     def create_program_panel(self):

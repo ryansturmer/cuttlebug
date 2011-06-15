@@ -352,9 +352,14 @@ class Controller(wx.EvtHandler):
         
     def on_halted(self, result):
         self.gdb.update()
-        
-    def jump_to_entry_point(self):
+       
+    def reset(self):
+        if self.project.debug.reset_cmd:
+            self.gdb.command(self.project.debug.reset_cmd, callback=self.jump_to_entry_point)
+
+    def jump_to_entry_point(self, dummy=None):
             #TODO: This is a hack, not cross-platform compatible.
+            print "Jumping to entry point..."
             wx.CallAfter(self.frame.start_busy, "Jumping to entry point...")
             self.gdb.set("$pc", self.project.program.entry_point, self.on_at_entry_point)
 
@@ -365,7 +370,7 @@ class Controller(wx.EvtHandler):
         else:
             self.frame.statusbar.text = "Ready!"
             self.gdb.halt()
-#            self.gdb.update()
+            self.gdb.update()
          
     def download(self):
         self.download_request = False
@@ -377,7 +382,11 @@ class Controller(wx.EvtHandler):
             print "Can't download from state %s" % self.state
 
     def download_stage_2(self, result):
-        self.gdb.target_download(callback=self.on_downloaded)
+        if not self.project.debug.download_cmd:
+            self.gdb.target_download(callback=self.on_downloaded)
+        else:
+            self.gdb.command(self.project.debug.download_cmd, callback=self.on_downloaded)
+
 
     def on_downloaded(self, result):
         wx.CallAfter(self.frame.stop_busy)

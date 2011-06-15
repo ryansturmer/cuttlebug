@@ -898,7 +898,7 @@ class Notebook(aui.AuiNotebook):
             if not os.path.isfile(path): 
                 return None
         
-        self.Freeze()
+        #self.Freeze()
         panel = wx.Panel(self)
         edit_widget = EditorControl(panel, -1, style=wx.BORDER_NONE, controller=self.controller)
         quick_find_bar = QuickFindBar(panel, edit_widget)
@@ -924,6 +924,6 @@ class Notebook(aui.AuiNotebook):
         edit_widget.Bind(stc.EVT_STC_MODIFIED, self.on_modified)
         self.check_tabs()
         self.bind_tab_events()
-        self.Thaw()
+        #self.Thaw()
         return edit_widget
 

@@ -230,7 +230,7 @@ class GDB(wx.EvtHandler):
         wx.PostEvent(self, GDBEvent(EVT_GDB_UPDATE_BREAKPOINTS, self, data=self.breakpoints))
                         
     def post_event(self, evt):
-        print "Posting %s" % evt
+        #print "Posting %s" % evt
         wx.PostEvent(self, evt)
     
     def __send(self, data):
