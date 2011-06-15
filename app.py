@@ -359,7 +359,6 @@ class Controller(wx.EvtHandler):
 
     def jump_to_entry_point(self, dummy=None):
             #TODO: This is a hack, not cross-platform compatible.
-            print "Jumping to entry point..."
             wx.CallAfter(self.frame.start_busy, "Jumping to entry point...")
             self.gdb.set("$pc", self.project.program.entry_point, self.on_at_entry_point)
 

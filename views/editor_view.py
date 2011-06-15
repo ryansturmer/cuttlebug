@@ -922,8 +922,8 @@ class Notebook(aui.AuiNotebook):
         edit_widget.SetFocus()
         self.controller.frame.statusbar.line = edit_widget.current_line()+1
         edit_widget.Bind(stc.EVT_STC_MODIFIED, self.on_modified)
-        self.check_tabs()
         self.bind_tab_events()
+        self.check_tabs()
         #self.Thaw()
         return edit_widget
 
