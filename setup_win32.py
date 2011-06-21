@@ -1,13 +1,60 @@
 import os
 import pickle
 import datetime
-import py2exe
 import sys
-import pkg_resources
+import py2exe
+
+#import pkg_resources
 from distutils.core import setup
 
 # Don't require the command line argument.
 sys.argv.append('py2exe')
+
+MANIFEST = '''
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1"
+manifestVersion="1.0">
+  <assemblyIdentity
+    version="2.0.0.0"
+    processorArchitecture="x86"
+    name="Assay Development Environment"
+    type="win32"
+  />
+  <description>Assay Development Environment 1.0</description>
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+    <security>
+      <requestedPrivileges>
+        <requestedExecutionLevel
+          level="asInvoker"
+          uiAccess="false"
+        />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+  <dependency>
+    <dependentAssembly>
+      <assemblyIdentity
+        type="win32"
+        name="Microsoft.VC90.CRT"
+        version="9.0.21022.1"
+        processorArchitecture="x86"
+        publicKeyToken="1fc8b3b9a1e18e3b"
+      />
+    </dependentAssembly>
+  </dependency>
+  <dependency>
+    <dependentAssembly>
+      <assemblyIdentity
+        type="win32"
+        name="Microsoft.Windows.Common-Controls"
+        version="6.0.0.0"
+        processorArchitecture="x86"
+        publicKeyToken="6595b64144ccf1df"
+        language="*"
+      />
+    </dependentAssembly>
+  </dependency>
+</assembly>
+'''
 
 # Include these data files.
 def get_data_files():
@@ -31,24 +78,35 @@ def get_data_files():
     data_files += tree('./extras')
     data_files += tree('./templates')
     data_files += tree('./targets')
-    
+    data_files += tree('./Microsoft.VC90.CRT')
     return data_files
     
 # Build the distribution.
 setup(
     options = {"py2exe":{
         "compressed": 1,
-        "optimize": 0,
-        "bundle_files": 3,
-        "includes": ['pkg_resources', 'encodings', 'encodings.cp437'],
+        "optimize": 1,
+        "bundle_files": 1,
+        "includes": ['encodings', 'encodings.cp437'],
         #"excludes": ['dummy'],
         "packages": ['lxml', 'gzip'],
-        "dll_excludes": ["MSVCP90.dll"]
+        "excludes": ['Tkconstants', 'Tkinter', 'tcl'],
+        "dll_excludes": [
+            'msvcp90.dll',
+            'mswsock.dll',
+            'API-MS-Win-Core-LocalRegistry-L1-1-0.dll',
+            'API-MS-Win-Core-ProcessThreads-L1-1-0.dll',
+            'API-MS-Win-Security-Base-L1-1-0.dll',
+            'POWRPROF.dll',
+            'Secur32.dll',
+            'SHFOLDER.dll',
+            ],
     }},
     windows = [{
         "script": "main.py",
         "dest_base": "cuttlebug",
        # "icon_resources": [(1, "icons/analyzer.ico")],
+        "other_resources": [(24, 1, MANIFEST)],
     }],
     data_files = get_data_files(),
 )
