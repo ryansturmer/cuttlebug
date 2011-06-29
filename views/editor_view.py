@@ -325,7 +325,7 @@ class EditorControl(stc.StyledTextCtrl):
         #self.MarkerSetForeground(self.DISABLED_BREAKPOINT_MARKER, "darkgrey") 
 
         self.MarkerDefine(self.ERROR_BKGND_MARKER, stc.STC_MARK_BACKGROUND)
-        self.MarkerSetBackground(self.EXECUTION_BKGND_MARKER, wx.Colour(255,0,0))
+        self.MarkerSetBackground(self.ERROR_BKGND_MARKER, wx.Colour(255,0,0))
         
                 
     def on_update_ui(self, evt):

@@ -41,7 +41,7 @@ class Notebook(aui.AuiNotebook):
                     return
             if not os.path.exists(path):
                 return
-        self.Freeze()
+        #self.Freeze()
         
         widget = controls.EditorControl(self, -1, style=wx.BORDER_NONE)
         
@@ -49,6 +49,6 @@ class Notebook(aui.AuiNotebook):
             widget.open_file(path)
         self.AddPage(widget, widget.get_name(), True)
         widget.SetFocus()
-        self.Thaw()
+        #self.Thaw()
         
         return widget

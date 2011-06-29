@@ -482,8 +482,8 @@ class GDB(wx.EvtHandler):
     def set(self, name, val, callback=None):
         self.__cmd("-gdb-set %s=%s" % (name, val), callback)
     # Set Executable
-    def set_exec(self, file):
-        self.__cmd('-file-exec-and-symbols "%s"\n' % escape(file))
+    def set_exec(self, file, callback=None):
+        self.__cmd('-file-exec-and-symbols "%s"\n' % escape(file), callback)
 
 
     def OnTerminate(self, *args, **kwargs):

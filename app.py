@@ -381,6 +381,9 @@ class Controller(wx.EvtHandler):
             print "Can't download from state %s" % self.state
 
     def download_stage_2(self, result):
+        self.gdb.set_exec(self.project.absolute_path(self.project.program.target), callback=self.download_stage_3)
+        
+    def download_stage_3(self, result):
         if not self.project.debug.download_cmd:
             self.gdb.target_download(callback=self.on_downloaded)
         else:

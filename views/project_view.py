@@ -83,12 +83,17 @@ class ProjectView(view.View):
         
     def on_new_file(self, evt):
         filename = util.get_text(self.controller.frame, "Enter new filename:", title="New File...")
-        if filename:
-            fp = open(os.path.join(self.project.directory, filename), 'w')
+        if os.path.isdir(self.selected_file):
+            dir = self.selected_file
+        elif os.path.isfile(path):
+            dir = os.path.split(self.selected_file)[0]
+        if filename and dir:
+            fp = open(os.path.join(dir, filename), 'w')
             fp.close()
             self.tree.update_file_tree()
 
     def on_new_folder(self, evt):
+        print self.selected_file
         foldername = util.get_text(self.controller.frame, "Enter new folder name:", title="New Folder...")
         if foldername:
             os.mkdir(os.path.join(self.project.directory, foldername))

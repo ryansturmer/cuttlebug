@@ -977,6 +977,48 @@
 	</reg>
 </peripheral>
 
+<peripheral name="spi">
+    <reg name="CR1" fullname="SPI Control Register 1" offset="0" as="short">
+        <field name="BIDIMODE" fullname="Bidirectional data mode enable" start="15" length="1" />
+        <field name="BIDIOE" fullname="Output enable in bidirectional mode" start="14" length="1" />
+        <field name="CRCEN" fullname="Hardware CRC calculation enable" start="13" length="1" />
+        <field name="CRCNEXT" fullname="Transmit CRC next" start="12" length="1" />
+        <field name="DFF" fullname="Data frame format" start="11" length="1" />
+        <field name="RXONLY" fullname="Receive only" start="10" length="1" />
+        <field name="SSM" fullname="Software slave management" start="9" length="1" />
+        <field name="SSI" fullname="Internal slave select" start="8" length="1" />
+        <field name="LSBFIRST" fullname="Frame format" start="7" length="1" />
+        <field name="SPE" fullname="SPI Enable" start="6" length="1" />
+        <field name="BR[2:0]" fullname="Baud rate control" start="3" length="3" />
+        <field name="MSTR" fullname="Master selection" start="2" length="1" />
+        <field name="CPOL" fullname="Clock polarity" start="1" length="1" />
+        <field name="CPHA" fullname="Clock phase" start="0" length="1" />
+    </reg>
+    <reg name="CR2" fullname="SPI Control Register 2" offset="0x4" as="short">
+        <field name="TXEIE" fullname="Tx buffer empty interrupt enable" start="7" length="1" />
+        <field name="RXNEIE" fullname="Rx buffer not empty interrupt enable" start="6" length="1" />
+        <field name="ERRIE" fullname="Error interrupt enable" start="5" length="1" />
+        <field name="SSOE" fullname="SS output enable" start="2" length="1" />
+        <field name="TXDMAEN" fullname="Tx buffer DMA enable" start="1" length="1" />
+        <field name="RXDMAEN" fullname="Rx buffer DMA enable" start="0" length="1" />
+    </reg>
+    <reg name="SR" fullname="SPI Status Register" offset="0x8" as="short">
+        <field name="BSY" fullname="Busy flag" start="7" length="1" />
+        <field name="OVR" fullname="Overrun flag" start="6" length="1" />
+        <field name="MODF" fullname="Mode fault" start="5" length="1" />
+        <field name="CRCERR" fullname="CRC error flag" start="4" length="1" />
+        <field name="UDR" fullname="Underrun occurred" start="3" length="1" />
+        <field name="CHSIDE" fullname="Channel side" start="2" length="1" />
+        <field name="TXE" fullname="Transmit buffer empty" start="1" length="1" />
+        <field name="RXNE" fullname="Recieve buffer not empty" start="0" length="1" />
+    </reg>
+    <reg name="DR" fullname="SPI Data Register" offset="0xc" as="short" />
+    <reg name="CRCPR" fullname="SPI CRC Polynomial Register" offset="0x10" as="short" />
+    <reg name="RXCRCR" fullname="SPI RX CRC register" offset="0x14" as="short" />
+    <reg name="TXCRCR" fullname="SPI TX CRC register" offset="0x18" as="short" />
+</peripheral>
+
+
 <target name="STM32F103">
     <invoke peripheral="rcc" name="RCC" fullname="RCC" base="0x40021000" />
 	<group fullname="Timers">
@@ -1003,7 +1045,9 @@
     </group>
     <invoke peripheral="usb" name="USB" fullname="USB" base="0x40005c00" />
     <invoke peripheral="exti" name="EXTI" fullname="External Interrupt/Event Controller" base="0x40010400" />
-    
+    <group fullname="SPI">
+        <invoke peripheral="spi" name="SPI1" base="0x40013000" />
+    </group>    
     <group fullname="DMA">
     	<invoke peripheral="dma" name="DMA1" fullname="DMA 1" base="0x40020000" />
     	<invoke peripheral="dma" name="DMA2" fullname="DMA 2" base="0x40020400" />
@@ -1025,6 +1069,6 @@
    		<field name="T" fullname="Thumb state/ARM state flag" start="5" />
    	</cpu_register>   		
    	
-   	
+    
 </target>
 </document>

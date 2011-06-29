@@ -583,10 +583,15 @@ class RegisterEditDialog(wx.Dialog):
         p.SetSizer(ps)
         sizer.Add(p, flag=wx.EXPAND)
         self.SetSizerAndFit(sizer)
+        self.CenterOnParent()
         
     @staticmethod
     def show(parent, model, max_width=16):
-        dlg = RegisterEditDialog(parent, model, max_width)
+        top_parent = parent
+        while top_parent.GetParent():
+            top_parent = top_parent.GetParent()
+        
+        dlg = RegisterEditDialog(top_parent, model, max_width)
         return dlg.ShowModal()
 
     def set_value(self):
