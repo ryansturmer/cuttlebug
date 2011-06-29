@@ -730,16 +730,18 @@ class Notebook(aui.AuiNotebook):
         window = self.get_window()
         if window:
             self.controller.frame.statusbar.line = window.current_line()+1
-
+        evt.Skip()
+        
     def on_tab_right_down(self, evt):
         order = self._tab_controls[evt.GetEventObject()]
         index = order[evt.GetSelection()]
         self._current_index = index
         self.SetSelection(index)
-
-    def on_right_up(self, evt):
         evt.Skip()
+        
+    def on_right_up(self, evt):
         self._right_up_position = evt.GetPosition()
+        evt.Skip()
     
     def on_tab_right_up(self, evt):
         order = self._tab_controls[evt.GetEventObject()]
