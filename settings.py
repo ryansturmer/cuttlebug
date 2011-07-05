@@ -13,7 +13,8 @@ def load_session(filename='.session'):
     global session
     try:
         session = util.unpickle_file(filename)
-    except:
+    except Exception, e:
+        print "Couldn't load session: %s" % e
         session = {}
         
     if not isinstance(session, dict):

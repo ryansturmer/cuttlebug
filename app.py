@@ -318,6 +318,7 @@ class Controller(wx.EvtHandler):
         for bkpt in self.gdb.breakpoints:
             file = self.project.relative_path(file)
             f, l = self.project.relative_path(bkpt.fullname), bkpt.line
+            print f,l,file,line
             if l == line and f == file:
                 self.gdb.break_delete(self.gdb.breakpoints.get_number(file, line), self.on_gdb_done)
 

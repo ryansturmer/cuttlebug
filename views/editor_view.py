@@ -150,6 +150,9 @@ class EditorView(view.View):
         if file:
             goto = self.controller.settings.debug.jump_to_exec_location
             self.set_exec_location(file, line, goto=goto)
+    
+    def on_target_running(self):
+        self.remove_exec_marker()
         
     def find(self):
         self.notebook.find()

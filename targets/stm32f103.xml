@@ -1047,6 +1047,8 @@
     <invoke peripheral="exti" name="EXTI" fullname="External Interrupt/Event Controller" base="0x40010400" />
     <group fullname="SPI">
         <invoke peripheral="spi" name="SPI1" base="0x40013000" />
+        <invoke peripheral="spi" name="SPI2/I2S" base="0x40003800" />
+        <invoke peripheral="spi" name="SPI3/I2S" base="0x40003C00" />
     </group>    
     <group fullname="DMA">
     	<invoke peripheral="dma" name="DMA1" fullname="DMA 1" base="0x40020000" />

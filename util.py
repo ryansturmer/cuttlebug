@@ -469,9 +469,8 @@ def readable_files_in_directory(dir):
         
                                                     
 def pickle_file(object, filename):
-        fp = open(os.path.abspath(filename),'wb')
-        pickle.dump(object, fp, -1)
-        fp.close()
+        with open(os.path.abspath(filename),'wb') as fp:
+            pickle.dump(object, fp, -1)
 
 def unpickle_file(filename):
     path = os.path.abspath(filename)
