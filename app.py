@@ -541,5 +541,5 @@ class Controller(wx.EvtHandler):
                     self.download()
                     
     def on_build_update(self, evt):
-        self.frame.log_view.update_build(str(evt.data))
+        wx.CallAfter(self.frame.log_view.update_build,str(evt.data))
         evt.Skip()

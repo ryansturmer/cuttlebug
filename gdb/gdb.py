@@ -153,7 +153,7 @@ class GDB(wx.EvtHandler):
         #self.buffer += line
         if line.strip() != '(gdb)':
             response = self.parse(line)
-            self.handle_response(response)
+            wx.CallAfter(self.handle_response, response)
             self.buffer = ''
     
     def __on_running(self, record):

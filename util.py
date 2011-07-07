@@ -340,6 +340,7 @@ class Process(subprocess.Popen):
         if start:
             self.start()
 
+
         self.stdoutworker = ThreadWorker(self.monitor_stream, self.stdout_func, self.stdout, end=True)
         self.stderrworker = ThreadWorker(self.monitor_stream, self.stderr_func, self.stderr)
 
@@ -355,13 +356,13 @@ class Process(subprocess.Popen):
                 break
             
             if data:
-                func(data)
+                wx.CallAfter(func,data)
             else:
                 self.done = True
                 break
         
         if end and self.end:
-            self.end()
+            wx.CallAfter(self.end)
 
     def sigint(self):        
         import win32api, win32con
@@ -468,16 +469,41 @@ def readable_files_in_directory(dir):
     return retval
         
                                                     
-def pickle_file(object, filename):
-        with open(os.path.abspath(filename),'wb') as fp:
-            pickle.dump(object, fp, -1)
+def pickle_file(data, path):
+    # Safe pickling functions courtesy of mike!
+    tmp_path = '%s.tmp' % path
+    bak_path = '%s.bak' % path
+    # Write tmp file
+    with open(tmp_path, 'wb') as file:
+        pickle.dump(data, file, -1)
+    # Copy existing file to bak file
+    try:
+        os.remove(bak_path)
+    except Exception:
+        pass
+    try:
+        os.rename(path, bak_path)
+    except Exception:
+        pass
+    # Rename tmp file to actual file
+    os.rename(tmp_path, path)
+    # Remove bak file
+    try:
+        os.remove(bak_path)
+    except Exception:
+        pass
+        
 
-def unpickle_file(filename):
-    path = os.path.abspath(filename)
-    fp = open(path, 'r')
-    object = pickle.load(fp)
-    fp.close()
-    return object
+def unpickle_file(path):
+    tmp_path = '%s.tmp' % path
+    bak_path = '%s.bak' % path
+    for p in (path, bak_path, tmp_path):
+        try:
+            with open(p, 'rb') as file:
+                return pickle.load(file)
+        except Exception:
+            pass
+    raise Exception('Unable to load: %s' % path)
 
 def human_size(size_in_bytes):
     K = 1024
@@ -562,8 +588,8 @@ class KeyTree(object):
         retval = [top_item] if include_root else []
         child, cookie = self.get_first_child(top_item)
         while child.is_ok():
-             retval.extend(self.walk(child))
-             child, cookie = self.get_next_child(top_item, cookie)
+            retval.extend(self.walk(child))
+            child, cookie = self.get_next_child(top_item, cookie)
         return retval
         
     def walk_expanded(self, top_item, include_root=True):

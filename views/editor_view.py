@@ -752,7 +752,8 @@ class Notebook(aui.AuiNotebook):
         if index == self.GetSelection():
             frame = self.GetParent()
             evt.GetEventObject().PopupMenu(self.popup_menu.build(frame), self._right_up_position)
-
+        evt.Skip()
+        
     def on_tab_dclick(self, evt):
         order = self._tab_controls[evt.GetEventObject()]
 #        index = order[evt.GetSelection()]
