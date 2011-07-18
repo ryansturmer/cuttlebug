@@ -227,12 +227,14 @@ class GDB(wx.EvtHandler):
                     line = int(item.get('line', -1))
                     bp = Breakpoint(number, fullname, file, line, enabled=enabled, address=address)
                     self.breakpoints[number] = bp
-        wx.PostEvent(self, GDBEvent(EVT_GDB_UPDATE_BREAKPOINTS, self, data=self.breakpoints))
+            self.post_event(GDBEvent(EVT_GDB_UPDATE_BREAKPOINTS, self, data=self.breakpoints))
                         
     def post_event(self, evt):
         #print "Posting %s" % evt
-        wx.PostEvent(self, evt)
-    
+        #wx.PostEvent(self, evt)
+        #wx.CallAfter(wx.PostEvent, self, evt)
+        self.AddPendingEvent(evt)
+        
     def __send(self, data):
         self.__mi_log(data)
         self.subprocess.stdin.write(data)

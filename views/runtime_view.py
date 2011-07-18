@@ -116,6 +116,8 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                 parent = self.pending_var_additions.pop(name)
                 self.lock.release()
                 wx.CallAfter(self.add_var_item, parent, name, self.model.vars[name])
+                if parent == self.watch_item:
+                    self.Expand(self.watch_item)
             elif name in self.pending_var_updates:
                 self.lock.acquire()
                 var_item = self.pending_var_updates.pop(name)
@@ -224,7 +226,8 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
     def on_select_item(self, evt):
         #item = self.get_event_item(evt)
         #print self.get_item_data(item)
-        evt.Skip()
+        evt.Veto()
+        #evt.Skip()
         
     def on_end_label_edit(self, evt):
         item = self.get_event_item(evt)

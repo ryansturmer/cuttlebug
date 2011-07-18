@@ -40,10 +40,10 @@ class StatusBar(wx.StatusBar):
     def __set_line(self, line=0):
         if line:
             self._line = int(line)
-            self.SetStatusText(str(line), self.LINE)
+            wx.CallAfter(self.SetStatusText, str(line), self.LINE)
         else:
             self._line = 0
-            self.SetStatusText('', self.LINE)
+            wx.CallAfter(self.SetStatusText,'', self.LINE)
             
     def __get_line(self): return self._line
     line = property(__get_line, __set_line)
@@ -54,7 +54,7 @@ class StatusBar(wx.StatusBar):
         else:    
             self.__icon = util.get_icon('blank.png')
         self.staticbmp = wx.StaticBitmap(self, -1, self.__icon)
-        self.Reposition()
+        wx.CallAfter(self.Reposition)
 
     def __get_icon(self):
         return self.icon

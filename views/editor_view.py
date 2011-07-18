@@ -336,8 +336,8 @@ class EditorControl(stc.StyledTextCtrl):
         self.update_line_numbers()
         evt.Skip()
         
-    def on_modified(self, evt):
-        evt.Skip()
+    #def on_modified(self, evt):
+    #    evt.Skip()
     
     def on_undo(self, evt):
         self.Undo()
@@ -730,9 +730,15 @@ class Notebook(aui.AuiNotebook):
         return iter(self.get_windows())
     
     def on_page_changed(self, evt):
-        window = self.get_window()
-        if window:
-            self.controller.frame.statusbar.line = window.current_line()+1
+        try:
+            window = self.get_window()
+            if window:
+                self.controller.frame.SetTitle("%s - Cuttlebug IDE" % window.name)
+                self.controller.frame.statusbar.line = window.current_line()+1
+        except Exception, e:
+            print "Got a page changed event, but there was an exception!"
+            print e
+            
         evt.Skip()
         
     def on_tab_right_down(self, evt):
@@ -927,7 +933,7 @@ class Notebook(aui.AuiNotebook):
 
         edit_widget.SetFocus()
         self.controller.frame.statusbar.line = edit_widget.current_line()+1
-        edit_widget.Bind(stc.EVT_STC_MODIFIED, self.on_modified)
+        #edit_widget.Bind(stc.EVT_STC_MODIFIED, self.on_modified)
         self.bind_tab_events()
         self.check_tabs()
         #self.Thaw()

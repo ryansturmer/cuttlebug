@@ -133,6 +133,18 @@ def launch(file):
     else:
         return
     
+def shell(path):
+    if os.name == 'posix':
+        print "Don't know what to do here yet"
+    elif os.name == 'nt':
+        cmd = 'start cmd /K "cd %s"' % path
+        print cmd
+        os.system(cmd)
+    elif os.name == 'mac':
+        print "Don't know what to do here yet."
+    else:
+        print "Can't handle os %s" % os.name
+        
        
 def rgb(r,g,b,a=255):
     return wx.Colour(r,g,b,a)
@@ -319,17 +331,18 @@ class ThreadWorker(threading.Thread):
         except wx.PyDeadObjectError:
             pass
         except Exception, e:
-            #print "omg exception"
-            #print e
+            print "omg exception"
+            print e
             raise
 
 class Process(subprocess.Popen):
-    def __init__(self, cmd, start=None, stdout=None, stderr=None, end=None, cwd=os.curdir):
+    def __init__(self, cmd, start=None, stdout=None, stderr=None, end=None, cwd=os.curdir, callafter=False):
         self.start = start
         self.stdout_func = stdout
         self.stderr_func = stderr
         self.end = end
         self.done = False
+        self.callafter = callafter
         try:
             #import win32process
             #flags = win32process.CREATE_NEW_PROCESS_GROUP
@@ -354,9 +367,11 @@ class Process(subprocess.Popen):
             except IOError, e:
                 print e
                 break
-            
             if data:
-                wx.CallAfter(func,data)
+                if self.callafter:
+                    wx.CallAfter(func,data)
+                else:
+                    func(data)
             else:
                 self.done = True
                 break
@@ -365,9 +380,12 @@ class Process(subprocess.Popen):
             wx.CallAfter(self.end)
 
     def sigint(self):        
-        import win32api, win32con
-        win32api.GenerateConsoleCtrlEvent(win32con.CTRL_C_EVENT, self.pid)
-
+        try:
+            import win32api, win32con
+            win32api.GenerateConsoleCtrlEvent(win32con.CTRL_C_EVENT, self.pid)
+        except:
+            pass
+        
 class Event(wx.PyEvent):
     def __init__(self, event_object, type):
         super(Event, self).__init__()

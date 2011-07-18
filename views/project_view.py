@@ -58,7 +58,8 @@ class ProjectView(view.View):
     def setup_menus(self):
         manager = menu.MenuManager()
         pmenu = manager.menu()
-        pmenu.item("Open in shell", icon='application_osx_terminal.png', show=(MNU_FILE, MNU_FILES), hide=(MNU_PROJECT,), func=self.on_open_in_shell)
+        pmenu.item("Explore", icon='magnifier.png', show=(MNU_FILE, MNU_FILES), hide=(MNU_PROJECT,), func=self.on_open_in_shell)
+        pmenu.item("Open in Shell", icon='application_osx_terminal.png', show=(MNU_FILES, MNU_FOLDER), hide=(MNU_PROJECT,MNU_FILE), func=self.on_launch_terminal)        
         pmenu.item("Rename...", show=(MNU_FILE, MNU_PROJECT), hide=(MNU_FILES), func=self.on_rename, icon='textfield_rename.png')
         pmenu.item("Delete", show=(MNU_FILE), hide=(MNU_FILES, MNU_PROJECT), func=self.on_remove_file, icon='delete.png')
         pmenu.separator()
@@ -141,6 +142,9 @@ class ProjectView(view.View):
         if self.selected_file:
             util.launch(self.selected_file)
             
+    def on_launch_terminal(self, evt):
+        if self.selected_file and os.path.isdir(self.selected_file):
+            util.shell(self.selected_file)
     def on_rename(self, evt):
         if self.selected_item == self.tree.root_item:
             name = util.get_text(self.controller.frame, "Enter new name for project '%s':" % self.project.general.project_name, title="Rename Project", default=self.project.general.project_name)
