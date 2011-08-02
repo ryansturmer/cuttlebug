@@ -340,7 +340,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         dlg = wx.TextEntryDialog(self, "Watch Variable", self.last_watch)
         if dlg.ShowModal() == wx.ID_OK:
             var = dlg.GetValue().strip()
-            self.add_watch(var)
+            self.add_watch('"%s"' % var) # Quoting the watch allows spaces
             
     def on_remove_watch(self, evt):
         item = self.get_item_data(self.selected_item)
@@ -508,6 +508,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                 self.model.break_delete(bkpt)
             
     def update_registers(self, names):
+        '''
         if self.model and self.registers_item.is_ok():
             registers = self.model.registers
             if len(registers) != self.get_children_count(self.registers_item, recursive=False):
@@ -523,9 +524,11 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                     
                 for name in names:
                     item = self.register_registry[name]
+                    print item
                     self.set_item_text(item, registers[name], 1)
                     self.set_item_text_colour(item, wx.RED)
-              
+        '''
+        
     def build_sfr_tree(self):
         if not self.parent.controller.project:
             return

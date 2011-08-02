@@ -409,7 +409,7 @@ class GDB(wx.EvtHandler):
     def exec_until(self, file, line, callback=None):
         line = int(line)
         file = str(file)
-        self.__cmd('-exec-until %s:%d\n' % (file, line), callable)
+        self.__cmd('-exec-until "%s:%d"\n' % (file, line), callable)
 
     def exec_interrupt(self, callable=None):
         self.__cmd('-exec-interrupt\n', callable)
@@ -516,9 +516,13 @@ class BreakpointTable(object):
         except:
             pass
 
+    def compare_paths(self, p1, p2):
+        return os.path.normcase(os.path.normpath(p1)) == os.path.normcase(os.path.normpath(p2))
+    
     def get_number(self, file, line):
         for key, breakpoint in self.__data.iteritems():
-            if breakpoint.line == line and (breakpoint.fullname == file or breakpoint.file == file): return key
+            if (breakpoint.line == line) and (self.compare_paths(file, breakpoint.fullname) or self.compare_paths(file, breakpoint.file)): 
+                return key
         raise KeyError
                     
 class Breakpoint(object):
@@ -532,7 +536,7 @@ class Breakpoint(object):
         self.address = address
         
     def __str__(self):
-        return "<Breakpoint %s[%d]%s%d>" % ('+' if self.enabled else ' ', self.number, self.fullname, self.line) 
+        return "<Breakpoint %s [%02d] %s:%d (%s)>" % ('+' if self.enabled else ' ', self.number, self.fullname, self.line, self.file) 
         
 if __name__ == "__main__":
     

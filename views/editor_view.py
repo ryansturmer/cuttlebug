@@ -414,6 +414,7 @@ class EditorControl(stc.StyledTextCtrl):
 
     def on_breakpoint_here(self, evt):
         line = self.line_from_point(self.click_pos)+1
+        print self.project_rel_file_path, line
         self.controller.set_breakpoint(self.project_rel_file_path, line)
         
     def on_clear_breakpoint(self, evt):

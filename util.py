@@ -577,11 +577,19 @@ class KeyTree(object):
         self._items = {}
             
     def append_item(self, parent_key, name):
-        parent = self._items[parent_key]
-        item = self.AppendItem(parent, name)
-        key = TreeItemKey(self)
-        self._items[key] = item
-        self.SetItemPyData(item, (key, None))
+        try:
+            parent = self._items[parent_key]
+            item = self.AppendItem(parent, name)
+            key = TreeItemKey(self)
+            self._items[key] = item
+            self.SetItemPyData(item, (key, None))
+        except Exception, e:
+            print "There was a problem appending item:"
+            print e
+            print parent_key
+            print name
+            
+            
         return key
     
     def hit_test(self, pos):
@@ -698,7 +706,14 @@ class KeyTree(object):
         self.SetItemHasChildren(item, has_children)
     
     def set_item_text(self, key, text, column=0):
-        item = self._items[key]
+        try:
+            item = self._items[key]
+        except:
+            print "couldn't set item text."
+            print key
+            print text
+            print self._items
+            return
         self.SetItemText(item, text, column)
         
     def set_item_bold(self, key, bold):
