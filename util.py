@@ -751,7 +751,11 @@ class KeyTree(object):
     def collapse(self, key):
         item = self._items[key]
         self.Collapse(item)
-        
+
+    def expand(self, key):
+        item = self._items[key]
+        self.Expand(item)
+                
     def select_item(self, key):
         item = self._items[key]
         self.SelectItem(item)

@@ -47,11 +47,11 @@ class QuickFindBar(wx.Panel):
         self.whole_word = whole_word
 
     def show_and_focus(self):
-        self.GetParent().Freeze()
+      #  self.GetParent().Freeze()
         self.Show()
         self.GetParent().Layout()
         self.textctrl.SetFocus()
-        self.GetParent().Thaw()
+     #   self.GetParent().Thaw()
 
     def on_next(self, evt):
         self.find_next(self.textctrl.GetValue())
@@ -125,7 +125,9 @@ class EditorView(view.View):
         sizer.Add(self.notebook, 1, wx.EXPAND)
         self.SetSizer(sizer)
         self.files = {}
-
+        self.controller.Bind(app.EVT_APP_TARGET_HALTED, self.on_target_halted)
+        self.controller.Bind(app.EVT_APP_TARGET_RUNNING, self.on_target_running)
+              
     def set_model(self, model):
         self.model = model
         self.model.Bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, self.on_breakpoint_update)
@@ -146,13 +148,16 @@ class EditorView(view.View):
             retval.append(widget.file_path)
         return retval
     
-    def on_target_halted(self, file, line):
+    def on_target_halted(self, evt):
+        file, line = evt.data[0], evt.data[1]
         if file:
             goto = self.controller.settings.debug.jump_to_exec_location
             self.set_exec_location(file, line, goto=goto)
-    
+        evt.Skip()
+        
     def on_target_running(self):
         self.remove_exec_marker()
+        evt.Skip()
         
     def find(self):
         self.notebook.find()
@@ -229,10 +234,8 @@ class EditorView(view.View):
             editor.remove_breakpoint_markers()
             
     def on_breakpoint_update(self, evt):
-        self.Freeze()
         self.remove_breakpoint_markers()
         self.set_breakpoint_markers(self.model.breakpoints)
-        self.Thaw()
         evt.Skip()
         
     def update_settings(self):
@@ -858,7 +861,7 @@ class Notebook(aui.AuiNotebook):
         self.close_tab(index=idx)
         
     def close_tab(self, index=None):
-        self.Freeze()
+        #self.Freeze()
         if index is None: index = self.GetSelection()
         if index >= 0:
             window = self.get_window(index)
@@ -873,7 +876,7 @@ class Notebook(aui.AuiNotebook):
                 #wx.PostEvent(self, NotebookEvent(EVT_NOTEBOOK_TAB_CLOSED, self))
             else:
                 pass # save == None, user cancelled
-        self.Thaw()
+        #self.Thaw()
         
         
     def get_file_tab(self, path):

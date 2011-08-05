@@ -117,7 +117,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
                 self.lock.release()
                 wx.CallAfter(self.add_var_item, parent, name, self.model.vars[name])
                 if parent == self.watch_item:
-                    self.Expand(self.watch_item)
+                    self.expand(self.watch_item)
             elif name in self.pending_var_updates:
                 self.lock.acquire()
                 var_item = self.pending_var_updates.pop(name)

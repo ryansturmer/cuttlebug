@@ -1,6 +1,11 @@
 <?xml version="1.0"?>
 <document>
 
+    <peripheral name="afio">
+        <reg name="MAPR" fullname="AF remap and debug I/O configuration register (AFIO_MAPR)" offset="0x4" as="int">
+            <field name="spi1_remap" fullname="SPI1 remapping" start="0" length="1" />
+        </reg>
+    </peripheral>
 <peripheral name="nvic">
 	<reg name="ISER0" fullname="Interrupt Set-enable 0" offset="0x0" as="int" > 
 		<field name="SE0" fullname="Interrupt 0 set-enable" start="0" length="1" />
@@ -1059,6 +1064,8 @@
     	<invoke peripheral="nvic" name="NVIC" fullname="Nested Vectored Interrupt Controller" base="0xe000e100" />
     	<invoke peripheral="scb" name="SCB" fullname="System Control Block" base="0xe000ed00" />
     </group>
+
+    <invoke peripheral="afio" name="AFIO" fullname="AFIO" base="0x40010000" />
    	
    	<cpu_register name="cpsr" fullname="Current Program Status Register" as="int">
    		<field name="N" fullname="Negative result from ALU flag" start="31" />

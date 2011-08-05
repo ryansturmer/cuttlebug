@@ -280,7 +280,6 @@ class Controller(wx.EvtHandler):
             self.change_state(ATTACHED)
         elif self.state == RUNNING:
             return
-
         self.gdb.exec_continue(self.on_running)
             
     def on_running(self, result):

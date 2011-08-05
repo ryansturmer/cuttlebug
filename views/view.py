@@ -3,16 +3,6 @@ import log
 import app
 import gdb
 
-class ViewEvent(wx.PyEvent):
-    def __init__(self, type, object=None, data=None):
-        super(ViewEvent, self).__init__()
-        self.SetEventType(type.typeId)
-        self.SetEventObject(object)
-        self.data = data
-
-
-EVT_VIEW_REQUEST_UPDATE = wx.PyEventBinder(wx.NewEventType())
-EVT_VIEW_POST_UPDATE = wx.PyEventBinder(wx.NewEventType())
 
 class View(wx.Panel):
     
@@ -20,6 +10,7 @@ class View(wx.Panel):
         self.controller = kwargs.pop('controller', None)
         super(View, self).__init__(*args, **kwargs)
         self.model = None
+        '''
         if self.controller:
             self._bind(app.EVT_APP_PROJECT_CLOSED, "on_project_close")
             self._bind(app.EVT_APP_PROJECT_OPENED, "on_project_open")
@@ -30,7 +21,7 @@ class View(wx.Panel):
             
 #            self._bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, "on_breakpoint_update")
 #            self._bind(gdb.EVT_GDB_UPDATE_LOCALS, "on_locals_update")
-
+        '''
     def set_model(self, model):
         self.model = model
         

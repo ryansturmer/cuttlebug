@@ -8,4 +8,3 @@ from breakpoint_view import BreakpointView
 from runtime_view import RuntimeView, GDBDebugView
 from asm_view import DisassemblyView
 
-from view import ViewEvent, EVT_VIEW_REQUEST_UPDATE, EVT_VIEW_POST_UPDATE 
