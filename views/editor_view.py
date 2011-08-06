@@ -530,18 +530,22 @@ class EditorControl(stc.StyledTextCtrl):
     def remove_exec_marker(self):
         self.MarkerDeleteAll(self.EXECUTION_MARKER)
         self.MarkerDeleteAll(self.EXECUTION_BKGND_MARKER)
-
+        self.Refresh()
+        
     def remove_error_marker(self):
         self.MarkerDeleteAll(self.ERROR_BKGND_MARKER)
+        self.Refresh()
 
     def set_error_marker(self, line):
         self.MarkerAdd(line-1, self.ERROR_BKGND_MARKER)
         wx.CallLater(10, self.error_pulse, 128)
+        self.Refresh()
         
     def error_pulse(self, amt):
         print "Error pulse: %s" % amt
         if amt >= 255:
             self.remove_error_marker()
+            self.Refresh()
             return
         self.MarkerSetBackground(self.ERROR_BKGND_MARKER, wx.Colour(255, amt, amt))
         wx.CallLater(10, self.error_pulse, amt+10)                         
@@ -549,10 +553,12 @@ class EditorControl(stc.StyledTextCtrl):
     def set_exec_marker(self, line):
         self.MarkerAdd(line-1, self.EXECUTION_MARKER)
         self.MarkerAdd(line-1, self.EXECUTION_BKGND_MARKER)
+        self.Refresh()
 
     def remove_breakpoint_markers(self):
         self.MarkerDeleteAll(self.BREAKPOINT_MARKER)
         self.MarkerDeleteAll(self.DISABLED_BREAKPOINT_MARKER)
+        self.Refresh()
 
     def set_breakpoint_marker(self, line, disabled=False):
         marker = self.DISABLED_BREAKPOINT_MARKER if disabled else self.BREAKPOINT_MARKER
@@ -568,6 +574,7 @@ class EditorControl(stc.StyledTextCtrl):
             if current_marker & (1 << self.DISABLED_BREAKPOINT_MARKER): 
                 self.MarkerDelete(line-1, self.DISABLED_BREAKPOINT_MARKER)
             self.MarkerAdd(line-1, marker)
+        self.Refresh()
 
     def update_line_numbers(self):
         if self.controller and self.controller.settings.editor.page.show_line_numbers:
@@ -581,6 +588,7 @@ class EditorControl(stc.StyledTextCtrl):
                 self.SetMarginWidth(self.LINE_MARGIN, width)
         else:
             self.SetMarginWidth(self.LINE_MARGIN, 0)
+        self.Refresh()
 
     def detect_language(self):
         if self.controller:
@@ -627,7 +635,8 @@ class EditorControl(stc.StyledTextCtrl):
         self.StyleSetBackground(id, s.create_background())
         self.StyleSetForeground(id, s.create_foreground())
         self.StyleSetEOLFilled(id, s.eol_filled)
-        
+        self.Refresh()
+       
     def save(self):
         if self.file_path:
             try:
@@ -683,6 +692,7 @@ class EditorControl(stc.StyledTextCtrl):
             self.SetProperty("fold", "0")
             self.SetMarginSensitive(self.FOLDING_MARGIN, False)
             self.SetMarginWidth(self.FOLDING_MARGIN, 0)
+        self.Refresh()
 
 class Notebook(aui.AuiNotebook):
 

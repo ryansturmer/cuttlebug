@@ -274,13 +274,20 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
         evt.Skip()
         
     def __on_listed_children(self, parent, result):
+
+        names = []
         if hasattr(result, 'children'):
             for child in result.children:
                 varname= child['child']['name']
                 self.lock.acquire()
                 self.pending_var_additions[varname] = parent
                 self.lock.release()
-                
+                names.append(varname)
+        class Dummy(object): pass
+        evt = Dummy()
+        evt.data = names
+        wx.CallAfter(self.on_var_update, evt)
+        
     def __on_listed_locals(self, frame_item, args, result):
         if result.cls != 'error':
             if hasattr(result, 'locals') and frame_item.is_ok():
@@ -664,6 +671,7 @@ class GDBDebugView(view.View):
         
     def set_model(self, model):
         self.model = model
+        print "Binding the var update"
         self.model.Bind(gdb.EVT_GDB_UPDATE_VARS, self.on_var_update)
 
     def on_var_update(self, evt):

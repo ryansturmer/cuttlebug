@@ -6,9 +6,18 @@ import os, shutil, pickle
 #TODO close all project files when closing a project
 #TODO fix kookiness in the modification of project attributes (save isn't always prompted, confirmation is broken, et al)
 
-class ProjectViewEvent(wx.PyEvent): pass
-
+class ProjectViewEvent(wx.PyEvent):
+    def __init__(self, type, object=None, data=None):
+        super(ProjectViewEvent, self).__init__()
+        self.SetEventType(type.typeId)
+        self.SetEventObject(object)
+        self.data = data
+        
+    def __str__(self):
+        return "<ProjectViewEvent type=%s>" % (event_types.get(self.GetEventType(), "???"))
+    
 EVT_PROJECT_DCLICK_FILE = wx.PyEventBinder(wx.NewEventType())
+event_types = {EVT_PROJECT_DCLICK_FILE._getEvtType() : "EVT_PROJECT_DCLICK_FILE"}
 
 MNU_PROJECT = 0
 MNU_FILE = 1
@@ -42,15 +51,13 @@ class ProjectView(view.View):
         evt.Skip()
         
     def on_left_dclick(self, evt):
-        print "Double clicked a file"
         pt = evt.GetPosition()
         item, flags = self.tree.HitTest(pt)
         if item and item.IsOk():
             path = self.tree.GetPyData(item)
             if path:
                 if os.path.isfile(path):
-                    print "indeed a file!"
-                    evt = ProjectViewEvent(EVT_PROJECT_DCLICK_FILE, self, data=path)
+                    evt = ProjectViewEvent(EVT_PROJECT_DCLICK_FILE,self,path)
                     wx.PostEvent(self, evt)
                 elif os.path.isdir(path):
                     self.tree.Expand(item)

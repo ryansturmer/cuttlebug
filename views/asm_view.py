@@ -2,7 +2,7 @@ from controls import ListControl
 import view
 import wx
 import settings
-import gdb
+import app, gdb
 
 def tabify(s):
     TAB_STOP = 5
@@ -30,6 +30,9 @@ class DisassemblyView(view.View):
         sizer.Add(self.list, 1, wx.EXPAND)
         self.SetSizer(sizer)
  
+        self.controller.Bind(app.EVT_APP_TARGET_HALTED, self.on_target_halted)
+        self.controller.Bind(app.EVT_APP_TARGET_DISCONNECTED, self.on_gdb_finished)
+    
     def on_col_resize(self, evt):
         self.save_positions()
         evt.Skip()
@@ -55,11 +58,12 @@ class DisassemblyView(view.View):
         self.clear()
         evt.Skip()
         
-    def on_target_halted(self, a, b):
+    def on_target_halted(self, evt):
         self.save_positions()
         if self.model:
             self.model.data_disassemble(start_addr="$pc-8", end_addr="$pc+8", callback=self.on_disassembled_data)
-         
+        evt.Skip()
+        
     def update_assembly(self, instructions):
         self.list.Freeze()
         self.list.clear()

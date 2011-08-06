@@ -203,7 +203,6 @@ class Frame(util.PersistedFrame):
             self.manager.AddPane(self.editor_view, self.editor_view.info)
 
             self.project_view = views.ProjectView(self, controller=self.controller)
-            print "binding the dclick event"
             self.project_view.Bind(views.EVT_PROJECT_DCLICK_FILE, self.on_project_dclick_file)
             self.project_view.info = aui.AuiPaneInfo().Caption('Project').Left().Name('ProjectView') 
             self.manager.AddPane(self.project_view, self.project_view.info)
@@ -231,7 +230,6 @@ class Frame(util.PersistedFrame):
             self.editor_view.notebook.open(path)
 
         def on_project_dclick_file(self, evt):
-            print "got a dclick"
             self.open_file(evt.data)
 
         # Event Handlers
