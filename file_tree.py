@@ -83,6 +83,7 @@ class FileTree(object):
             self.expand_directory(node)
             for child in node.children:
                 self.expand_all(child)
+                
     def expand_directory(self, node):
         node = self.get_node(node)
         if node.children or not node.is_dir: return

@@ -724,11 +724,9 @@ class Notebook(aui.AuiNotebook):
     
     def on_close_other_tabs(self, evt):
         for i in range(self._current_index):
-            self.close_tab(i)
-        i+=1
+            self.close_tab(0)
         while self.PageCount > 1:
             self.close_tab(1)
-        # TODO FINISH
         pass
     
     def on_close_all_tabs(self, evt):
