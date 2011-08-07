@@ -430,7 +430,7 @@ class EditorControl(stc.StyledTextCtrl):
 
     def on_add_watch(self, evt):
         watch_str = self.GetSelectedText().strip()        
-        wx.CallAfter(self.controller.add_watch, watch_str)
+        self.controller.add_watch(watch_str)
         
     def on_disable_breakpoint(self, evt):
         line = self.line_from_point(self.click_pos)+1        

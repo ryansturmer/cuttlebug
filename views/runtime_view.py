@@ -317,7 +317,7 @@ class RuntimeTree(gizmos.TreeListCtrl, ArtListMixin, KeyTree):
             
     def add_var_item(self, parent, name, var):
         if parent.is_ok():
-            var_item = self.append_item(parent, var.expression)
+            var_item = self.append_item(parent, var.expression.strip('"'))
             self.update_var_item(var_item, name, var)
             
     def update_var_item(self, var_item, name, var):
@@ -660,6 +660,9 @@ class RuntimeView(view.View):
         
     def update(self, stack):
         self.tree.update()
+        
+    def add_watch(self, s):
+        self.tree.add_watch(s)
         
 class GDBDebugView(view.View):
     def __init__(self, *args, **kwargs):

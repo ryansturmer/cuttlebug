@@ -37,12 +37,14 @@ class BuildPane(stc.StyledTextCtrl):
         self.AddStyledText(self.styler.style(text))
         self.ScrollLines(1000)
         self.SetReadOnly(True)
+        self.Refresh()
         
     def clear(self):
         self.styler.reset()
         self.SetReadOnly(False)
         self.ClearAll()
         self.SetReadOnly(True)
+        self.Refresh()
         
     def on_click(self, event):
         point=event.GetPosition()
@@ -245,6 +247,7 @@ class LogPane(wx.Panel):
 
     def on_clear(self, evt):
         self.txt.Clear()
+        self.Refresh()
         
     def input_handler(self, evt):
         if self.__input_handler:

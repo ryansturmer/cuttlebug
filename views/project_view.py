@@ -470,7 +470,7 @@ class ProjectTree(wx.TreeCtrl):
 
         additions, deletions = self.file_tree.get_tree_changes()
 
-        self.Freeze()
+        #self.Freeze()
         self.files[self.project.directory] = self.files_item
 
         # Remove any file/folder items that no longer exist
@@ -509,7 +509,8 @@ class ProjectTree(wx.TreeCtrl):
                     if not self.backups_visible and file.endswith("~"):
                         continue
                     self.add_file(os.path.join(root, file), icons.get_file_icon(file))
-        self.Thaw()
+        #self.Thaw()
+        self.Refresh()
 
     def save_state(self):
         state = set()
