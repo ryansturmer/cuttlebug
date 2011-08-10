@@ -1,7 +1,7 @@
 from __future__ import with_statement
 import wx.aui as aui
 import wx.stc as stc
-import os
+import os, string
 import wx
 import view, menu, icons, util, app, gdb 
 
@@ -9,6 +9,7 @@ import view, menu, icons, util, app, gdb
 #TODO fix updating the colorization settings so you don't have to close and reopen existing tabs
 FOUND_COLOR = wx.WHITE
 NOTFOUND_COLOR = wx.Colour(255,102,102)
+ID_CHARS = string.ascii_letters + string.digits + '_'
 
 class QuickFindBar(wx.Panel):
     
@@ -47,11 +48,9 @@ class QuickFindBar(wx.Panel):
         self.whole_word = whole_word
 
     def show_and_focus(self):
-      #  self.GetParent().Freeze()
         self.Show()
         self.GetParent().Layout()
         self.textctrl.SetFocus()
-     #   self.GetParent().Thaw()
 
     def on_next(self, evt):
         self.find_next(self.textctrl.GetValue())
@@ -155,7 +154,7 @@ class EditorView(view.View):
             self.set_exec_location(file, line, goto=goto)
         evt.Skip()
         
-    def on_target_running(self):
+    def on_target_running(self, evt):
         self.remove_exec_marker()
         evt.Skip()
         
@@ -298,7 +297,11 @@ class EditorControl(stc.StyledTextCtrl):
         self.Bind(stc.EVT_STC_UPDATEUI, self.on_update_ui)
         self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key)
+        self.Bind(wx.stc.EVT_STC_DWELLSTART, self.on_hover)
+        self.Bind(wx.stc.EVT_STC_DWELLEND, self.on_endhover)
         self.error_redness = 0
+        self.SetMouseDwellTime(1000)
+        self.gdb_varname = None
         
     def on_key(self, evt):
         if evt.GetKeyCode() == wx.WXK_ESCAPE and evt.GetModifiers() == 0:
@@ -308,11 +311,51 @@ class EditorControl(stc.StyledTextCtrl):
         evt.Skip()
         
     def on_mouse_motion(self, evt):
-        evt.Skip()
         #point = evt.GetPosition()
         #loc = self.PositionFromPoint(point)
+        #print loc
+        evt.Skip()
+    
+    def on_hover(self, evt):
+        #print "Hovering: ", evt.GetPosition()
+        i = evt.GetPosition()
+        # Position is invalid
+        if i < 0:
+            evt.Skip()
+            return
+
+        # Get the identifier at the cursor
+        j = i
+        lower, upper = 0, self.GetLength()
+        while j < upper:
+            char = self.GetTextRange(j,j+1)
+            if char not in ID_CHARS:
+                break
+            j+=1
+        while i > lower:
+            char = self.GetTextRange(i-1,i)
+            if char not in ID_CHARS:
+                break
+            i-=1
+        varname = self.GetTextRange(i,j)
         
-  
+        # Query gdb for its value, and get a callback when the data arrives
+        self.gdb_varname = varname
+        self.controller.gdb.data_evaluate_expression(varname, self.on_got_gdb_data)
+        evt.Skip()
+
+    
+    def on_got_gdb_data(self, data):
+        # If by the time data comes back from gdb we don't want to display it anymore, just forget about it
+        if self.gdb_varname != None:
+            # If the data is valid, display it in a tooltip!
+            if data.cls == 'done':
+                wx.CallAfter(self.SetToolTipString, "%s = %s" % (self.gdb_varname, data.value))
+        
+    def on_endhover(self, evt):
+        self.gdb_varname = None
+        self.SetToolTipString("")
+        
     def define_markers(self):
         # Execution Marker (for showing current program location)
         self.MarkerDefine(self.EXECUTION_MARKER, stc.STC_MARK_ARROW)
@@ -717,6 +760,13 @@ class Notebook(aui.AuiNotebook):
         m.item('Close', icon='ex.png', func=self.on_close_tab)
         m.item('Close All', func=self.on_close_all_tabs)        
         m.item('Close Others', func=self.on_close_other_tabs)
+        m.separator()
+        submenu = m.submenu('Sort')
+        submenu.item('by filename', func=self.on_sort_by_filename)
+        submenu.item('by extension', func=self.on_sort_by_extension)
+        submenu.item('by date modified', func=self.on_sort_by_date_modified)
+        submenu.item('unsaved files first', func=self.on_sort_by_unsaved_files)
+        
         self.popup_menu = m
         
     def on_close_tab(self, evt):
@@ -727,6 +777,17 @@ class Notebook(aui.AuiNotebook):
             self.close_tab(0)
         while self.PageCount > 1:
             self.close_tab(1)
+
+    def on_sort_by_filename(self):
+        pass
+    
+    def on_sort_by_extension(self):
+        pass
+    
+    def on_sort_by_date_modified(self):
+        pass
+    
+    def on_sort_by_unsaved_files(self):
         pass
     
     def on_close_all_tabs(self, evt):

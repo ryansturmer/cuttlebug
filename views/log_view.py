@@ -261,6 +261,7 @@ class LogPane(wx.Panel):
         #if not message.endswith("\n"): message += "\n"        
         line = handler.format(message)
         wx.CallAfter(self.txt.AppendText, "%s" % line)
+        wx.CallAfter(self.txt.Refresh)
 
     # TODO hook these up
     def on_hide(self, evt):
