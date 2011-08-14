@@ -20,6 +20,10 @@ class MemoryTable(grid.PyGridTableBase):
         self.stride = int(stride)
         self.ResetView()
 
+    def set_base(self, base):
+        self.base = int(base)
+        self.ResetView()
+        
     def update(self, base_addr, values):
         self.cached_range =  (base_addr, base_addr + (len(values)*self.stride))
         self.cached_data = list(values)
@@ -33,25 +37,19 @@ class MemoryTable(grid.PyGridTableBase):
         self.rows = self.size / (self.stride*cols)
         self.ResetView()
 
-    def __address_from_coordinate(self, row, col):
-        return row*self.stride*self.cols + col*self.stride
-
-    def __coordinate_from_address(self, address):
-        row = address / (self.stride*self.cols)
-        col = (address % (self.cols))/self.stride
-        return row, col
-
     def address_from_coordinate(self, row, col):
-        return self.__address_from_coordinate(row, col)
-    
-    def address_from_row(self, row):
-        return self.__address_from_coordinate(row, 0)
+        return self.base + row*self.stride*self.cols + col*self.stride
 
     def coordinate_from_address(self, address):
-        return self.__coordinate_from_address(address)
+        row = (address-self.base) / (self.stride*self.cols)
+        col = ((address-self.base) % (self.cols))/self.stride
+        return row, col
+
+    def address_from_row(self, row):
+        return self.address_from_coordinate(row, 0)
     
     def GetAttr(self, row, col, kind):
-        addr = self.__address_from_coordinate(row, col)
+        addr = self.address_from_coordinate(row, col)
         attr = grid.GridCellAttr()
         if not self.is_in_cache(addr):
             attr.SetTextColour("darkgray")
@@ -73,7 +71,7 @@ class MemoryTable(grid.PyGridTableBase):
         return False
 
     def GetValue(self, row,col):
-        addr = self.__address_from_coordinate(row ,col)
+        addr = self.address_from_coordinate(row ,col)
         if addr >= self.cached_range[0] and addr < self.cached_range[1]:
             fmt = "%%0%dx" % (self.stride*2)
             try:
@@ -84,7 +82,7 @@ class MemoryTable(grid.PyGridTableBase):
             return "??"*self.stride
 
     def SetValue(self, row, col, value):
-        addr = self.__address_from_coordinate(row,col)
+        addr = self.address_from_coordinate(row,col)
         if self.update_callable:
             self.update_callable(addr, value)
          
@@ -94,7 +92,6 @@ class MemoryTable(grid.PyGridTableBase):
 
     def ResetView(self):
             """Trim/extend the control's rows and update all values"""
-            #print "Table rows, cols = %s" % ((self.rows, self.cols),)
             if self.GetView() is None:
                 return
             self.clear_cache()
@@ -210,7 +207,7 @@ class MemoryView(view.View):
         self.fetching = False
         
         
-        #sizer.Add(self.create_toolbar(), 0, wx.EXPAND)        
+        sizer.Add(self.create_toolbar(), 0, wx.EXPAND)        
         sizer.Add(self.grid,1, wx.EXPAND)
         
         self.SetSizer(sizer)
@@ -223,11 +220,28 @@ class MemoryView(view.View):
     
     def create_toolbar(self):
         pnl_toolbar = wx.Panel(self)
-        combo_address = wx.ComboBox(pnl_toolbar)
+        combo_address = wx.ComboBox(pnl_toolbar, style=wx.TE_PROCESS_ENTER)
+        combo_address.Bind(wx.EVT_TEXT_ENTER, self.on_addr_changed)
+        combo_address.Bind(wx.EVT_COMBOBOX, self.on_addr_changed)
+
+        self.combo_address = combo_address
         toolbar_sizer = wx.BoxSizer(wx.HORIZONTAL)
         toolbar_sizer.Add(combo_address, border=5, flag=wx.ALL)
         pnl_toolbar.SetSizer(toolbar_sizer)
         return pnl_toolbar
+
+    def on_addr_changed(self, evt):
+        cb = evt.GetEventObject()
+        try:
+            s = cb.GetValue()
+            new_addr = util.str2int(s)
+            self.grid.Table.set_base(new_addr)
+            self.refresh()
+            self.last_set_address = s
+            if cb.FindString(s) < 0:
+                cb.Append(s)
+        except:
+            cb.SetValue(self.last_set_address)
         
     def on_target_connected(self, evt):
         self._fetch_data()
@@ -238,6 +252,8 @@ class MemoryView(view.View):
     def on_target_running(self, evt):
         pass
     
+    def refresh(self):
+        self._fetch_data()
     def _fetch_data(self):
         if not self.fetching and self.controller.gdb:
             start, end = self.grid.visible_address_range()
