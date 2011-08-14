@@ -100,6 +100,7 @@ class Frame(util.PersistedFrame):
             view.item('&Logs\tAlt+L', self.on_toggle_log_view, icon="application_view_list.png")
             #view.item('&Debug\tAlt+D', self.on_toggle_debug_view, icon="bug.png")
             view.item('&Disassembly\tAlt+A', self.on_toggle_disassembly_view, icon="chip.png")
+            view.item('&Memory\tAlt+M', self.on_toggle_memory_view, icon="chip.png")
         
             menu.manager.publish(menu.TARGET_DETACHED)
             menu.manager.publish(menu.PROJECT_CLOSE)
@@ -218,6 +219,10 @@ class Frame(util.PersistedFrame):
             self.disassembly_view = views.DisassemblyView(self, controller=self.controller)
             self.disassembly_view.info = aui.AuiPaneInfo().Caption('Disassembly').Right().Name('DisassemblyView').MinSize((250,50))
             self.manager.AddPane(self.disassembly_view, self.disassembly_view.info)
+
+            self.memory_view = views.MemoryView(self, controller=self.controller)
+            self.memory_view.info = aui.AuiPaneInfo().Caption('Memory').Right().Name('MemoryView').MinSize((250,50))
+            self.manager.AddPane(self.memory_view, self.memory_view.info)
     
             self.views = [self.log_view, self.editor_view, self.project_view, self.runtime_view, self.disassembly_view]
             

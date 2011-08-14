@@ -306,26 +306,16 @@ class EditorControl(stc.StyledTextCtrl):
     def on_key(self, evt):
         if evt.GetKeyCode() == wx.WXK_ESCAPE and evt.GetModifiers() == 0:
             self.GetParent().find_bar.hide()
-        #print self.GetCurrentPos()
         
         evt.Skip()
         
     def on_mouse_motion(self, evt):
-        #point = evt.GetPosition()
-        #loc = self.PositionFromPoint(point)
-        #print loc
         evt.Skip()
-    
-    def on_hover(self, evt):
-        #print "Hovering: ", evt.GetPosition()
-        i = evt.GetPosition()
-        # Position is invalid
-        if i < 0:
-            evt.Skip()
-            return
-
-        # Get the identifier at the cursor
-        j = i
+            
+    def get_word_at(self, pos=-1):
+        if pos < 0:
+            return None
+        i,j = pos,pos
         lower, upper = 0, self.GetLength()
         while j < upper:
             char = self.GetTextRange(j,j+1)
@@ -337,20 +327,24 @@ class EditorControl(stc.StyledTextCtrl):
             if char not in ID_CHARS:
                 break
             i-=1
-        varname = self.GetTextRange(i,j)
-        
+        if i != j:
+            return self.GetTextRange(i,j)
+        else:
+            return None
+    
+    def on_hover(self, evt):        
         # Query gdb for its value, and get a callback when the data arrives
-        self.gdb_varname = varname
-        self.controller.gdb.data_evaluate_expression(varname, self.on_got_gdb_data)
-        evt.Skip()
-
+        self.gdb_varname = self.get_word_at(evt.GetPosition())
+        if self.gdb_varname:
+            self.controller.gdb.data_evaluate_expression(self.gdb_varname, self.on_got_gdb_data)
+            evt.Skip()
     
     def on_got_gdb_data(self, data):
         # If by the time data comes back from gdb we don't want to display it anymore, just forget about it
         if self.gdb_varname != None:
             # If the data is valid, display it in a tooltip!
             if data.cls == 'done':
-                wx.CallAfter(self.SetToolTipString, "%s = %s" % (self.gdb_varname, data.value))
+                wx.CallAfter(self.SetToolTipString, " %s = %s " % (self.gdb_varname, data.value))
         
     def on_endhover(self, evt):
         self.gdb_varname = None
@@ -966,7 +960,9 @@ class Notebook(aui.AuiNotebook):
             return self.create_file_tab(path)
         else:
             return None
-        
+    
+
+            
     def create_file_tab(self, path=None):
         if path:
             if self.controller.project:
