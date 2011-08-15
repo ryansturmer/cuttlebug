@@ -215,21 +215,34 @@ class MemoryView(view.View):
         self.controller.Bind(app.EVT_APP_TARGET_RUNNING, self.on_target_running)
         self.controller.Bind(app.EVT_APP_TARGET_CONNECTED, self.on_target_connected)
         
-        self.grid.Bind(grid.EVT_GRID_LABEL_LEFT_DCLICK, self.on_label_dclick)
         self.grid.GetGridWindow().Bind(wx.EVT_MOTION, self.on_mouse_motion)
     
     def create_toolbar(self):
-        pnl_toolbar = wx.Panel(self)
-        combo_address = wx.ComboBox(pnl_toolbar, style=wx.TE_PROCESS_ENTER)
+        toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_FLAT)
+        toolbar.SetToolBitmapSize((18,18))
+        combo_address = wx.ComboBox(toolbar, style=wx.TE_PROCESS_ENTER)
         combo_address.Bind(wx.EVT_TEXT_ENTER, self.on_addr_changed)
         combo_address.Bind(wx.EVT_COMBOBOX, self.on_addr_changed)
-
+        combo_address.SetValue('0x00000000')
         self.combo_address = combo_address
-        toolbar_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        toolbar_sizer.Add(combo_address, border=5, flag=wx.ALL)
-        pnl_toolbar.SetSizer(toolbar_sizer)
-        return pnl_toolbar
-
+        combo_size = wx.ComboBox(toolbar, style=wx.CB_READONLY)
+        combo_size.Append("Byte (8)")
+        combo_size.Append("Word (16)")
+        combo_size.Append("Long (32)")
+        combo_size.SetSelection(2)
+        combo_size.Bind(wx.EVT_COMBOBOX, self.on_size_changed)
+        
+        toolbar.AddControl(wx.StaticText(toolbar, -1, " Base Addr: "))
+        toolbar.AddControl(combo_address)
+        toolbar.AddControl(wx.StaticText(toolbar, -1, " Size: "))
+        toolbar.AddControl(combo_size)
+        
+        util.tool_item(self, toolbar, label="Refresh", func=self.on_refresh, icon='arrow_refresh.png')
+        
+        toolbar.Realize()
+        toolbar.Fit()
+        return toolbar
+    
     def on_addr_changed(self, evt):
         cb = evt.GetEventObject()
         try:
@@ -243,11 +256,23 @@ class MemoryView(view.View):
         except:
             cb.SetValue(self.last_set_address)
         
+    def on_size_changed(self, evt):
+        cb = evt.GetEventObject()
+        item = cb.GetSelection()
+        self.grid.Table.set_stride({0:1, 1:2, 2:4}[item])
+        self.grid.resize()
+        self.refresh()
+        
+    def on_refresh(self, evt):
+        self.refresh()
+    
     def on_target_connected(self, evt):
         self._fetch_data()
+        evt.Skip()
         
     def on_target_halted(self, evt):
         self._fetch_data()
+        evt.Skip()
 
     def on_target_running(self, evt):
         pass
@@ -268,31 +293,23 @@ class MemoryView(view.View):
                 memtable = []
                 for entry in result.memory:
                     memtable.append(int(entry.data[0]))
-                    wx.CallAfter(self.update,int(result.addr,16), memtable)
+                wx.CallAfter(self.update,int(result.addr,16), memtable)
         
     def update(self, base_addr, values):
+        print "view update"
         self.grid.update(base_addr, values)
         
     def on_cell_update(self, addr, value):
         print hex(addr) + "=" + str(value)
 
     def on_scrolled(self, evt):
-        #print "scrolled"
-        #print evt.GetPosition()
         wx.CallAfter(self._fetch_data)
-        #self._fetch_data()
         evt.Skip()
     
     def on_size(self, evt):
         self._fetch_data()
         evt.Skip()
-        
-    def on_label_dclick(self, evt):
-        start, end = self.grid.visible_address_range()
-        #print "Visible Address Range: 0x%08x -> 0x%08x" % (start, end)
-        #print "Stride: ", self.grid.GetTable().stride
-        self._fetch_data()        
-        
+                
     def on_mouse_motion(self, evt):
         x,y = self.grid.CalcUnscrolledPosition(evt.GetPosition())
         row = self.grid.YToRow(y)
