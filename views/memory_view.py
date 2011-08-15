@@ -275,7 +275,7 @@ class MemoryView(view.View):
         evt.Skip()
 
     def on_target_running(self, evt):
-        pass
+        evt.Skip()
     
     def refresh(self):
         self._fetch_data()
@@ -318,8 +318,11 @@ class MemoryView(view.View):
             self.grid.hover_cell = (row, col)
             self.grid.hover_address = self.grid.GetTable().address_from_coordinate(row, col)
             #print "Changed cell", self.grid.hover_cell, "0x%08x" % self.grid.hover_address
-            v = int(self.grid.GetCellValue(row, col),16)
-            self.controller.gdb.command('info symbol 0x%08x' % v, callback=self.on_symbol_lookup)    
+            #self.controller.gdb.command('info symbol 0x%08x' % v, callback=self.on_symbol_lookup)    
+            tooltip = "Address = 0x%08x" % self.grid.hover_address
+            self.grid.GetGridWindow().SetToolTipString(tooltip)
+        else:
+            self.grid.GetGridWindow().HideToolTip()
         evt.Skip()
 
     def on_symbol_lookup(self, data):
