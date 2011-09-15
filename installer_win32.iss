@@ -7,11 +7,11 @@
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{66D5A814-2B31-4667-A248-6B0ED0E2D710}
 AppName=Cuttlebug
-AppVerName=Cuttlebug 0.1
+AppVerName=Cuttlebug 0.2
 AppPublisher=Ryan Sturmer
-AppPublisherURL=http://www.example.org
-AppSupportURL=http://www.example.org
-AppUpdatesURL=http://www.example.org
+AppPublisherURL=http://www.cuttlebug.org
+AppSupportURL=http://www.cuttlebug.org
+AppUpdatesURL=http://www.cuttlebug.org
 DefaultDirName={pf}\Cuttlebug
 DefaultGroupName=Cuttlebug
 AllowNoIcons=yes
@@ -28,7 +28,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "dist\cuttlebug.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\cuttlebug.exe"; DestDir: "{app}"; Flags: ignoreversion; Permissions: everyone-readexec
 Source: "dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 

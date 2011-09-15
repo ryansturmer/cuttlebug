@@ -6,6 +6,56 @@ import functools
 
 EVT_BITFIELD_CHANGED = wx.PyEventBinder(wx.NewEventType())
 
+'''
+def show_busy(parent, message, func, *args):
+    frame = BusyFrame(parent, message, wx.Bitmap('icons/analyzer_refresh.png'))
+    frame.Show()
+    def thread_main():
+        try:
+            func(*args)
+        except Exception as exception:
+            wx.CallAfter(util.show_exception, parent, exception)
+        finally:
+            wx.CallAfter(frame.Close)
+    util.start_thread(thread_main)
+'''
+
+class ModalFrame(wx.Frame):
+    def __init__(self, parent):
+        style = wx.FRAME_TOOL_WINDOW | wx.BORDER_RAISED
+        style |= wx.FRAME_FLOAT_ON_PARENT if parent else wx.STAY_ON_TOP
+        super(ModalFrame, self).__init__(parent, -1, '', style=style)
+        self.SetBackgroundColour(wx.SystemSettings_GetColour(wx.SYS_COLOUR_BTNFACE))
+
+class BusyFrame(ModalFrame):
+    def __init__(self, parent, message, bitmap=None):
+        super(BusyFrame, self).__init__(parent)
+        self.Bind(wx.EVT_CLOSE, self.on_close)
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        if bitmap:
+            bitmap = wx.StaticBitmap(self, -1, bitmap)
+            sizer.Add(bitmap, 0, wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 15)
+        
+        #bitmap = throb.Throbber(self, -1, util.get_icon('download_anim.png'), frames=8, frameWidth=48, frameDelay=0.1)
+        #bitmap.Start()
+        #sizer.Add(bitmap, 0, wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 15)
+        
+        text = wx.StaticText(self, -1, message)
+        text.Wrap(300)
+        sizer.Add(text, 0, wx.ALIGN_CENTER_VERTICAL)
+        wrapper = wx.BoxSizer(wx.VERTICAL)
+        wrapper.Add(sizer, 1, wx.EXPAND|wx.ALL, 15)
+        self.SetSizerAndFit(wrapper)
+        self.CenterOnParent()
+        if parent:
+            parent.Disable()
+    def on_close(self, event):
+        event.Skip()
+        parent = self.GetParent()
+        if parent:
+            parent.Enable()
+
 class BusyMenuBar(wx.MenuBar):
     pass
 
@@ -15,12 +65,19 @@ class StatusBar(wx.StatusBar):
     LINE = 2
     STATE = 3
     GAUGE = 4
+    
+    NONE = "blank.png"
+    CONNECTED = "status_connected.png"
+    RUNNING = "status_running.png"
+    DISCONNECTED = "status_disconnected.png"
+    
     def __init__(self, *args, **kwargs):
         super(StatusBar, self).__init__(*args, **kwargs)
         self.SetFieldsCount(5)
         self.SetStatusWidths([18, -24,-2,-8,-8])
-
-
+        self.staticbmp = None
+        self.load_icons()
+        
         # Progress Bar
         self.gauge = wx.Gauge(self)
         self.work_timer = wx.Timer(self, id=1)
@@ -37,9 +94,19 @@ class StatusBar(wx.StatusBar):
         self.Bind(wx.EVT_IDLE, self.on_idle)
         self.icon = None
 
+    def load_icons(self):
+        self.icon_names = [StatusBar.NONE, StatusBar.CONNECTED, StatusBar.DISCONNECTED, StatusBar.RUNNING]
+        self.icons = dict([(key,util.get_icon(key)) for key in self.icon_names])
+        self.staticbmps = {}
+        for key in self.icon_names:
+            self.staticbmps[key] = wx.StaticBitmap(self, -1, self.icons[key])
+            self.staticbmps[key].Hide()
+
     def __set_line(self, line=0):
         if line:
             self._line = int(line)
+            if self._line < 0:
+                line = "???"
             wx.CallAfter(self.SetStatusText, str(line), self.LINE)
         else:
             self._line = 0
@@ -48,17 +115,13 @@ class StatusBar(wx.StatusBar):
     def __get_line(self): return self._line
     line = property(__get_line, __set_line)
     
-    def __set_icon(self, icon):
-        if icon:
-            self.__icon = util.get_icon(icon)
-        else:    
-            self.__icon = util.get_icon('blank.png')
-        self.staticbmp = wx.StaticBitmap(self, -1, self.__icon)
+    def set_icon(self, key):
+        if self.staticbmp:
+            self.staticbmp.Hide()
+        self.staticbmp = self.staticbmps[key]
+        self.staticbmp.Show() 
         wx.CallAfter(self.Reposition)
 
-    def __get_icon(self):
-        return self.icon
-    icon = property(__get_icon, __set_icon)
 
     def set_state(self, text, blink=False, color=wx.BLACK):
         #TODO Put COLOR support in here
@@ -95,6 +158,7 @@ class StatusBar(wx.StatusBar):
             self.gauge.Pulse()
         else:
             self.gauge.SetValue(0)
+            self.gauge.Pulse()
             
     def on_state_timer(self, evt):
         if self.state_on:
@@ -121,6 +185,7 @@ class StatusBar(wx.StatusBar):
         # Icon
         rect = self.GetFieldRect(self.ICON)
         self.staticbmp.SetPosition((rect.x+2, rect.y+2))
+        self.staticbmp.SetSize((rect.height-4, rect.height-4))
         self.size_changed = False
 
 class DictListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.TextEditMixin):
@@ -612,9 +677,9 @@ class RegisterEditDialog(wx.Dialog):
         
         
 if __name__ == "__main__":
-    
-    import project
     '''
+    import project
+    
     print "Loading target file to test register editor:" 
     
     target = project.Target.load('targets/stm32f103.xml')
@@ -626,7 +691,7 @@ if __name__ == "__main__":
     print register
     for field in register.fields:
         print field
-    '''
+    
     register = project.SpecialFunctionRegister("SMPR", "Sample Register", 0x1000, 4, 'rw')
     
     register.add_field(project.Field(0, 3, "FA", "Field A"))
@@ -646,4 +711,9 @@ if __name__ == "__main__":
     RegisterEditDialog.show(frame, register)
     print "Final Register Value 0x%x" % register.value
     frame.Close()
+    app.MainLoop()
+    '''
+    app = wx.PySimpleApp()
+    frame = BusyFrame(None, 'This is a modal frame for presenting information to the user during a long-running task.', wx.ArtProvider_GetBitmap(wx.ART_INFORMATION))
+    frame.Show()
     app.MainLoop()

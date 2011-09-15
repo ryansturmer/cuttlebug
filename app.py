@@ -1,4 +1,4 @@
-import build, views, gdb, project, log, styles, settings, util, menu
+import build, views, gdb, project, log, styles, settings, util, menu, controls
 import logging, os
 import wx
 
@@ -175,13 +175,13 @@ class Controller(wx.EvtHandler):
             self.project.load_target() # Do this to reload the SFRs for the runtime tree, in case we edited the target file
             self.frame.disassembly_view.set_model(self.gdb)
             self.exit_current_state()
-            self.frame.statusbar.icon = "connect.png"
+            self.frame.statusbar.set_icon(self.frame.statusbar.CONNECTED)
             self.state = ATTACHED
             self.halt(callback=self.do_post_attach_cmd, download=self.download_request)
                         
         elif self.state == RUNNING:
             self.exit_current_state()
-            self.frame.statusbar.icon = "connect.png"
+            self.frame.statusbar.set_icon(self.frame.statusbar.CONNECTED)
             self.state = ATTACHED
             if self.download_request:
                 self.download()
@@ -200,7 +200,7 @@ class Controller(wx.EvtHandler):
         menu.manager.publish(menu.TARGET_RUNNING)
         if self.state == ATTACHED:
             self.exit_current_state()
-            self.frame.statusbar.icon = "connect_green.png"
+            self.frame.statusbar.set_icon(self.frame.statusbar.RUNNING)
             self.frame.statusbar.set_state("Running",blink=True)
             self.state = RUNNING
         else:
@@ -212,7 +212,7 @@ class Controller(wx.EvtHandler):
     def enter_idle_state(self):
         self.exit_current_state()
         menu.manager.publish(menu.TARGET_DETACHED)
-        self.frame.statusbar.icon = "disconnect.png"
+        self.frame.statusbar.set_icon(self.frame.statusbar.RUNNING)
         self.frame.statusbar.working = False
         self.frame.statusbar.text = ""
 
@@ -373,6 +373,7 @@ class Controller(wx.EvtHandler):
     def download(self):
         self.download_request = False
         if self.state == ATTACHED:
+            wx.CallAfter(self.frame.start_busy_frame)
             wx.CallAfter(self.frame.start_busy, "Downloading to target...")
             if self.project.debug.pre_download_cmd:
                 self.gdb.command(self.project.debug.pre_download_cmd, callback=self.download_stage_2)
@@ -390,6 +391,7 @@ class Controller(wx.EvtHandler):
 
 
     def on_downloaded(self, result):
+        wx.CallAfter(self.frame.stop_busy_frame)
         wx.CallAfter(self.frame.stop_busy)
         if result.cls == 'error':
             wx.CallAfter(self.frame.error_msg, result.msg)

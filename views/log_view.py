@@ -124,7 +124,7 @@ class BuildStyler(object):
 class LogView(view.View):
     
     def __init__(self, parent, controller):
-        super(LogView, self).__init__(parent, -1, style=wx.BORDER_STATIC, size=(800,150), controller=controller)
+        super(LogView, self).__init__(parent, -1, style=wx.BORDER_NONE, size=(800,150), controller=controller)
         self.notebook = aui.AuiNotebook(self, -1, style=wx.BORDER_NONE | aui.AUI_NB_TAB_MOVE | aui.AUI_NB_TAB_SPLIT)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.notebook,1, wx.EXPAND)
@@ -182,7 +182,7 @@ class LogView(view.View):
 class LogPane(wx.Panel):
 
     def __init__(self, parent, logger, format=None, on_input=None):
-        super(LogPane, self).__init__(parent, -1, style=wx.BORDER_STATIC, size=(800,150))
+        super(LogPane, self).__init__(parent, -1, style=wx.BORDER_NONE, size=(800,150))
         self.txt = wx.TextCtrl(self, -1, style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH2)
         self.create_popup_menu()
         self.__input_handler = None

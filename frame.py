@@ -129,6 +129,16 @@ class Frame(util.PersistedFrame):
             else:
                 self.maximize_editor()
                 
+        def start_busy_frame(self):
+            self.busy_frame = controls.BusyFrame(self, 'Downloading to target...', util.get_icon('download_static.png'))
+            self.busy_frame.CenterOnParent()
+            self.busy_frame.Show()
+            
+        def stop_busy_frame(self):
+            if self.busy_frame:
+                self.busy_frame.Close()
+                self.busy_frame = None
+                
         def start_busy(self, message=''):
             self.statusbar.message = message
             self.statusbar.working = True
@@ -228,7 +238,7 @@ class Frame(util.PersistedFrame):
             
         def create_status_bar(self):
             self.statusbar = controls.StatusBar(self)
-            self.statusbar.icon = "disconnect.png"
+            self.statusbar.set_icon(self.statusbar.DISCONNECTED)
             self.SetStatusBar(self.statusbar)        
         
         def open_file(self, path):
