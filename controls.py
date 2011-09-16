@@ -146,8 +146,9 @@ class StatusBar(wx.StatusBar):
             wx.CallAfter(self.gauge.Pulse)
             wx.CallAfter(self.work_timer.Start,100)
         else:
-            wx.CallAfter(self.work_timer.Stop)
-            wx.CallAfter(self.gauge.SetValue,0)
+            pass
+            #wx.CallAfter(self.work_timer.Stop)
+            #wx.CallAfter(self.gauge.SetValue,0)
     
     def __get_working(self):
         return self.__working
@@ -157,8 +158,11 @@ class StatusBar(wx.StatusBar):
         if self.__working:
             self.gauge.Pulse()
         else:
+            print "stopped timer"
             self.gauge.SetValue(0)
             self.gauge.Pulse()
+            self.work_timer.Stop()
+            
             
     def on_state_timer(self, evt):
         if self.state_on:

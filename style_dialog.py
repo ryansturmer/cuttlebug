@@ -37,6 +37,7 @@ class StyleControls(wx.Panel):
             self.foreground, self.background
         ]
         self.set_style(style)
+
     def set_style(self, style):
         self.style = style
         enable = bool(style)

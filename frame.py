@@ -309,8 +309,8 @@ class Frame(util.PersistedFrame):
             self.editor_view.close()
 
         def on_styles(self, evt):
-            dialog = style_dialog.StyleDialog(None, self.controller.style_manager, on_apply=self.controller.update_styles)
-            dialog.Centre()
+            dialog = style_dialog.StyleDialog(self, self.controller.style_manager, on_apply=self.controller.update_styles)
+            dialog.CentreOnParent()
             dialog.ShowModal() 
         
         def on_new(self, evt):
