@@ -4,6 +4,7 @@ import wx.stc as stc
 import view, util, log, styles, menu
 import logging, re
 from editor_view import QuickFindBar
+import os
 
 class BuildPane(stc.StyledTextCtrl):
     def __init__(self, *args, **kwargs):
@@ -18,7 +19,7 @@ class BuildPane(stc.StyledTextCtrl):
         self.SetCaretForeground(self.GetBackgroundColour())
         self.SetWrapMode(stc.STC_WRAP_WORD)
         self.SetUseHorizontalScrollBar(False)
-        self.styler = BuildStyler()
+        self.styler = BuildStyler(self.controller)
         self.Bind(wx.EVT_LEFT_DOWN, self.on_click)
         
     def apply_styles(self, styles):
@@ -56,10 +57,11 @@ class BuildPane(stc.StyledTextCtrl):
         
 class BuildStyler(object):
     
-    def __init__(self):
+    def __init__(self, controller):
         self.re_warning = re.compile('.*\swarning\:.*')
         self.re_error = re.compile('.*\serror\:.*')
-        self.re_link = re.compile('\A([\w\.\\/]+)\:([0-9]+)(\:([0-9]+))?\:?')
+        self.re_link = re.compile('\A[\t ]*([\w\.\\/]+)\:(([0-9]+))?(\:([0-9]+))?\:?')
+        self.controller = controller
         self.reset()
         
     def reset(self):
@@ -84,11 +86,9 @@ class BuildStyler(object):
         return [(match.start(), match.end()) for match in i]
             
     def hit_test(self, pos):
-        print "hit testing %s" % pos
         link_ranges = self.link_ranges
         for (a,b), location in link_ranges.iteritems():
             if pos >= a and pos <= b:
-                print "Hit test POSITIVE: %s" % (location,)
                 return location
         return None
     
@@ -108,15 +108,21 @@ class BuildStyler(object):
         hittest_ranges = self.link_ranges
         for match in matches:
             a,b = match.start(), match.end()
-            link_ranges.append((a, b))
-            hittest_ranges[(a+idx, b+idx)] = (match.group(1), int(match.group(2)))
+            file = match.group(1)
+            print file
+            if os.path.exists(self.controller.project.absolute_path(file)):
+                link_ranges.append((a, b))
+                try:
+                    hittest_ranges[(a+idx, b+idx)] = (match.group(1), int(match.group(3)))
+                except:
+                    hittest_ranges[(a+idx, b+idx)] = (match.group(1), 1)
             
         s.append((styles.STYLE_BUILD_LINK, link_ranges))
         
         exp_txt = self.__add_style_bytes(txt, styles.STYLE_BUILD_DEFAULT)
         for byte, ranges in s:
-            for range in ranges:
-                exp_txt = self.__update_style_bytes(exp_txt, byte, *range)
+            for r in ranges:
+                exp_txt = self.__update_style_bytes(exp_txt, byte, *r)
         self.idx += len(txt)
         return ''.join(exp_txt)
     

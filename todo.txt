@@ -40,6 +40,7 @@ PROJECT VIEW
  * Star for modified project
  * Periodic refresh of file view
  * Create new file doesn't
+ 
 MAIN FRAME
  * Confirmation/error dialog (for program errors)
  

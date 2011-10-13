@@ -322,7 +322,8 @@ class MemoryView(view.View):
             tooltip = "Address = 0x%08x" % self.grid.hover_address
             self.grid.GetGridWindow().SetToolTipString(tooltip)
         else:
-            self.grid.GetGridWindow().HideToolTip()
+            pass
+            #self.grid.GetGridWindow().HideToolTip()
         evt.Skip()
 
     def on_symbol_lookup(self, data):

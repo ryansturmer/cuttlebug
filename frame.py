@@ -297,8 +297,11 @@ class Frame(util.PersistedFrame):
             self.controller.save_project()
 
         def on_save(self, evt):
-            self.editor_view.save()
-
+            try:
+                self.editor_view.save()
+            except Exception, e:
+                self.error_msg(str(e), "Problem saving file!")
+                
         def on_save_as(self, evt):
             self.editor_view.save_as()
         
@@ -332,7 +335,13 @@ class Frame(util.PersistedFrame):
             if self.editor_view.has_unsaved_files:
                 save_confirm = self.confirm("Save modified files before quitting?")
                 if save_confirm:
-                    self.editor_view.save_all()
+                    try:
+                        self.editor_view.save_all()
+                    except Exception, e:
+                        self.error_msg(str(e), "Problem saving file!")
+                        evt.Veto()
+                        return
+                        
                 elif save_confirm == None:
                     evt.Veto()
                     return

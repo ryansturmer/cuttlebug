@@ -441,10 +441,17 @@ class EditorControl(stc.StyledTextCtrl):
         self.mnu_clear_bp.hide()
         
         self.mnu_add_watch = m.item("Add Watch", func=self.on_add_watch, icon="magnifier_zoom_in.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
-        self.mnu_add_watch.hide()
+        self.mnu_add_watch.hide() 
         
+        self.mnu_toggle_word_wrap = m.item("Word Wrap", func=self.on_toggle_word_wrap, kind=wx.ITEM_CHECK)
         self.popup_menu = m
 
+    def on_toggle_word_wrap(self, evt):
+        mode = {wx.stc.STC_WRAP_NONE : wx.stc.STC_WRAP_WORD, wx.stc.STC_WRAP_WORD : wx.stc.STC_WRAP_NONE}.get(self.GetWrapMode(),wx.stc.STC_WRAP_NONE)
+        print mode
+        self.SetWrapMode(mode)
+        self.Update()
+        
     def on_go_to_pc(self, evt):
         evt.Skip()
 
@@ -676,18 +683,13 @@ class EditorControl(stc.StyledTextCtrl):
        
     def save(self):
         if self.file_path:
+            fp = open(self.file_path, 'w')
             try:
-                fp = open(self.file_path, 'w')
-                try:
-                    fp.write(self.GetText())
-                    self.SetSavePoint()
-                except:
-                    pass
-                finally:
-                    fp.close()
-            except:
-                pass
-
+                fp.write(self.GetText())
+                self.SetSavePoint()
+            finally:
+                fp.close()
+            
     def open_file(self, path):
         path = os.path.normpath(path)
         self.file_path = path
