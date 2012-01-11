@@ -119,7 +119,7 @@ class StatusBar(wx.StatusBar):
         if self.staticbmp:
             self.staticbmp.Hide()
         self.staticbmp = self.staticbmps[key]
-        self.staticbmp.Show() 
+        wx.CallAfter(self.staticbmp.Show()) 
         wx.CallAfter(self.Reposition)
 
 
@@ -130,14 +130,15 @@ class StatusBar(wx.StatusBar):
             self.state_timer.Start(500)
         else:
             self.state_timer.Stop()
-        self.SetStatusText(text, self.STATE)
+        wx.CallAfter(self.SetStatusText, text, self.STATE)
         
     def get_state(self): return self._state
     
     def __set_text(self, text):
+        self.__text = text
         wx.CallAfter(self.SetStatusText,str(text), self.TEXT)
     def __get_text(self):
-        return str(self.GetStatusText())
+        return self.__text
     text = property(__get_text, __set_text)
 
     def __set_working(self, working):
@@ -173,8 +174,9 @@ class StatusBar(wx.StatusBar):
             self.SetStatusText("", self.STATE)
             
     def on_idle(self, evt):
-        if self.size_changed:
-            self.Reposition()
+        pass
+        #if self.size_changed:
+        #    self.Reposition()
 
     def on_size(self, evt):
         self.Reposition()

@@ -16,6 +16,19 @@ DECIMAL = 'd'
 RAW = 'r'
 NATURAL = 'n'
 
+def function_name(x):
+    retval = ''
+    if isinstance(x, functools.partial):
+        retval = 'functools.partial (args=%s, kw=%s): ' % (x.args, x.keywords)
+        x = x.func
+        
+    if hasattr(x, 'im_func'):
+        return retval + str(x.im_self.__class__.__name__) + '.' + x.im_func.__name__
+    elif hasattr(x, '__name__'):
+        return retval + x.__name__
+    
+    return '<UNKNOWN FUNCTION NAME: %s>' % x
+
 def escape(s):
     return s.replace("\\", "\\\\")
 
@@ -197,8 +210,10 @@ class GDB(wx.EvtHandler):
                     if result.token in self.pending:
                         command, callback, internal_callback = self.pending[result.token]
                         if callable(internal_callback):
+                            print "GDB Calling %s" % function_name(internal_callback)
                             internal_callback(result)
                         if callable(callback):
+                            print "GDB Calling %s"  % function_name(callback)
                             callback(result)
                         
                 # Post an event on error
