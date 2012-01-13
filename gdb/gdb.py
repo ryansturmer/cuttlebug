@@ -130,7 +130,6 @@ class GDB(wx.EvtHandler):
         if self.__parser.gdbmi_error:
             msg = self.__parser.gdbmi_error.strip() + " : '" + string.strip() + "'\n"
             logging.getLogger('errors').error(msg)
-            
         return output
 
     @property

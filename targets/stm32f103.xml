@@ -981,6 +981,79 @@
 		<field name="TBLOFF[29:9]" start="9" length="21" />
 	</reg>
 </peripheral>
+<peripheral name="adc">
+	<reg name="SR" fullname="ADC Status Register" offset="0" as="short">
+		<field name="STRT" fullname="Regular channel start flag" start="4" length="1" />
+		<field name="JSTRT" fullname="Injected channel start flag" start="3" length="1" />
+		<field name="JEOC" fullname="Injected channel end of conversion" start="2" length="1" />
+		<field name="EOC" fullname="End of conversion" start="1" length="1" />
+		<field name="AWD" fullname="Analog watchdog flag" start="0" length="1" />
+	</reg>
+	<reg name="CR1" fullname="ADC Control Register 1" offset="0x4" as="int">
+		<field name="AWDEN" fullname="Analog watchdog enable on regular channels" start="23" length="1" />
+		<field name="JAWDEN" fullname="Analog watchdog enable on injected channels" start="22" length="1" />
+		<field name="DUALMOD" fullname="Dual mode selection" start="16" length="4" />
+		<field name="DISCNUM" fullname="Discontinuous mode channel count" start="13" length="3" />
+
+		<field name="JDISCEN" fullname="Discontinuous mode on injected channels" start="12" length="1" />
+		<field name="DISCEN" fullname="Discontinuous mode on regular channels" start="11" length="1" />
+		<field name="JAUTO" fullname="Discontinuous mode on injected channels" start="10" length="1" />
+		<field name="AWDSGL" fullname="Enable the watchdog on a single channel in scan mode" start="9" length="1" />
+		<field name="SCAN" fullname="Scan mode" start="8" length="1" />
+		<field name="JEOCIE" fullname="Interrupt enable for injected channels" start="7" length="1" />
+		<field name="AWDIE" fullname="Analog watchdog interrupt enable" start="6" length="1" />
+		<field name="EOCIE" fullname="Interrupt enable for EOC" start="5" length="1" />
+		<field name="AWDCH" fullname="Analog watchdog channel select bits" start="0" length="4" />
+	</reg>
+		
+	<reg name="CR2" fullname="ADC Control Register 2" offset="0x08" as="int">
+		<field name="TSVREFE" start="23" length="1"/>
+		<field name="SWSTART" start="22" length="1"/>
+		<field name="JSWSTART" start="21" length="1"/>
+		<field name="EXTTRIG" start="20" length="1"/>
+		<field name="EXTSEL" start="17" length="3"/>
+		<field name="JEXTTRIG" start="15" length="1"/>
+		<field name="JEXTSEL" start="12" length="3"/>
+		<field name="ALIGN" start="11" length="1"/>
+		<field name="DMA" start="8" length="1" />
+		<field name="RSTCAL" start="3" length="1" />
+		<field name="CAL" start="2" length="1" />
+		<field name="CONT" start="1" length="1" />
+		<field name="ADON" start="0" length="1" />
+	</reg>
+	
+	<reg name="SQR1" fullname="ADC Regular Sequence Register 1" offset="0x2c" as="int">
+		<field name="L" fullname="Regular channel sequence length" start="20" length="4" />
+		<field name="SQ16" fullname="16th conversion in regular sequence" start="15" length="5" />
+		<field name="SQ15" fullname="15th conversion in regular sequence" start="10" length="5" />
+		<field name="SQ14" fullname="14th conversion in regular sequence" start="5" length="5" />
+		<field name="SQ13" fullname="13th conversion in regular sequence" start="0" length="5" />
+	</reg>
+
+	<reg name="SQR2" fullname="ADC Regular Sequence Register 2" offset="0x30" as="int">
+		<field name="SQ12" fullname="12th conversion in regular sequence" start="25" length="5" />
+		<field name="SQ11" fullname="11th conversion in regular sequence" start="20" length="5" />
+		<field name="SQ10" fullname="10th conversion in regular sequence" start="15" length="5" />
+		<field name="SQ9" fullname="9th conversion in regular sequence" start="10" length="5" />
+		<field name="SQ8" fullname="8th conversion in regular sequence" start="5" length="5" />
+		<field name="SQ7" fullname="7th conversion in regular sequence" start="0" length="5" />
+	</reg>
+
+	<reg name="SQR3" fullname="ADC Regular Sequence Register 3" offset="0x34" as="int">
+		<field name="SQ6" fullname="6th conversion in regular sequence" start="25" length="5" />
+		<field name="SQ5" fullname="5th conversion in regular sequence" start="20" length="5" />
+		<field name="SQ4" fullname="4th conversion in regular sequence" start="15" length="5" />
+		<field name="SQ3" fullname="3rd conversion in regular sequence" start="10" length="5" />
+		<field name="SQ2" fullname="2nd conversion in regular sequence" start="5" length="5" />
+		<field name="SQ1" fullname="1st conversion in regular sequence" start="0" length="5" />
+	</reg>
+	
+	<reg name="DR" fullname="Regular Data Register" offset="0x4c" as="int">
+		<field name="ADC2DATA" fullname="ADC2 Data" start="16" length="16" />
+		<field name="DATA" fullname="Regular Data" start="0" length="16" />
+	</reg>
+		
+</peripheral>
 
 <peripheral name="spi">
     <reg name="CR1" fullname="SPI Control Register 1" offset="0" as="short">
@@ -1039,6 +1112,11 @@
 		<invoke peripheral="timer" name="TIM8" fullname="Timer 8 (Advanced Timer)" base="0x40013400" />	
 	</group>
     <invoke peripheral="dac" name="DAC" fullname="DAC" base="0x40007400" />
+    <group fullname="Analog-to-Digital Converters">
+    	<invoke peripheral="adc" name="ADC1" fullname="ADC1" base="0x40012400" />
+    	<invoke peripheral="adc" name="ADC2" fullname="ADC2" base="0x40012800" />
+    	<invoke peripheral="adc" name="ADC3" fullname="ADC3" base="0x40013C00" />
+    </group>
     <group fullname="GPIO">
         <invoke peripheral="gpio" name="GPIOA" base="0x40010800" />
         <invoke peripheral="gpio" name="GPIOB" base="0x40010C00" />

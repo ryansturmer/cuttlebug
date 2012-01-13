@@ -7,7 +7,6 @@ BUILDING = 1
 ATTACHED = 2
 CONNECTED = 3
 RUNNING = 4
-
 class AppEvent(wx.PyEvent):
     def __init__(self, type, object=None, data=None):
         super(AppEvent, self).__init__()
@@ -63,7 +62,7 @@ class Controller(wx.EvtHandler):
         g.Bind(gdb.EVT_GDB_UPDATE_STACK, self.on_gdb_stack_update)
         #g.Bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, self.on_update_breakpoints)
         #g.Bind(gdb.EVT_GDB_UPDATE_VARS, self.on_update_vars)
-
+        
         self.gdb = g
   
     def setup_logs(self):

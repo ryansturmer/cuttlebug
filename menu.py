@@ -1,6 +1,7 @@
 import wx
 import odict
 import util
+import random, inspect
 
 # APPLICATION SPECIFIC
 # pub/sub topics
@@ -206,10 +207,9 @@ class MenuBar(wx.MenuBar):
         # TODO Implement subscription for showing/hiding/enabling/disabling at the menu level
         return retval
 
-
     def update(self, menu):
-        self.Replace(self._menus[menu], menu.build(self.window), menu.label)
-
+        self.Replace(self._menus[menu], menu.build(self.window), menu.label).Destroy()
+        
 class MenuManager(object):
 
     def __init__(self):
@@ -270,7 +270,7 @@ class MenuManager(object):
 
 manager = MenuManager()
 
-if __name__ == "__main__":
+if __name__ == "__main__":    
     app = wx.PySimpleApp()
     frame = wx.Frame(None)
     menubar = manager.menu_bar(frame)
@@ -298,7 +298,6 @@ if __name__ == "__main__":
         manager.publish("SAVE")
     def close_func(evt):
         manager.publish("CLOSE")
-
     new = file.item("New", hide="SAVE", show="CLOSE")
     open = file.item("Open", disable="SAVE")
     close = file.item("Close", func=close_func)
