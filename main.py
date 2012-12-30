@@ -1,13 +1,14 @@
-import wx, log
+import cuttlebug.settings as settings
+import wx
 
 def set_path():
     import os
     import dummy
-    file = dummy.__file__
-    file = os.path.abspath(file)
-    while file and not os.path.isdir(file):
-        file, ext = os.path.split(file)
-    os.chdir(file)
+    _file = dummy.__file__
+    _file = os.path.abspath(_file)
+    while file and not os.path.isdir(_file):
+        _file, ext = os.path.split(_file)
+    os.chdir(_file)
     
 def activate_psyco():
     try:
@@ -23,14 +24,14 @@ def show_splash():
 
 def run():
     set_path()
-    import util
+    import cuttlebug.util as util
     util.load_templates()
     activate_psyco()
-    import settings
+    
     settings.load_session()
     app = wx.PySimpleApp()
     splash = show_splash()
-    import frame
+    import cuttlebug.ui.frame as frame
     main_window = frame.Frame()
     app.SetTopWindow(main_window)
     app.frame = main_window
