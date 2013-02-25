@@ -1,6 +1,6 @@
 import wx
 import odict
-import util
+from cuttlebug import util
 import random, inspect
 
 # APPLICATION SPECIFIC

@@ -1,5 +1,5 @@
 import wx
-import util
+from cuttlebug import util
 
 if __name__ == "__main__":
     app = wx.App()

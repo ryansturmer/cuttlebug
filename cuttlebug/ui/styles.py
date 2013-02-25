@@ -2,7 +2,7 @@ import wx
 import wx.stc as stc
 import copy
 import pickle
-import cuttlebug.util as util
+from cuttlebug import util
 
 STYLE_PATH = 'styles.dat'
 DEFAULT_STYLE_PATH = 'default-styles.dat'

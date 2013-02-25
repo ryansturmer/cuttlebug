@@ -1,11 +1,7 @@
 import wx
 import wx.aui as aui
 #import wx.stc as stc
-import cuttlebug.util as util
-import cuttlebug.app as app
-#import cuttlebug.build as build
-import cuttlebug.project as project
-import cuttlebug.settings as settings
+from cuttlebug import util, app, project, settings
 
 import notebook, controls, views, menu
 import styles, style_dialog

@@ -13,10 +13,10 @@ ATTACHED = 2
 CONNECTED = 3
 RUNNING = 4
 class AppEvent(wx.PyEvent):
-    def __init__(self, type, object=None, data=None):
+    def __init__(self, _type, obj=None, data=None):
         super(AppEvent, self).__init__()
-        self.SetEventType(type.typeId)
-        self.SetEventObject(object)
+        self.SetEventType(_type.typeId)
+        self.SetEventObject(obj)
         self.data = data
 
 
@@ -40,7 +40,7 @@ class Controller(wx.EvtHandler):
         self.download_request = False
         try:
             self.settings = settings.Settings.load(".settings")
-        except Exception, e:
+        except:
             self.settings = settings.Settings.create(".settings")
         
         # Build events
@@ -88,8 +88,8 @@ class Controller(wx.EvtHandler):
                 self.load_project(project_filename)
                 open_files = settings.session_get('open_files')
                 if open_files:
-                    for file in open_files:
-                        self.open_file(file)
+                    for _file in open_files:
+                        self.open_file(_file)
                 self.frame.project_view.load_state(settings.session_get('project_view_state'))
             except Exception,  e:
                 pass
@@ -145,12 +145,12 @@ class Controller(wx.EvtHandler):
             evt = AppEvent(EVT_APP_PROJECT_CLOSED, self)
             wx.PostEvent(self, evt)
             
-    def goto(self, file, line):
-        absolute_file = self.project.absolute_path(file)
+    def goto(self, _file, line):
+        absolute_file = self.project.absolute_path(_file)
         self.frame.editor_view.goto(absolute_file, line)
 
-    def show_error(self, file, line):
-        absolute_file = self.project.absolute_path(file)
+    def show_error(self, _file, line):
+        absolute_file = self.project.absolute_path(_file)
         self.frame.editor_view.show_error(absolute_file, line)
         
     def save_project(self):

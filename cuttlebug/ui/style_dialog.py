@@ -2,8 +2,9 @@ import wx
 import wx.aui as aui
 import wx.stc as stc
 import copy
-import util
 import styles
+from cuttlebug import util
+
 
 def color_tuple(color):
     return color.Red(), color.Green(), color.Blue()

@@ -1,5 +1,5 @@
 import wx
-import util
+from cuttlebug import util
 import os
 
 

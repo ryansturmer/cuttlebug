@@ -1,9 +1,9 @@
 import wx
 from options import OptionsEvent, EVT_OPTION_CHANGED
 import wx.lib.colourselect as csel
-import wx.lib.filebrowsebutton as filebrowse
+#import wx.lib.filebrowsebutton as filebrowse
 import string, os
-import util
+from cuttlebug import util
 
 class OptionsWidget(object):
     def __init__(self):

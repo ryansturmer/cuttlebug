@@ -3,8 +3,7 @@ import os, threading, logging
 import antlr3, GDBMILexer, GDBMIParser
 import functools
 from models import Type, Variable, GDBVarModel, GDBStackModel, GDBRegisterModel
-import util, odict
-import logging
+from cuttlebug import util, odict
 
 STOPPED = 0
 RUNNING = 1
