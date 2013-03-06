@@ -55,6 +55,7 @@ class QuickFindBar(wx.Panel):
         self.Show()
         self.GetParent().Layout()
         self.textctrl.SetFocus()
+        self.textctrl.SetSelection(0,self.textctrl.GetLastPosition())
 
     def on_next(self, evt):
         self.find_next(self.textctrl.GetValue())
