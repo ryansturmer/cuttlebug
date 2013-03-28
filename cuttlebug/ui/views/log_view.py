@@ -25,6 +25,9 @@ class BuildPane(stc.StyledTextCtrl):
         self.SetUseHorizontalScrollBar(False)
         self.styler = BuildStyler(self.controller)
         self.Bind(wx.EVT_LEFT_DOWN, self.on_click)
+        self.Bind(wx.EVT_MOTION, self.on_move)
+        self.CURSOR_HAND = wx.StockCursor(wx.CURSOR_HAND)
+        self.CURSOR_IBEAM = wx.StockCursor(wx.CURSOR_IBEAM)
         
     def apply_styles(self, styles):
         for style in styles:
@@ -50,7 +53,17 @@ class BuildPane(stc.StyledTextCtrl):
         self.ClearAll()
         self.SetReadOnly(True)
         self.Refresh()
-        
+    
+    def on_move(self, event):
+        point=event.GetPosition()
+        pos = self.PositionFromPoint(point)
+        location = self.styler.hit_test(pos)
+        if location:
+            self.SetCursor(self.CURSOR_HAND)
+        else:
+            self.SetCursor(self.CURSOR_IBEAM)
+        event.Skip()
+            
     def on_click(self, event):
         point=event.GetPosition()
         pos = self.PositionFromPoint(point)

@@ -119,7 +119,7 @@ class StatusBar(wx.StatusBar):
         if self.staticbmp:
             self.staticbmp.Hide()
         self.staticbmp = self.staticbmps[key]
-        wx.CallAfter(self.staticbmp.Show()) 
+        wx.CallAfter(self.staticbmp.Show) 
         wx.CallAfter(self.Reposition)
 
 
