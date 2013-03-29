@@ -447,6 +447,8 @@ class EditorControl(stc.StyledTextCtrl):
         
         self.mnu_add_watch = m.item("Add Watch", func=self.on_add_watch, icon="magnifier_zoom_in.png", hide=[menu.TARGET_RUNNING, menu.TARGET_DETACHED], show=[menu.TARGET_HALTED, menu.TARGET_ATTACHED])
         self.mnu_add_watch.hide() 
+
+        m.separator()
         
         self.mnu_toggle_word_wrap = m.item("Word Wrap", func=self.on_toggle_word_wrap, kind=wx.ITEM_CHECK)
         self.popup_menu = m
@@ -520,10 +522,14 @@ class EditorControl(stc.StyledTextCtrl):
                 self.mnu_set_bp.show()
                 self.mnu_disable_bp.hide()
                 self.mnu_enable_bp.hide()
+            
+            if start != end:
+                self.mnu_add_watch.show()
 
         else:
             self.mnu_clear_bp.hide()
             self.mnu_set_bp.hide()
+            self.mnu_add_watch.hide()
             
         self.PopupMenu(self.popup_menu.build(self)) 
         evt.Skip()
