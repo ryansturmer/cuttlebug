@@ -1,7 +1,7 @@
 import wx
-import util
+import cuttlebug.util as util
 import wx.lib.mixins.listctrl as listmix
-from odict import OrderedDict
+from collections import OrderedDict
 import functools
 
 EVT_BITFIELD_CHANGED = wx.PyEventBinder(wx.NewEventType())

@@ -2,7 +2,7 @@ import view
 import wx
 import wx.lib.mixins.listctrl as listmix
 import sys
-from odict import OrderedDict
+from collections import OrderedDict
 from cuttlebug.ui.controls import DictListCtrl
 from cuttlebug.util import rgb
 

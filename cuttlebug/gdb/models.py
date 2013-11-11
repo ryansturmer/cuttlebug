@@ -1,5 +1,5 @@
-import odict
 from cuttlebug.util import bidict
+import collections
 
 class ParseError(Exception): pass
 
@@ -151,7 +151,7 @@ class GDBRegisterModel(object):
     
     def set_names(self, names): 
         self.__names = list(names)
-        self.__values = odict.OrderedDict()
+        self.__values = collections.OrderedDict()
         for name in self.__names:
             if name:
                 self.__values[name] = None
@@ -223,7 +223,7 @@ class GDBVarModel(object):
 
     def __init__(self, parent):
         self.parent = parent
-        self.vars = odict.OrderedDict()
+        self.vars = collections.OrderedDict()
         self.exprs = {}
 
     def __str__(self):

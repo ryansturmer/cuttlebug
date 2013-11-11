@@ -1,7 +1,7 @@
 import wx
 import wx.grid as grid
 import view
-import util
+import cuttlebug.util as util
 import cuttlebug.app as app
 
 class MemoryTable(grid.PyGridTableBase):
