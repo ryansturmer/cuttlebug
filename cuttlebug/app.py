@@ -67,7 +67,6 @@ class Controller(wx.EvtHandler):
         g.Bind(gdb.EVT_GDB_UPDATE_STACK, self.on_gdb_stack_update)
         #g.Bind(gdb.EVT_GDB_UPDATE_BREAKPOINTS, self.on_update_breakpoints)
         #g.Bind(gdb.EVT_GDB_UPDATE_VARS, self.on_update_vars)
-        
         self.gdb = g
   
     def setup_logs(self):
@@ -133,6 +132,8 @@ class Controller(wx.EvtHandler):
         project_view.set_project(self.project)
         settings.session_set('project_filename', path)
         evt = AppEvent(EVT_APP_PROJECT_OPENED, self, data=self.project)
+        if self.gdb:
+            self.gdb.cd(self.project.directory)
         wx.PostEvent(self, evt)
 
     def unload_project(self):
@@ -173,6 +174,7 @@ class Controller(wx.EvtHandler):
         menu.manager.publish(menu.TARGET_ATTACHED)
         #print "Entering the ATTACHED state."
         if self.state == IDLE:
+            self.gdb.cd(self.project.directory)
             #self.frame.debug_view.set_model(self.gdb)
             self.frame.runtime_view.set_model(self.gdb)
             self.frame.editor_view.set_model(self.gdb)
@@ -381,6 +383,8 @@ class Controller(wx.EvtHandler):
             wx.CallAfter(self.frame.start_busy, "Downloading to target...")
             if self.project.debug.pre_download_cmd:
                 self.gdb.command(self.project.debug.pre_download_cmd, callback=self.download_stage_2)
+            else:
+                self.download_stage_2(None)
         else:
             print "Can't download from state %s" % self.state
 

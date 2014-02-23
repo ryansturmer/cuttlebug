@@ -501,7 +501,10 @@ class GDB(wx.EvtHandler):
     def set_exec(self, file, callback=None):
         self.__cmd('-file-exec-and-symbols "%s"\n' % escape(file), callback)
 
-
+    def environment_cd(self, path, callback=None):
+        self.__cmd('-environment-cd "%s"\n' % escape(path), callback)
+    cd = environment_cd
+    
     def OnTerminate(self, *args, **kwargs):
         self.post_event(GDBEvent(EVT_GDB_FINISHED, self))
 
